@@ -38,7 +38,7 @@
         />
         <script
             id="script_vue"
-            t-attf-src="/shopfloor_mobile/assets/src/lib/vue.min.js?v=#{app_version}"
+            t-attf-src="/shopfloor_mobile/assets/src/lib/vue.js?v=#{app_version}"
         />
         <script
             id="script_vue_router"
