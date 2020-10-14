@@ -209,6 +209,16 @@
             t-attf-src="/shopfloor_mobile/assets/src/components/scenario_picking_detail/picking_summary.js?v=#{app_version}"
             type="module"
         />
+        <script
+            id="receipt_list"
+            t-attf-src="/shopfloor_mobile/assets/src/components/receipt_list.js?v=#{app_version}"
+            type="module"
+        />
+        <script
+            id="receipt_detail"
+            t-attf-src="/shopfloor_mobile/assets/src/components/receipt_detail.js?v=#{app_version}"
+            type="module"
+        />
         <!-- Scenario -->
         <script
             id="script_scenario_single_pack_transfer"
