@@ -221,6 +221,11 @@
             type="module"
         />
         <script
+            id="script_scenario_reception"
+            t-attf-src="/shopfloor_mobile/assets/src/scenario/reception.js?v=#{app_version}"
+            type="module"
+        />
+        <script
             id="script_scenario_checkout"
             t-attf-src="/shopfloor_mobile/assets/src/scenario/checkout.js?v=#{app_version}"
             type="module"
