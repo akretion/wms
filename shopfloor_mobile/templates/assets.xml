@@ -219,6 +219,22 @@
             t-attf-src="/shopfloor_mobile/assets/src/components/receipt_detail.js?v=#{app_version}"
             type="module"
         />
+        <script
+            id="contact_list"
+            t-attf-src="/shopfloor_mobile/assets/src/components/contacts/contact-list.js?v=#{app_version}"
+            type="module"
+        />
+        <script
+            id="contact_detail"
+            t-attf-src="/shopfloor_mobile/assets/src/components/contacts/contact-detail.js?v=#{app_version}"
+            type="module"
+        />
+        <!-- Scenario States --!>
+        <script
+            id="choosing_reception_contact"
+            t-attf-src="/shopfloor_mobile/assets/src/scenario/reception/choosing_reception_contact.js?v=#{app_version}"
+            type="module"
+        />
         <!-- Scenario -->
         <script
             id="script_scenario_single_pack_transfer"

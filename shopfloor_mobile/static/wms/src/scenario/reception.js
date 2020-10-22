@@ -1,16 +1,18 @@
+/**
+ * Copyright 2020 Akretion (http://www.akretion.com)
+ * @author Francois Poizat <francois.poizat@gmail.com>
+ * License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+ */
+
 import {ScenarioBaseMixin} from "./mixins.js";
 import {process_registry} from "../services/process_registry.js";
 
 const Reception = {
     mixins: [ScenarioBaseMixin],
     template: `
-        <Screen :screen_info="screen_info">
-            <searchbar
-                v-on:found="on_scan"
-                :input_placeholder="search_input_placeholder"
-                />
-            <receipt-list
-                :receipts="offlineListOfReceipts"
+        <Scr :screen_info="screen_info">
+            <choosing-reception-contact
+                :stateData="offlineListOfContacts"
                 />
         </Screen>
     `,
@@ -22,16 +24,20 @@ const Reception = {
             states: {
                 start: {},
             },
-            offlineListOfReceipts: [
-                {
-                    reference: "WH/IN/00002",
-                    contact: "Vendeur 1",
-                },
-                {
-                    reference: "WH/IN/00003",
-                    contact: "Vendeur 2",
-                },
-            ],
+            offlineListOfContacts: {
+                contacts: [
+                    {
+                        contact: "Vendeur 1",
+                        receipt_count: 2,
+                        code: "V1",
+                    },
+                    {
+                        contact: "Vendeur 2",
+                        receipt_count: 10,
+                        code: "V2",
+                    },
+                ],
+            },
         };
     },
 };
