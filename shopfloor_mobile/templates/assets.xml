@@ -230,6 +230,12 @@
             t-attf-src="/shopfloor_mobile/assets/src/components/forms/form_edit_stock_picking.js?v=#{app_version}"
             type="module"
         />
+        <!-- States -->
+        <script
+            id="script_scenario_state_checkout_scan_products"
+            t-attf-src="/shopfloor_mobile/assets/src/scenario/checkout/scan_products.js?v=#{app_version}"
+            type="module"
+        />
         <!-- Scenario -->
         <script
             id="script_scenario_single_pack_transfer"
