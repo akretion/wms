@@ -21,7 +21,13 @@ const Checkout = {
             <searchbar
                 v-if="state.on_scan"
                 v-on:found="on_scan"
-                :input_placeholder="search_input_placeholder"
+                :input_placeholder="state.search_input_placeholder"
+                :fields="state.fields"
+                />
+            <checkout-scan-products
+                v-if="state_is('scan_products')"
+                :products="state.data.picking.move_lines"
+                :fields="state.fields"
                 />
             <div v-if="state_is('select_document')">
                 <div class="button-list button-vertical-list full">
@@ -206,6 +212,12 @@ const Checkout = {
                 {path: "packaging.name"},
             ];
         },
+        product_fields() {
+            return [
+                {path: "qty", label: "Quantity"},
+                {path: "qtyDone", label: "Done"},
+            ]
+        }
     },
     methods: {
         screen_title: function() {
@@ -258,6 +270,23 @@ const Checkout = {
             usage: "checkout",
             initial_state_key: "select_document",
             states: {
+                scan_products: {
+                    on_scan: scanned => {
+                        this.wait_call(
+                            this.odoo.call("scan_product", {
+                                barcode: scanned.text,
+                                picking_id: this.state.data.picking.id,
+                            })
+                        );
+                    },
+                    display_info: {
+                        search_input_placeholder: "Scan product",
+                    },
+                    fields: [
+                        {path: "qty", label: "Quantity"},
+                        {path: "qtyDone", label: "Done"},
+                    ],
+                },
                 select_document: {
                     display_info: {
                         title: "Choose an order to pack",
