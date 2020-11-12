@@ -13,6 +13,10 @@
                         attrs="{'invisible': [('shopfloor_menu_ids', '=', [])]}"
                     />
                     <field
+                        name="shopfloor_scan_and_pack"
+                        attrs="{'invisible': [('shopfloor_menu_ids', '=', [])]}"
+                    />
+                    <field
                         name="shopfloor_display_packing_info"
                         attrs="{'invisible': [('shopfloor_menu_ids', '=', [])]}"
                     />

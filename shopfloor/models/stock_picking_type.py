@@ -15,6 +15,10 @@ class StockPickingType(models.Model):
         " Discrete order Picking), the zero check step will be activated when"
         " a location becomes empty after a move.",
     )
+    shopfloor_scan_and_pack = fields.Boolean(
+        string="Activate Scan and Pack",
+        help="For packing force scanning of all product that will be in the delivery",
+    )
     shopfloor_display_packing_info = fields.Boolean(
         string="Display customer packing info",
         help="For the Shopfloor Checkout/Packing scenarios to display the"
