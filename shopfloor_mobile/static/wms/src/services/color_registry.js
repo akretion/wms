@@ -52,6 +52,10 @@ color_registry.add_theme(
          * details
          */
         detail_main_card: "info lighten-4",
+        /**
+         *
+         */
+        pack_line_done: "#5cff87",
     },
     "light"
 ); // TODO: we should bave a theme named "coosa" and select it

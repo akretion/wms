@@ -6,6 +6,14 @@ from odoo import fields
 
 from odoo.addons.component.core import Component
 
+import pprint
+
+def model_data(obj):
+    fields_dict = {}
+    for key in obj.fields_get():
+        fields_dict[key] = obj[key]
+        return fields_dict
+
 
 def ensure_model(model_name):
     """Decorator to ensure data method is called w/ the right recordset."""
@@ -188,6 +196,7 @@ class DataAction(Component):
             "id",
             "qty_done",
             "product_uom_qty:quantity",
+            "shopfloor_checkout_done:done",
             ("product_id:product", self._product_parser),
             ("lot_id:lot", self._lot_parser),
             ("location_id:location_src", self._location_parser),
