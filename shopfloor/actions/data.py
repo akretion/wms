@@ -4,6 +4,14 @@ from odoo import fields
 
 from odoo.addons.component.core import Component
 
+import pprint
+
+def model_data(obj):
+    fields_dict = {}
+    for key in obj.fields_get():
+        fields_dict[key] = obj[key]
+        return fields_dict
+
 
 class DataAction(Component):
     """Provide methods to share data structures
@@ -156,6 +164,7 @@ class DataAction(Component):
             "id",
             "qty_done",
             "product_uom_qty:quantity",
+            "shopfloor_checkout_done:done",
             ("product_id:product", self._product_parser),
             ("lot_id:lot", self._lot_parser),
             ("location_id:location_src", self._location_parser),

@@ -10,7 +10,6 @@ from odoo.addons.component.core import Component
 
 from .service import to_float
 
-
 class Checkout(Component):
     """
     Methods for the Checkout Process
@@ -233,7 +232,8 @@ class Checkout(Component):
         return self._response_for_select_line(picking)
 
     def _data_for_move_lines(self, lines, **kw):
-        return self.data.move_lines(lines, **kw)
+        move_line = self.data.move_lines(lines, **kw)
+        return move_line
 
     def _data_for_stock_picking(self, picking, done=False):
         data = self.data.picking(picking)
@@ -251,6 +251,10 @@ class Checkout(Component):
         return picking.move_line_ids.filtered(self._filter_lines_checkout_done)
 
     def _lines_to_pack(self, picking):
+        #if we scan one by one we want all the lines
+        if picking.picking_type_id.shopfloor_scan_and_pack:
+            return picking.move_line_ids
+
         return picking.move_line_ids.filtered(self._filter_lines_unpacked)
 
     def _domain_for_list_stock_picking(self):
@@ -993,7 +997,6 @@ class Checkout(Component):
         """
         move_lines = picking.move_line_ids.filtered(
             lambda l: l.product_id.barcode == barcode
-            and l.qty_done < l.product_uom_qty
         )
         if len(move_lines) > 0:
             move_line = move_lines[0]
@@ -1003,12 +1006,19 @@ class Checkout(Component):
                 message=self.msg_store.barcode_not_found()
             )
 
-        self._change_line_qty(
-            picking_id,
-            [line.id for line in picking.move_line_ids],
-            [move_line.id],
-            lambda __: move_line.qty_done + 1
-        )
+        if move_line.qty_done >= move_line.product_uom_qty:
+            return self._response_for_scanned_product(
+                picking,
+                message={
+                    "message_type": "error",
+                    "body": "Too much product in command",
+                },
+            )
+
+        move_line.qty_done = move_line.qty_done + 1;
+
+        if move_line.qty_done == move_line.product_uom_qty:
+            move_line.shopfloor_checkout_done = True
 
         return self._response_for_scanned_product(
             picking, message

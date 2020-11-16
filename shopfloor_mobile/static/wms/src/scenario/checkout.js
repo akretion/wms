@@ -28,6 +28,7 @@ const Checkout = {
                 v-if="state_is('scan_products')"
                 :products="state.data.picking.move_lines"
                 :fields="state.fields"
+                :lastScanned="lastScanned"
                 />
             <div v-if="state_is('select_document')">
                 <div class="button-list button-vertical-list full">
@@ -278,6 +279,7 @@ const Checkout = {
                                 picking_id: this.state.data.picking.id,
                             })
                         );
+                        this.lastScanned = scanned.text;
                     },
                     display_info: {
                         search_input_placeholder: "Scan product",
