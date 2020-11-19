@@ -172,18 +172,7 @@ class Checkout(Component):
                     )
                 lines = location.source_move_line_ids
                 pickings = lines.mapped("picking_id")
-                if len(pickings) == 1:
-                    picking = pickings
-                else:
-                    return self._response_for_select_document(
-                        message={
-                            "message_type": "error",
-                            "body": _(
-                                "Several transfers found, please scan a package"
-                                " or select a transfer manually."
-                            ),
-                        }
-                    )
+                picking = pickings[:1]  # take the first one
         if not picking:
             package = search.package_from_scan(barcode)
             if package:
