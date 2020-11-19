@@ -37,6 +37,7 @@ Vue.component("checkout-scan-products", {
             :fields="fields"
             :key="product.id"
             :shouldSetQuantity="shouldSetQuantity(product)"
+            v-on:addQuantity="$listeners.addQuantity"
             />
         <div style="position: fixed; bottom: 0; right: 12px;width: 100%">
             <v-row>
@@ -47,12 +48,14 @@ Vue.component("checkout-scan-products", {
                         v-if="all_lines_done"
                         x-large
                         class="justify-end"
+                        @click="$emit('shippedFinished')"
                         :color="utils.colors.color_for('screen_step_done')">
                         Package done
                     </v-btn>
                     <v-btn
                         v-if="!all_lines_done"
                         x-large
+                        @click="$emit('shippedUnfinished')"
                         :color="utils.colors.color_for('secondary')">
                         Ship unfinished
                     </v-btn>

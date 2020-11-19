@@ -29,6 +29,13 @@ const Checkout = {
                 :products="state.data.picking.move_lines"
                 :fields="state.fields"
                 :lastScanned="lastScanned"
+                v-on:addQuantity="on_user_confirm"
+                v-on:shippedFinished="state.shipFinished"
+                v-on:shippedUnfinished="state.shipUnfinished"
+                />
+            <checkout-scan-products
+                v-if="state_is('ship_products')"
+                :products="state.data.picking"
                 />
             <div v-if="state_is('select_document')">
                 <div class="button-list button-vertical-list full">
@@ -271,18 +278,37 @@ const Checkout = {
             usage: "checkout",
             initial_state_key: "select_document",
             states: {
+                ship_products: {
+                },
                 scan_products: {
                     on_scan: scanned => {
                         this.wait_call(
                             this.odoo.call("scan_product", {
                                 barcode: scanned.text,
                                 picking_id: this.state.data.picking.id,
+                                qty: 1,
                             })
                         );
                         this.lastScanned = scanned.text;
                     },
+                    on_user_confirm: ([barcode, qty]) => {
+                        this.wait_call(
+                            this.odoo.call("scan_product", {
+                                barcode: barcode,
+                                picking_id: this.state.data.picking.id,
+                                qty: parseInt(qty) - 1,
+                            })
+                        );
+                        this.lastScanned = null;
+                    },
+                    shipFinished: () => {
+                        console.log('shipped finished')
+                    },
+                    shipUnfinished: () => {
+                        console.log('shipped')
+                    },
                     display_info: {
-                        search_input_placeholder: "Scan product",
+                        scan_placeholder: "Scan product",
                     },
                     fields: [
                         {path: "qty", label: "Quantity"},

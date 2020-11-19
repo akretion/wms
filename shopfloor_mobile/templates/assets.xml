@@ -241,6 +241,11 @@
             t-attf-src="/shopfloor_mobile/assets/src/scenario/checkout/scan_products.js?v=#{app_version}"
             type="module"
         />
+        <script
+            id="script_scenario_state_checkout_ship_products"
+            t-attf-src="/shopfloor_mobile/assets/src/scenario/checkout/ship_products.js?v=#{app_version}"
+            type="module"
+        />
         <!-- Scenario -->
         <script
             id="script_scenario_single_pack_transfer"
