@@ -43,6 +43,7 @@ Vue.component("detail-simple-product", {
                             <v-btn
                                 block
                                 :color="utils.colors.color_for('screen_step_done')"
+                                @click="$emit('addQuantity', [product.barcode, quantityToSet])"
                                 >
                                 Add
                             </v-btn>
