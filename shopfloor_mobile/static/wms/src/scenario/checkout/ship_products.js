@@ -5,7 +5,7 @@
  */
 
 /* eslint-disable strict */
-Vue.component("checkout-scan-products", {
+Vue.component("checkout-ship-products", {
     props: ["products", "fields","lastScanned"],
     template: `
     <v-container class="mb-16">
