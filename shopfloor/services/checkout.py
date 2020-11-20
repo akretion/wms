@@ -170,7 +170,9 @@ class Checkout(Component):
                     return self._response_for_select_document(
                         message=self.msg_store.location_not_allowed()
                     )
-                lines = location.source_move_line_ids
+                lines = location.source_move_line_ids.filtered(
+                    lambda ml: ml.state not in ("cancel", "done")
+                )
                 pickings = lines.mapped("picking_id")
                 picking = pickings[:1]  # take the first one
         if not picking:
