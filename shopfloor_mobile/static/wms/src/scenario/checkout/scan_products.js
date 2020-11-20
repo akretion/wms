@@ -6,7 +6,7 @@
 
 /* eslint-disable strict */
 Vue.component("checkout-scan-products", {
-    props: ["products", "fields","lastScanned"],
+    props: ["packing", "products", "fields","lastScanned"],
     methods: {
         shouldSetQuantity(product) {
             return product && product.barcode === this.lastScanned;
@@ -31,6 +31,9 @@ Vue.component("checkout-scan-products", {
     },
     template: `
     <v-container class="mb-16">
+        <detail-picking
+            :record="packing"
+        />
         <detail-simple-product
             v-for="product in formatedProducts"
             :product="product"

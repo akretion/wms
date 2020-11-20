@@ -29,6 +29,7 @@ const Checkout = {
                 :products="state.data.picking.move_lines"
                 :fields="state.fields"
                 :lastScanned="lastScanned"
+                :packing="state.data.picking"
                 v-on:addQuantity="on_user_confirm"
                 v-on:shippedFinished="state.shipFinished"
                 v-on:shippedUnfinished="state.shipUnfinished"
