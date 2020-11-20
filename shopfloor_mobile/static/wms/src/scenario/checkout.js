@@ -297,16 +297,27 @@ const Checkout = {
                             this.odoo.call("scan_product", {
                                 barcode: barcode,
                                 picking_id: this.state.data.picking.id,
-                                qty: parseInt(qty) - 1,
+                                qty: parseInt(qty),
+                                setting: true,
                             })
                         );
                         this.lastScanned = null;
                     },
                     shipFinished: () => {
-                        console.log('shipped finished')
+                        this.wait_call(
+                            this.odoo.call("done", {
+                                picking_id: this.state.data.picking.id,
+                            })
+                        );
+                        this.lastScanned = null;
                     },
                     shipUnfinished: () => {
-                        console.log('shipped')
+                        this.wait_call(
+                            this.odoo.call("done", {
+                                picking_id: this.state.data.picking.id,
+                            })
+                        );
+                        this.lastScanned = null;
                     },
                     display_info: {
                         scan_placeholder: "Scan product",
