@@ -974,7 +974,7 @@ class Checkout(Component):
             picking, message={"message_type": "success", "body": msg}
         )
 
-    def scan_product(self, picking_id, barcode, qty):
+    def scan_product(self, picking_id, barcode, qty, setting=False):
         picking = self.env["stock.picking"].browse(picking_id)
         message = self._check_picking_status(picking)
         if message:
@@ -997,7 +997,9 @@ class Checkout(Component):
                 message=self.msg_store.barcode_not_found()
             )
 
-        if move_line.qty_done + qty > move_line.product_uom_qty:
+        quantity_to_set = qty if setting else move_line.qty_done + qty
+
+        if quantity_to_set > move_line.product_uom_qty:
             return self._response_for_scanned_product(
                 picking,
                 message={
@@ -1006,7 +1008,7 @@ class Checkout(Component):
                 },
             )
 
-        move_line.qty_done = move_line.qty_done + qty;
+        move_line.qty_done = quantity_to_set
 
         if move_line.qty_done == move_line.product_uom_qty:
             move_line.shopfloor_checkout_done = True
@@ -1103,6 +1105,7 @@ class ShopfloorCheckoutValidator(Component):
             "picking_id": {"coerce": to_int, "required": True, "type": "integer"},
             "barcode": {"required": True, "type": "string"},
             "qty": {"required": True, "type": "integer"},
+            "setting": {"required": False, "type": "boolean"},
         }
 
     def confirm_pack(self):

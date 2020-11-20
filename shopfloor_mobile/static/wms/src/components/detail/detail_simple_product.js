@@ -9,10 +9,20 @@ import {ItemDetailMixin} from "./detail_mixin.js";
 Vue.component("detail-simple-product", {
     props: ['product', 'fields', 'shouldSetQuantity'],
     mixins: [ItemDetailMixin],
+    computed: {
+        quantityToSet: {
+            get() {
+                return this.quantity === null ? this.product.qtyDone : this.quantity;
+            },
+            set(value) {
+                this.quantity = value;
+            },
+        }
+    },
     data: function() {
         return {
-            quantityToSet: 1,
-        };
+            quantity: null,
+        }
     },
     methods: {
         line_color: function(line) {
@@ -31,7 +41,7 @@ Vue.component("detail-simple-product", {
                     <v-row>
                         <v-col cols="4" offset="4" class="pa-0">
                             <v-text-field
-                                label="Quantity to add"
+                                label="Quantity to set"
                                 type="tel"
                                 v-model="quantityToSet"
                                 class="ma-0 pa-0"
@@ -45,7 +55,7 @@ Vue.component("detail-simple-product", {
                                 :color="utils.colors.color_for('screen_step_done')"
                                 @click="$emit('addQuantity', [product.barcode, quantityToSet])"
                                 >
-                                Add
+                                Confirm
                             </v-btn>
                         </v-col>
                     </v-row>
