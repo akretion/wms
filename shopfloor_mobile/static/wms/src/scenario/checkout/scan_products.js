@@ -16,6 +16,9 @@ Vue.component("checkout-scan-products", {
         all_lines_done: function() {
             return this.products.every(prod => prod.done);
         },
+        no_products: function() {
+            return this.products.every(prod => prod.qty_done === 0);
+        },
         formatedProducts: function() {
             return this.products.map(
                     prod => ({
@@ -57,7 +60,7 @@ Vue.component("checkout-scan-products", {
                         Package done
                     </v-btn>
                     <v-btn
-                        v-if="!all_lines_done"
+                        v-if="!all_lines_done && !no_products"
                         x-large
                         @click="$emit('shippedUnfinished')"
                         :color="utils.colors.color_for('secondary')">
