@@ -8,7 +8,7 @@
 Vue.component("checkout-scan-products", {
     props: ["packing", "products", "fields","lastScanned"],
     methods: {
-        shouldSetQuantity(product) {
+        isLastScanned(product) {
             return product && product.barcode === this.lastScanned;
         },
     },
@@ -43,7 +43,7 @@ Vue.component("checkout-scan-products", {
             :product="product"
             :fields="fields"
             :key="product.id"
-            :shouldSetQuantity="shouldSetQuantity(product)"
+            :selected="isLastScanned(product)"
             v-on:addQuantity="$listeners.addQuantity"
             />
         <div style="position: fixed; bottom: 0; right: 12px;width: 100%">
