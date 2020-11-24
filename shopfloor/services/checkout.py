@@ -1014,6 +1014,9 @@ class Checkout(Component):
 
         if move_line.qty_done == move_line.product_uom_qty:
             move_line.shopfloor_checkout_done = True
+        else:
+            move_line.shopfloor_checkout_done = False
+
 
         return self._response_for_scanned_product(
             picking, message
