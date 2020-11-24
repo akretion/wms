@@ -7,26 +7,17 @@
 import {ItemDetailMixin} from "./detail_mixin.js";
 
 Vue.component("detail-simple-product", {
-    props: ['product', 'fields', 'shouldSetQuantity'],
+    props: ['product', 'fields', 'selected'],
     mixins: [ItemDetailMixin],
-    computed: {
-        quantityToSet: {
-            get() {
-                return this.quantity === null ? this.product.qtyDone : this.quantity;
-            },
-            set(value) {
-                this.quantity = value;
-            },
-        }
-    },
-    data: function() {
-        return {
-            quantity: null,
-        }
-    },
     methods: {
         line_color: function(line) {
-            return line.done ? this.utils.colors.color_for('pack_line_done') : undefined;
+            if (line.done) {
+                return this.utils.colors.color_for('pack_line_done');
+            }
+            if (this.selected) {
+                return this.utils.colors.color_for('pack_line_selected');
+            }
+            return undefined;
         },
     },
     template: `
@@ -35,33 +26,7 @@ Vue.component("detail-simple-product", {
             :record="product"
             :options="{fields: fields}"
             :card_color="line_color(product)"
-        >
-            <template v-slot:after_details v-if="shouldSetQuantity">
-                <v-container class="pt-0 pb-0">
-                    <v-row>
-                        <v-col cols="4" offset="4" class="pa-0">
-                            <v-text-field
-                                label="Quantity to set"
-                                type="tel"
-                                v-model="quantityToSet"
-                                class="ma-0 pa-0"
-                                />
-                        </v-col>
-                    </v-row>
-                    <v-row>
-                        <v-col class="d-flex justify-center pt-0">
-                            <v-btn
-                                block
-                                :color="utils.colors.color_for('screen_step_done')"
-                                @click="$emit('addQuantity', [product.barcode, quantityToSet])"
-                                >
-                                Confirm
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                </v-container>
-            </template>
-        </item-detail-card>
+        />
     </v-row>
     `,
 });

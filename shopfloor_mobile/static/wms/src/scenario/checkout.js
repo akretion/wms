@@ -283,24 +283,31 @@ const Checkout = {
                 },
                 scan_products: {
                     on_scan: scanned => {
-                        this.wait_call(
-                            this.odoo.call("scan_product", {
-                                barcode: scanned.text,
-                                picking_id: this.state.data.picking.id,
-                                qty: 1,
-                            })
-                        );
-                        this.lastScanned = scanned.text;
+                        const intInText = parseInt(scanned.text);
+                        if (!isNaN(intInText) && intInText < 10000 && this.lastScanned) {
+                            this.state.on_user_confirm(intInText);
+                        }
+                        else {
+                            this.wait_call(
+                                this.odoo.call("scan_product", {
+                                    barcode: scanned.text,
+                                    picking_id: this.state.data.picking.id,
+                                    qty: 1,
+                                })
+                            );
+                            this.lastScanned = scanned.text;
+                        }
                     },
-                    on_user_confirm: ([barcode, qty]) => {
+                    on_user_confirm: (qty) => {
                         this.wait_call(
                             this.odoo.call("scan_product", {
-                                barcode: barcode,
+                                barcode: this.lastScanned,
                                 picking_id: this.state.data.picking.id,
                                 qty: parseInt(qty),
                                 setting: true,
                             })
                         );
+                        this.state.bus.$emit('resetQuantity');
                         this.lastScanned = null;
                     },
                     shipFinished: () => {
