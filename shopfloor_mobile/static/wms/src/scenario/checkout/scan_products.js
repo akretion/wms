@@ -24,7 +24,8 @@ Vue.component("checkout-scan-products", {
                         qty: prod.quantity,
                         qtyDone: prod.qty_done,
                         done: prod.done,
-                        barcode: prod.product.barcode
+                        barcode: prod.product.barcode,
+                        supplierCode: prod.product.supplier_code,
                     }),
                 );
         },
