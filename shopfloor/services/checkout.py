@@ -39,7 +39,7 @@ class Checkout(Component):
     _description = __doc__
 
     def _response_for_select_line(self, picking, message=None):
-        if all(line.shopfloor_checkout_done for line in picking.move_line_ids):
+        if all(line.shopfloor_checkout_done for line in picking.move_line_ids) and not picking.picking_type_id.shopfloor_scan_and_pack:
             return self._response_for_summary(picking, message=message)
 
         next_state = "select_line"
@@ -1379,7 +1379,7 @@ class ShopfloorCheckoutValidatorResponse(Component):
 
     def select(self):
         return self._response_schema(
-            next_states={"manual_selection", "summary", "select_line"}
+            next_states={"scan_products", "manual_selection", "summary", "select_line"}
         )
 
     def scan_line(self):
