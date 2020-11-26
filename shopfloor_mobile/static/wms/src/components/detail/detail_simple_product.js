@@ -14,9 +14,6 @@ Vue.component("detail-simple-product", {
             if (line.done) {
                 return this.utils.colors.color_for('pack_line_done');
             }
-            if (this.selected) {
-                return this.utils.colors.color_for('pack_line_selected');
-            }
             return undefined;
         },
     },
@@ -26,6 +23,7 @@ Vue.component("detail-simple-product", {
             :record="product"
             :options="{fields: fields}"
             :card_color="line_color(product)"
+            :outlined="selected"
         />
     </v-row>
     `,
