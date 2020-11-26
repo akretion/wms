@@ -193,8 +193,7 @@ export var ScenarioBaseMixin = {
         /*
         Switch state to given one.
         */
-        state_to: function(state_key) {
-            const self = this;
+        state_to: function(state_key, query) {
             return this.$router
                 .push({
                     name: this.usage,
@@ -202,6 +201,7 @@ export var ScenarioBaseMixin = {
                         menu_id: this.menu_item_id,
                         state: state_key,
                     },
+                    query,
                 })
                 .catch(() => {
                     // see https://github.com/quasarframework/quasar/issues/5672

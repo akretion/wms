@@ -52,17 +52,26 @@ Vue.component("checkout-scan-products", {
                     class="d-flex justify-end"
                     >
                     <v-btn
+                        x-large
+                        class="justify-end"
+                        @click="$emit('skipPack')"
+                        :color="utils.colors.color_for('accent')">
+                        Skip
+                    </v-btn>
+                    <v-btn
                         v-if="all_lines_done"
                         x-large
                         class="justify-end"
                         @click="$emit('shippedFinished')"
                         :color="utils.colors.color_for('screen_step_done')">
+                        style="margin-left: 12px;"
                         Package done
                     </v-btn>
                     <v-btn
                         v-if="!all_lines_done && !no_products"
                         x-large
                         @click="$emit('shippedUnfinished')"
+                        style="margin-left: 12px;"
                         :color="utils.colors.color_for('secondary')">
                         Ship unfinished
                     </v-btn>
