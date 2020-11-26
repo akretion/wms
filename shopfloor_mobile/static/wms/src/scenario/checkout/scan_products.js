@@ -30,7 +30,7 @@ Vue.component("checkout-scan-products", {
                         barcode: prod.product.barcode,
                         supplierCode: prod.product.supplier_code,
                     }),
-                );
+            ).sort((a, b) => a.done ? 1 : -1);
         },
     },
     template: `
