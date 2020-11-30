@@ -21,7 +21,7 @@ const Checkout = {
             <searchbar
                 v-if="state.on_scan"
                 v-on:found="on_scan"
-                :input_placeholder="state.search_input_placeholder"
+                :input_placeholder="search_input_placeholder"
                 :fields="state.fields"
                 />
             <checkout-scan-products
@@ -330,7 +330,7 @@ const Checkout = {
                         this.state_to('select_document', {skip: parseInt(this.$route.query.skip || 0) + 1});
                     },
                     display_info: {
-                        scan_placeholder: "Scan product",
+                        scan_placeholder: "Barcode or quantity",
                     },
                     fields: [
                         {path: "supplierCode", label: "Vendor code", klass: "loud"},
