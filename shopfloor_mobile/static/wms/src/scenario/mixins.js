@@ -351,7 +351,7 @@ export var ScenarioBaseMixin = {
                 this._reload_current_state();
             } else {
                 // Move to new state, data will be refreshed right after.
-                this.state_to(state_key);
+                this.state_to(state_key, this.$route.query);
             }
         },
         on_call_error: function(result) {
