@@ -137,7 +137,7 @@ class Checkout(Component):
             },
         )
 
-    def scan_document(self, barcode):
+    def scan_document(self, barcode, skip=0):
         """Scan a package, a stock.picking or a location
 
         When a location is scanned, if all the move lines from this destination
@@ -174,7 +174,8 @@ class Checkout(Component):
                     lambda ml: ml.state not in ("cancel", "done")
                 )
                 pickings = lines.mapped("picking_id")
-                picking = pickings[:1]  # take the first one
+                picking_index = skip%len(pickings)
+                picking = pickings[picking_index:picking_index+1]  # take the first one
         if not picking:
             package = search.package_from_scan(barcode)
             if package:
@@ -1089,7 +1090,10 @@ class ShopfloorCheckoutValidator(Component):
     _usage = "checkout.validator"
 
     def scan_document(self):
-        return {"barcode": {"required": True, "type": "string"}}
+        return {
+            "barcode": {"required": True, "type": "string"},
+            "skip": {"coerce": to_int, "required": False, "type": "integer"},
+        }
 
     def list_stock_picking(self):
         return {}

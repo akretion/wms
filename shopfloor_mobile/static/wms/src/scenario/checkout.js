@@ -327,7 +327,7 @@ const Checkout = {
                     },
                     skipPack: () => {
                         this.lastScanned = null;
-                        this.state_to('select_document', {skip: true});
+                        this.state_to('select_document', {skip: parseInt(this.$route.query.skip || 0) + 1});
                     },
                     display_info: {
                         scan_placeholder: "Scan product",
@@ -345,7 +345,7 @@ const Checkout = {
                     },
                     on_scan: scanned => {
                         this.wait_call(
-                            this.odoo.call("scan_document", {barcode: scanned.text})
+                            this.odoo.call("scan_document", {barcode: scanned.text, skip: this.$route.query.skip})
                         );
                     },
                     on_manual_selection: evt => {
