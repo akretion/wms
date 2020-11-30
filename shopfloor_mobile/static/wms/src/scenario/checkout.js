@@ -23,8 +23,9 @@ const Checkout = {
                 v-on:found="on_scan"
                 :input_placeholder="search_input_placeholder"
                 :fields="state.fields"
+                :refocusInput="true"
                 />
-            <checkout-scan-products
+            <scan-products
                 v-if="state_is('scan_products')"
                 :products="state.data.picking.move_lines"
                 :fields="state.fields"
@@ -34,10 +35,6 @@ const Checkout = {
                 v-on:shippedFinished="state.shipFinished"
                 v-on:shippedUnfinished="state.shipUnfinished"
                 v-on:skipPack="state.skipPack"
-                />
-            <checkout-scan-products
-                v-if="state_is('ship_products')"
-                :products="state.data.picking"
                 />
             <div v-if="state_is('select_document')">
                 <div class="button-list button-vertical-list full">

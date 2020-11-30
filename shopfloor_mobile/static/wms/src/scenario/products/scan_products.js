@@ -5,7 +5,7 @@
  */
 
 /* eslint-disable strict */
-Vue.component("checkout-scan-products", {
+Vue.component("scan-products", {
     props: ["packing", "products", "fields","lastScanned"],
     methods: {
         isLastScanned(product) {

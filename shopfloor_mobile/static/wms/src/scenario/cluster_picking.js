@@ -25,10 +25,21 @@ const ClusterPicking = {
                 v-on:cancel="state.on_cancel"
                 />
             <batch-picking-line-detail
-                v-if="state_in(['start_line', 'scan_destination', 'change_pack_lot', 'stock_issue'])"
+                v-if="state_in(['start_line', 'scan_destination', 'change_pack_lot', 'stock_issue', 'scan_products'])"
                 :line="state.data"
                 :article-scanned="state_is('scan_destination')"
                 :show-qty-picker="state_is('scan_destination')"
+                />
+            <scan-products
+                v-if="state_is('scan_products')"
+                :products="state.data.picking.move_lines"
+                :fields="state.fields"
+                :lastScanned="lastScanned"
+                :packing="state.data.picking"
+                v-on:addQuantity="on_user_confirm"
+                v-on:shippedFinished="state.shipFinished"
+                v-on:shippedUnfinished="state.shipUnfinished"
+                v-on:skipPack="state.skipPack"
                 />
             <batch-picking-line-actions
                 v-if="state_is('start_line')"
@@ -198,6 +209,64 @@ const ClusterPicking = {
                             self.state_reset_data_all();
                         });
                     },
+                },
+                scan_products: {
+                    on_scan: scanned => {
+                        const intInText = parseInt(scanned.text);
+                        if (!isNaN(intInText) && intInText < 10000 && this.lastScanned) {
+                            this.state.on_user_confirm(intInText);
+                        }
+                        else {
+                            this.wait_call(
+                                this.odoo.call("scan_product", {
+                                    barcode: scanned.text,
+                                    picking_id: this.state.data.picking.id,
+                                    qty: 1,
+                                })
+                            );
+                            this.lastScanned = scanned.text;
+                        }
+                    },
+                    on_user_confirm: (qty) => {
+                        this.wait_call(
+                            this.odoo.call("scan_product", {
+                                barcode: this.lastScanned,
+                                picking_id: this.state.data.picking.id,
+                                qty: parseInt(qty),
+                                setting: true,
+                            })
+                        );
+                        this.state.bus.$emit('resetQuantity');
+                        this.lastScanned = null;
+                    },
+                    shipFinished: () => {
+                        this.wait_call(
+                            this.odoo.call("done", {
+                                picking_id: this.state.data.picking.id,
+                            })
+                        );
+                        this.lastScanned = null;
+                    },
+                    shipUnfinished: () => {
+                        this.wait_call(
+                            this.odoo.call("done", {
+                                picking_id: this.state.data.picking.id,
+                            })
+                        );
+                        this.lastScanned = null;
+                    },
+                    skipPack: () => {
+                        this.lastScanned = null;
+                        this.state_to('select_document', {skip: parseInt(this.$route.query.skip || 0) + 1});
+                    },
+                    display_info: {
+                        scan_placeholder: "Barcode or quantity",
+                    },
+                    fields: [
+                        {path: "supplierCode", label: "Vendor code", klass: "loud"},
+                        {path: "qty", label: "Quantity"},
+                        {path: "qtyDone", label: "Done"},
+                    ],
                 },
                 start_line: {
                     display_info: {

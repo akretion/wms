@@ -92,6 +92,7 @@ class ClusterPicking(Component):
         return self._response(next_state="manual_selection", data=data, message=message)
 
     def _response_for_start_line(self, move_line, message=None, popup=None):
+
         return self._response(
             next_state="start_line",
             data=self._data_move_line(move_line),
@@ -318,9 +319,21 @@ class ClusterPicking(Component):
         * start: if the condition above is wrong (rare case of race condition...)
         """
         batch = self.env["stock.picking.batch"].browse(picking_batch_id)
+        pickings = batch.mapped("picking_ids")
+        scan_and_pack = all([picking.picking_type_id.shopfloor_scan_and_pack for picking in pickings])
         if not batch.exists():
             return self._response_batch_does_not_exist()
+        if scan_and_pack:
+            return self._response_for_scan_products(batch)
+
+            next_state = "scan_products"
         return self._pick_next_line(batch)
+
+    def _response_for_scan_products(self, batch):
+        return self._response(
+            next_state="scan_products",
+            data=self.data.picking_batch(batch, with_pickings="full"),
+        )
 
     def _pick_next_line(self, batch, message=None, force_line=None):
         if force_line:
@@ -405,6 +418,18 @@ class ClusterPicking(Component):
             location=line.location_id.id
         ).qty_available
         data.update(kw)
+        return data
+
+    def _data_picking(self, picking, done=False):
+        data = self.data.picking(picking)
+        line_picker = self._lines_checkout_done if done else self._lines_to_pack
+        data.update(
+            {
+                "move_lines": self._data_for_move_lines(
+                    line_picker(picking), with_packaging=done
+                )
+            }
+        )
         return data
 
     def unassign(self, picking_batch_id):
@@ -1288,7 +1313,23 @@ class ShopfloorClusterPickingValidatorResponse(Component):
             "unload_set_destination": self._schema_for_unload_single,
             "confirm_unload_set_destination": self._schema_for_unload_single,
             "change_pack_lot": self._schema_for_single_line_details,
+            "scan_products": self._schema_for_batch_full_details,
         }
+
+    def _schema_stock_picking(self, lines_with_packaging=False):
+        schema = self.schemas.picking()
+        schema.update(
+            {
+                "move_lines": self.schemas._schema_list_of(
+                    self.schemas.move_line(with_packaging=lines_with_packaging)
+                )
+            }
+        )
+        return {"picking": self.schemas._schema_dict_of(schema, required=True)}
+
+    @property
+    def _schema_stock_picking_details(self):
+        return self._schema_stock_picking()
 
     def find_batch(self):
         return self._response_schema(next_states={"confirm_start"})
@@ -1311,6 +1352,7 @@ class ShopfloorClusterPickingValidatorResponse(Component):
                 # already picked and have to be unloaded to the different
                 # destinations
                 "unload_single",
+                "scan_products",
             }
         )
 
@@ -1433,6 +1475,10 @@ class ShopfloorClusterPickingValidatorResponse(Component):
     @property
     def _schema_for_batch_details(self):
         return self.schemas.picking_batch(with_pickings=True)
+
+    @property
+    def _schema_for_batch_full_details(self):
+        return self.schemas.picking_batch(with_pickings="full")
 
     @property
     def _schema_for_single_line_details(self):

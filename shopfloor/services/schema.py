@@ -54,8 +54,8 @@ class BaseShopfloorSchemaResponse(Component):
             },
         }
 
-    def picking(self):
-        return {
+    def picking(self, with_move_lines=False):
+        schema = {
             "id": {"required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
             "origin": {"type": "string", "nullable": True, "required": False},
@@ -73,6 +73,11 @@ class BaseShopfloorSchemaResponse(Component):
             },
             "scheduled_date": {"type": "string", "nullable": False, "required": True},
         }
+
+        if with_move_lines:
+            schema["move_lines"] = self._schema_list_of(self.move_line(with_packaging=True))
+
+        return schema
 
     def move_line(self, with_packaging=False, with_picking=False):
         schema = {
@@ -166,8 +171,10 @@ class BaseShopfloorSchemaResponse(Component):
             "move_line_count": {"required": True, "type": "integer"},
             "weight": {"required": True, "nullable": True, "type": "float"},
         }
-        if with_pickings:
+        if with_pickings == True:
             schema["pickings"] = self._schema_list_of(self.picking())
+        if with_pickings == "full":
+            schema["pickings"] = self._schema_list_of(self.picking(with_move_lines=True))
         return schema
 
     def package_level(self):

@@ -98,6 +98,20 @@ class DataAction(Component):
             "scheduled_date",
         ]
 
+    @property
+    def _full_picking_parser(self):
+        return [
+            "id",
+            "name",
+            "origin",
+            "note",
+            ("partner_id:partner", self._partner_parser),
+            ("move_line_ids:move_lines", self._move_line_parser),
+            "move_line_count",
+            "total_weight:weight",
+            "scheduled_date",
+        ]
+
     @ensure_model("stock.quant.package")
     def package(self, record, picking=None, with_packaging=False, **kw):
         """Return data for a stock.quant.package
@@ -275,9 +289,19 @@ class DataAction(Component):
     @ensure_model("stock.picking.batch")
     def picking_batch(self, record, with_pickings=False, **kw):
         parser = self._picking_batch_parser
-        if with_pickings:
+        if with_pickings == True:
             parser.append(("picking_ids:pickings", self._picking_parser))
-        return self._jsonify(record, parser, **kw)
+        if with_pickings == "full":
+            parser.append(("picking_ids:pickings", self._full_picking_parser))
+
+        data = self._jsonify(record, parser, **kw)
+
+        pickings = record.picking_ids
+
+        for i, picking in enumerate(pickings):
+            data["pickings"][i].update({"move_lines": [self.move_line(move_line) for move_line in picking.move_line_ids]})
+
+        return data
 
     def picking_batches(self, record, with_pickings=False, **kw):
         return self.picking_batch(record, with_pickings=with_pickings, multi=True)
