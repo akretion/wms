@@ -38,7 +38,7 @@ class Checkout(Component):
     _usage = "checkout"
     _description = __doc__
 
-    def _response_for_select_line(self, picking, message=None):
+    def _response_for_select_line(self, picking, message=None, skip=None):
         if all(line.shopfloor_checkout_done for line in picking.move_line_ids) and not picking.picking_type_id.shopfloor_scan_and_pack:
             return self._response_for_summary(picking, message=message)
 
@@ -49,7 +49,7 @@ class Checkout(Component):
 
         return self._response(
             next_state=next_state,
-            data={"picking": self._data_for_stock_picking(picking)},
+            data={"picking": self._data_for_stock_picking(picking), "skip": skip},
             message=message,
         )
 
@@ -163,6 +163,7 @@ class Checkout(Component):
         """
         search = self.actions_for("search")
         picking = search.picking_from_scan(barcode)
+
         if not picking:
             location = search.location_from_scan(barcode)
             if location:
@@ -176,8 +177,18 @@ class Checkout(Component):
                     lambda ml: ml.state not in ("cancel", "done")
                 )
                 pickings = lines.mapped("picking_id")
-                picking_index = skip%len(pickings)
-                picking = pickings[picking_index:picking_index+1]  # take the first one
+
+                if skip >= len(pickings):
+                    picking = pickings[-1]
+                    return self._response_for_select_line(
+                        picking,
+                        message={
+                            "message_type": "error",
+                            "body": _("There's no more order to skip"),
+                        },
+                    )
+
+                picking = pickings[skip:skip + 1]  # take the first one
         if not picking:
             package = search.package_from_scan(barcode)
             if package:
@@ -196,9 +207,9 @@ class Checkout(Component):
                     )
                 if len(pickings) == 1:
                     picking = pickings
-        return self._select_picking(picking, "select_document")
+        return self._select_picking(picking, "select_document", skip)
 
-    def _select_picking(self, picking, state_for_error):
+    def _select_picking(self, picking, state_for_error, skip):
         if not picking:
             if state_for_error == "manual_selection":
                 return self._response_for_manual_selection(
@@ -223,7 +234,7 @@ class Checkout(Component):
             return self._response_for_select_document(
                 message=self.msg_store.stock_picking_not_available(picking)
             )
-        return self._response_for_select_line(picking)
+        return self._response_for_select_line(picking, skip=skip)
 
     def _data_for_move_lines(self, lines, **kw):
         move_line = self.data.move_lines(lines, **kw)
@@ -1306,7 +1317,10 @@ class ShopfloorCheckoutValidatorResponse(Component):
                 )
             }
         )
-        return {"picking": self.schemas._schema_dict_of(schema, required=True)}
+        return {
+            "picking": self.schemas._schema_dict_of(schema, required=True),
+            "skip": {"type": "integer", "nullable": True},
+        }
 
     @property
     def _schema_stock_picking_details(self):

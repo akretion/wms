@@ -63,8 +63,9 @@ Vue.component("scan-products", {
                         x-large
                         class="justify-end"
                         @click="$emit('shippedFinished')"
-                        :color="utils.colors.color_for('screen_step_done')">
+                        :color="utils.colors.color_for('screen_step_done')"
                         style="margin-left: 12px;"
+                        >
                         Package done
                     </v-btn>
                     <v-btn
