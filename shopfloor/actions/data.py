@@ -261,10 +261,11 @@ class DataAction(Component):
 
         data = self._jsonify(record, parser, **kw)
 
-        pickings = record.picking_ids
+        if with_pickings == "full":
+            pickings = record.picking_ids
 
-        for i, picking in enumerate(pickings):
-            data["pickings"][i].update({"move_lines": [self.move_line(move_line) for move_line in picking.move_line_ids]})
+            for i, picking in enumerate(pickings):
+                data["pickings"][i].update({"move_lines": [self.move_line(move_line) for move_line in picking.move_line_ids]})
 
         return data
 
