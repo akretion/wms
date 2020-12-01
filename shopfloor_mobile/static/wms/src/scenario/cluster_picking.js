@@ -25,21 +25,13 @@ const ClusterPicking = {
                 v-on:cancel="state.on_cancel"
                 />
             <batch-picking-line-detail
-                v-if="state_in(['start_line', 'scan_destination', 'change_pack_lot', 'stock_issue', 'scan_products'])"
+                v-if="state_in(['start_line', 'scan_destination', 'change_pack_lot', 'stock_issue'])"
                 :line="state.data"
                 :article-scanned="state_is('scan_destination')"
                 :show-qty-picker="state_is('scan_destination')"
                 />
-            <scan-products
-                v-if="state_is('scan_products')"
-                :products="state.data.picking.move_lines"
-                :fields="state.fields"
-                :lastScanned="lastScanned"
-                :packing="state.data.picking"
-                v-on:addQuantity="on_user_confirm"
-                v-on:shippedFinished="state.shipFinished"
-                v-on:shippedUnfinished="state.shipUnfinished"
-                v-on:skipPack="state.skipPack"
+            <batch-move-line
+                :batch="state.data"
                 />
             <batch-picking-line-actions
                 v-if="state_is('start_line')"
