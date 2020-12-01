@@ -323,8 +323,13 @@ const Checkout = {
                         this.lastScanned = null;
                     },
                     skipPack: () => {
+                        this.wait_call(
+                            this.odoo.call("scan_document", {
+                                 barcode: this.state.data.picking.move_lines[0].location_src.barcode,
+                                 skip: parseInt(this.state.data.skip || 0) + 1,
+                            })
+                        );
                         this.lastScanned = null;
-                        this.state_to('select_document', {skip: parseInt(this.$route.query.skip || 0) + 1});
                     },
                     display_info: {
                         scan_placeholder: "Barcode or quantity",
