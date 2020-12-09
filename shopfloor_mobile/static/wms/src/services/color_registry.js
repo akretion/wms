@@ -57,6 +57,7 @@ color_registry.add_theme(
          */
         pack_line_done: "#5cff87",
         pack_line_selected: "#d8c45c",
+        pack_line_filled: "rgba(162, 121, 0, 0.84)",
     },
     "light"
 ); // TODO: we should bave a theme named "coosa" and select it
