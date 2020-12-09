@@ -31,7 +31,11 @@ const ClusterPicking = {
                 :show-qty-picker="state_is('scan_destination')"
                 />
             <batch-move-line
+                v-if="state_is('scan_products')"
                 :batch="state.data"
+                :fields="state.fields"
+                :lastScanned="lastScanned"
+                @addQuantity="state.on_user_confirm"
                 />
             <batch-picking-line-actions
                 v-if="state_is('start_line')"
@@ -205,31 +209,74 @@ const ClusterPicking = {
                 scan_products: {
                     on_scan: scanned => {
                         const intInText = parseInt(scanned.text);
+
                         if (!isNaN(intInText) && intInText < 10000 && this.lastScanned) {
-                            this.state.on_user_confirm(intInText);
-                        }
-                        else {
-                            this.wait_call(
-                                this.odoo.call("scan_product", {
-                                    barcode: scanned.text,
-                                    picking_id: this.state.data.picking.id,
-                                    qty: 1,
+                            let move_line_id;
+
+                            this.state.data.pickings.forEach(picking =>
+                                picking.move_lines.filter(line => !line.done).forEach(line => {
+                                    if (line.product.barcode === this.lastScanned) {
+                                        move_line_id = move_line_id !== undefined ? move_line_id : line.id;
+                                    }
                                 })
                             );
-                            this.lastScanned = scanned.text;
+
+                            this.state.on_user_confirm(intInText, move_line_id);
+                        }
+                        else {
+                            let move_line_id;
+
+                            this.state.data.pickings.forEach(picking =>
+                                picking.move_lines.filter(line => !line.done).forEach(line => {
+                                    if (line.product.barcode === scanned.text) {
+                                        move_line_id = move_line_id !== undefined ? move_line_id : line.id;
+                                    }
+                                })
+                            );
+                            if (!move_line_id && this.lastScanned) {
+                                let move_line;
+                                this.state.data.pickings.forEach(picking =>
+                                    picking.move_lines.filter(line => !line.done).forEach(line => {
+                                        if (line.product.barcode === this.lastScanned) {
+                                            move_line = move_line !== undefined ? move_line : line;
+                                        }
+                                    })
+                                );
+
+                                return this.wait_call(
+                                    this.odoo.call("scan_product", {
+                                        barcode: scanned.text,
+                                        move_line_id: move_line.id,
+                                        picking_batch_id: this.state.data.id,
+                                        qty: move_line.qty_done,
+                                    })
+                                );
+                                this.lastScanned = null;
+                            }
+                            else {
+                                this.wait_call(
+                                    this.odoo.call("scan_product", {
+                                        barcode: scanned.text,
+                                        move_line_id,
+                                        picking_batch_id: this.state.data.id,
+                                        qty: 1,
+                                    })
+                                );
+
+                                this.lastScanned = scanned.text;
+                            }
                         }
                     },
-                    on_user_confirm: (qty) => {
+                    on_user_confirm: (qty, move_line_id) => {
                         this.wait_call(
                             this.odoo.call("scan_product", {
                                 barcode: this.lastScanned,
-                                picking_id: this.state.data.picking.id,
+                                picking_batch_id: this.state.data.id,
+                                move_line_id,
                                 qty: parseInt(qty),
                                 setting: true,
                             })
                         );
-                        this.state.bus.$emit('resetQuantity');
-                        this.lastScanned = null;
                     },
                     shipFinished: () => {
                         this.wait_call(

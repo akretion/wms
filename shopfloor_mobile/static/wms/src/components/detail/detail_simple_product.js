@@ -14,6 +14,9 @@ Vue.component("detail-simple-product", {
             if (line.done) {
                 return this.utils.colors.color_for('pack_line_done');
             }
+            if (line.qtyDone === line.qty) {
+                return this.utils.colors.color_for('pack_line_filled');
+            }
             return undefined;
         },
     },

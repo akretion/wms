@@ -5,38 +5,60 @@
  */
 
 Vue.component("batch-move-line", {
-    props: ["batch"],
+    props: ["batch", "fields", "lastScanned"],
+    methods: {
+        isLastScanned(product) {
+            return product && product.barcode === this.lastScanned;
+        },
+    },
     computed: {
-        lines: function() {
-            const lines = this.pickings.flatMap((picking) => {
-                picking.move_lines.map((line) => {
+        linesBySource: function() {
+            const lines = this.batch.pickings.flatMap((picking) => {
+                return picking.move_lines.map((line) => {
                     return {
                         name: line.product.display_name,
                         qty: line.quantity,
                         qtyDone: line.qty_done,
+                        done: line.done,
                         source: line.location_src,
+                        barcode: line.product.barcode,
+                        supplierCode: line.product.supplier_code,
                     }
                 });
             });
 
-            const linesBySource = {};
-
-            lines.forEach((line) => {
-                linesBySource[line.source] = [
-                    line,
-                    ...linesBySource[line.source] || []
-                ];
+            const sources = lines.map(line => line.source).filter((value, i, array) => {
+                return array.findIndex(v => v.id = value.id) === i;
             });
+
+            const sourceWithLines = sources.map(source => {
+                return {
+                    source,
+                    lines: lines.filter(line =>
+                        line.source.id === source.id,
+                    ),
+                }
+            });
+
+            return sourceWithLines;
         },
     },
     template: `
         <v-container class="mb-16">
-            <batch-picking-line-detail
-                v-if="state_in(['start_line', 'scan_destination', 'change_pack_lot', 'stock_issue'])"
-                :line="state.data"
-                :article-scanned="state_is('scan_destination')"
-                :show-qty-picker="state_is('scan_destination')"
-                />
+            <div v-for="source in linesBySource">
+                <item-detail-card
+                    :record="source.source"
+                    :card_color="utils.colors.color_for('detail_main_card')"
+                    />
+                <detail-simple-product
+                    v-for="product in source.lines"
+                    :product="product"
+                    :fields="fields"
+                    :key="product.id"
+                    :selected="isLastScanned(product)"
+                    v-on:addQuantity="$listeners.addQuantity"
+                    />
+            </div>
         </v-container>
     `
-};
+});
