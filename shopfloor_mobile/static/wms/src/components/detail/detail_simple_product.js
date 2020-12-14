@@ -27,7 +27,14 @@ Vue.component("detail-simple-product", {
             :options="{fields: fields}"
             :card_color="line_color(product)"
             :outlined="selected"
-        />
+        >
+            <template v-slot:after_details>
+                <v-container>
+                    <slot name="actions">
+                    </slot>
+                </v-container>
+            </template>
+        </item-detail-card>
     </v-row>
     `,
 });

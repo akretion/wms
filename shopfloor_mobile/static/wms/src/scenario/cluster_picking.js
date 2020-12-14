@@ -36,6 +36,7 @@ const ClusterPicking = {
                 :fields="state.fields"
                 :lastScanned="lastScanned"
                 @addQuantity="state.on_user_confirm"
+                @cancelLine="state.cancelLine"
                 />
             <batch-picking-line-actions
                 v-if="state_is('start_line')"

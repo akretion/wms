@@ -745,6 +745,23 @@ class ClusterPicking(Component):
             message=self.msg_store.barcode_not_found()
         )
 
+    def cancel_line(self, picking_batch_id, move_line_id):
+        batch = self.env["stock.picking.batch"].browse(picking_batch_id)
+        if not batch.exists():
+            return self._response_batch_does_not_exist()
+        move_line = self.env["stock.move.line"].browse(move_line_id)
+        if not move_line.exists():
+            return self._response_for_scan_products(
+                batch, message=self.msg_store.operation_not_found()
+            )
+
+        move_line.qty_done = 0
+        move_line.shopfloor_checkout_done = False
+
+        return self._response_for_scan_products(
+            batch,
+        )
+
     def _are_all_dest_location_same(self, batch):
         lines_to_unload = self._lines_to_unload(batch)
         return len(lines_to_unload.mapped("location_dest_id")) == 1
@@ -1283,6 +1300,12 @@ class ShopfloorClusterPickingValidator(Component):
             "setting": {"required": False, "type": "boolean"},
         }
 
+    def cancel_line(self):
+        return {
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+        }
+
     def unassign(self):
         return {
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"}
@@ -1432,6 +1455,11 @@ class ShopfloorClusterPickingValidatorResponse(Component):
         )
 
     def scan_product(self):
+        return self._response_schema(
+            next_states={"scan_products"}
+        )
+
+    def cancel_line(self):
         return self._response_schema(
             next_states={"scan_products"}
         )
