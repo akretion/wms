@@ -57,7 +57,16 @@ Vue.component("batch-move-line", {
                     :key="product.id"
                     :selected="isLastScanned(product)"
                     v-on:addQuantity="$listeners.addQuantity"
-                    />
+                    >
+                    <template v-slot:actions v-if="product.done">
+                        <v-btn
+                            @click="$listeners.cancelLine(product.id)"
+                            :color="utils.colors.color_for('btn_action_cancel')"
+                            >
+                            Cancel line
+                        </v-btn>
+                    </template>
+                </detail-simple-product>
             </div>
         </v-container>
     `
