@@ -23,9 +23,13 @@ Vue.component("batch-move-line", {
                         source: line.location_src,
                         barcode: line.product.barcode,
                         supplierCode: line.product.supplier_code,
+                        id: line.id,
                     }
                 });
-            });
+            }).sort((a, b) => a.done ? 1 : -1);
+
+            const selected = lines.find(this.isLastScanned) || {};
+            selected.selected = true;
 
             const sources = lines.map(line => line.source).filter((value, i, array) => {
                 return array.findIndex(v => v.id = value.id) === i;
@@ -55,7 +59,7 @@ Vue.component("batch-move-line", {
                     :product="product"
                     :fields="fields"
                     :key="product.id"
-                    :selected="isLastScanned(product)"
+                    :selected="product.selected"
                     v-on:addQuantity="$listeners.addQuantity"
                     >
                     <template v-slot:actions v-if="product.done">
