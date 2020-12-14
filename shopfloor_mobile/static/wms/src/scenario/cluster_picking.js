@@ -156,6 +156,19 @@ const ClusterPicking = {
                 })
             );
         },
+        find_move_line: function(pickings, barcode, filter=() => true) {
+            let move_line;
+
+            pickings.forEach(picking =>
+                picking.move_lines.filter(filter).forEach(line => {
+                    if (line.product.barcode === barcode) {
+                        move_line = move_line !== undefined ? move_line : line;
+                    }
+                })
+            );
+
+            return move_line || {};
+        }
     },
     data: function() {
         // TODO: add a title to each screen
@@ -208,63 +221,74 @@ const ClusterPicking = {
                     },
                 },
                 scan_products: {
+                    cancelLine: (move_line_id) => {
+                        this.wait_call(
+                            this.odoo.call("cancel_line", {
+                                move_line_id,
+                                picking_batch_id: this.state.data.id,
+                            })
+                        );
+                    },
                     on_scan: scanned => {
                         const intInText = parseInt(scanned.text);
+                        let move_line = this.find_move_line(
+                            this.state.data.pickings,
+                            scanned.text,
+                            line => !line.done);
+                        let last_move_line = this.find_move_line(
+                            this.state.data.pickings,
+                            this.lastScanned,
+                            line => !line.done);
 
                         if (!isNaN(intInText) && intInText < 10000 && this.lastScanned) {
-                            let move_line_id;
-
-                            this.state.data.pickings.forEach(picking =>
-                                picking.move_lines.filter(line => !line.done).forEach(line => {
-                                    if (line.product.barcode === this.lastScanned) {
-                                        move_line_id = move_line_id !== undefined ? move_line_id : line.id;
-                                    }
-                                })
-                            );
-
-                            this.state.on_user_confirm(intInText, move_line_id);
+                            if (last_move_line.id) {
+                                this.state.on_user_confirm(intInText, last_move_line.id);
+                            }
+                            else {
+                                this.set_message({
+                                    body: "You can't set quantity for an already pick product",
+                                    message_type: "error"
+                                });
+                            }
                         }
                         else {
-                            let move_line_id;
-
-                            this.state.data.pickings.forEach(picking =>
-                                picking.move_lines.filter(line => !line.done).forEach(line => {
-                                    if (line.product.barcode === scanned.text) {
-                                        move_line_id = move_line_id !== undefined ? move_line_id : line.id;
-                                    }
-                                })
-                            );
-                            if (!move_line_id && this.lastScanned) {
-                                let move_line;
-                                this.state.data.pickings.forEach(picking =>
-                                    picking.move_lines.filter(line => !line.done).forEach(line => {
-                                        if (line.product.barcode === this.lastScanned) {
-                                            move_line = move_line !== undefined ? move_line : line;
-                                        }
-                                    })
-                                );
+                            if (!move_line.id && last_move_line) {
+                                this.lastScanned = null;
 
                                 return this.wait_call(
                                     this.odoo.call("scan_product", {
                                         barcode: scanned.text,
-                                        move_line_id: move_line.id,
+                                        move_line_id: last_move_line.id,
                                         picking_batch_id: this.state.data.id,
-                                        qty: move_line.qty_done,
+                                        qty: last_move_line.qty_done,
                                     })
                                 );
-                                this.lastScanned = null;
+                            }
+                            else if (move_line.id) {
+                                if (last_move_line.id === move_line.id || !last_move_line.id) {
+                                    this.wait_call(
+                                        this.odoo.call("scan_product", {
+                                            barcode: scanned.text,
+                                            move_line_id: move_line.id,
+                                            picking_batch_id: this.state.data.id,
+                                            qty: 1,
+                                        })
+                                    );
+
+                                    this.lastScanned = scanned.text;
+                                }
+                                else {
+                                    this.set_message({
+                                        body: "You must scan a destination for the current products",
+                                        message_type: "error"
+                                    });
+                                }
                             }
                             else {
-                                this.wait_call(
-                                    this.odoo.call("scan_product", {
-                                        barcode: scanned.text,
-                                        move_line_id,
-                                        picking_batch_id: this.state.data.id,
-                                        qty: 1,
-                                    })
-                                );
-
-                                this.lastScanned = scanned.text;
+                                this.set_message({
+                                    body: "There is no more product like that to pick",
+                                    message_type: "error"
+                                });
                             }
                         }
                     },
