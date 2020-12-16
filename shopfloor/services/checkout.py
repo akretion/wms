@@ -176,19 +176,22 @@ class Checkout(Component):
                 lines = location.source_move_line_ids.filtered(
                     lambda ml: ml.state not in ("cancel", "done")
                 )
+
                 pickings = lines.mapped("picking_id")
 
-                if skip >= len(pickings):
-                    picking = pickings[-1]
-                    return self._response_for_select_line(
-                        picking,
-                        message={
-                            "message_type": "error",
-                            "body": _("There's no more order to skip"),
-                        },
-                    )
+                if len(pickings) > 0:
+                    if skip >= len(pickings):
+                        picking = pickings[-1]
+                        return self._response_for_select_line(
+                            picking,
+                            message={
+                                "message_type": "error",
+                                "body": _("There's no more order to skip"),
+                            },
+                        )
 
-                picking = pickings[skip:skip + 1]  # take the first one
+                    picking = pickings[skip:skip + 1]  # take the first one
+
         if not picking:
             package = search.package_from_scan(barcode)
             if package:
