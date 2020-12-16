@@ -54,7 +54,7 @@ class BaseShopfloorSchemaResponse(Component):
             },
         }
 
-    def picking(self, with_move_lines=False):
+    def picking(self, with_move_lines=False, no_packaging=False):
         schema = {
             "id": {"required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
@@ -75,7 +75,7 @@ class BaseShopfloorSchemaResponse(Component):
         }
 
         if with_move_lines:
-            schema["move_lines"] = self._schema_list_of(self.move_line(with_packaging=True))
+            schema["move_lines"] = self._schema_list_of(self.move_line(with_packaging=not no_packaging))
 
         return schema
 
@@ -163,7 +163,7 @@ class BaseShopfloorSchemaResponse(Component):
             "qty": {"type": "float", "required": True},
         }
 
-    def picking_batch(self, with_pickings=False):
+    def picking_batch(self, with_pickings=False, no_packaging=False):
         schema = {
             "id": {"required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
@@ -174,7 +174,7 @@ class BaseShopfloorSchemaResponse(Component):
         if with_pickings == True:
             schema["pickings"] = self._schema_list_of(self.picking())
         if with_pickings == "full":
-            schema["pickings"] = self._schema_list_of(self.picking(with_move_lines=True))
+            schema["pickings"] = self._schema_list_of(self.picking(with_move_lines=True, no_packaging=no_packaging))
         return schema
 
     def package_level(self):

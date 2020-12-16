@@ -1586,7 +1586,7 @@ class ShopfloorClusterPickingValidatorResponse(Component):
 
     @property
     def _schema_for_batch_full_details(self):
-        return self.schemas.picking_batch(with_pickings="full")
+        return self.schemas.picking_batch(with_pickings="full", no_packaging=True)
 
     @property
     def _schema_for_single_line_details(self):
