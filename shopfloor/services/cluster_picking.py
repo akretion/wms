@@ -330,6 +330,11 @@ class ClusterPicking(Component):
         return self._pick_next_line(batch)
 
     def _response_for_scan_products(self, batch, message=None):
+        next_line = self._next_line_for_pick(batch)
+
+        if not next_line:
+            return self.prepare_unload(batch.id)
+
         return self._response(
             next_state="scan_products",
             data=self.data.picking_batch(batch, with_pickings="full"),
@@ -369,6 +374,7 @@ class ClusterPicking(Component):
         return lines.sorted(key=self._sort_key_lines)
 
     def _lines_to_pick(self, picking_batch):
+        print(picking_batch)
         return self._lines_for_picking_batch(
             picking_batch,
             filter_func=lambda l: (
@@ -1469,7 +1475,7 @@ class ShopfloorClusterPickingValidatorResponse(Component):
 
     def scan_product(self):
         return self._response_schema(
-            next_states={"scan_products"}
+            next_states={"scan_products", "unload_all", "unload_single"}
         )
 
     def cancel_line(self):
