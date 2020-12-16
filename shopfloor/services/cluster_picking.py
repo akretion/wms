@@ -712,16 +712,23 @@ class ClusterPicking(Component):
             return self._response_for_scan_products(batch)
 
         location_dest = search.location_from_scan(barcode)
+        bin_package = search.package_from_scan(barcode)
+
+        if not location_dest and not bin_package:
+            return self._response_for_scan_products(
+                batch,
+                message=self.msg_store.barcode_not_found()
+            )
+
+        new_line, qty_check = move_line._split_qty_to_be_done(qty)
+
+        if qty_check == "greater":
+            return self._response_for_scan_products(
+                batch,
+                message=self.msg_store.unable_to_pick_more(move_line.product_uom_qty),
+            )
 
         if location_dest:
-            new_line, qty_check = move_line._split_qty_to_be_done(qty)
-
-            if qty_check == "greater":
-                return self._response_for_scan_products(
-                    batch,
-                    message=self.msg_store.unable_to_pick_more(move_line.product_uom_qty),
-                )
-
             if not location_dest.is_sublocation_of(
                 move_line.picking_id.location_dest_id
             ):
@@ -739,11 +746,17 @@ class ClusterPicking(Component):
                 ),
             )
 
+        if bin_package:
+            move_line.write({"qty_done": qty, "result_package_id": bin_package.id})
+            move_line.shopfloor_checkout_done = True
 
-        return self._response_for_scan_products(
-            batch,
-            message=self.msg_store.barcode_not_found()
-        )
+            return self._response_for_scan_products(
+                batch,
+                message=self.msg_store.x_units_put_in_package(
+                    move_line.qty_done, move_line.product_id, move_line.result_package_id
+                ),
+            )
+
 
     def cancel_line(self, picking_batch_id, move_line_id):
         batch = self.env["stock.picking.batch"].browse(picking_batch_id)
