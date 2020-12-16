@@ -366,7 +366,6 @@ class ClusterPicking(Component):
         return lines.sorted(key=self._sort_key_lines)
 
     def _lines_to_pick(self, picking_batch):
-        print(picking_batch)
         return self._lines_for_picking_batch(
             picking_batch,
             filter_func=lambda l: (
