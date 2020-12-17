@@ -24,6 +24,7 @@ Vue.component("batch-move-line", {
                         barcode: line.product.barcode,
                         supplierCode: line.product.supplier_code,
                         id: line.id,
+                        dest: line.package_dest || line.location_dest,
                     }
                 });
             }).sort((a, b) => a.done ? 1 : -1);

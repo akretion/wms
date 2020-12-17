@@ -331,6 +331,7 @@ const ClusterPicking = {
                         {path: "supplierCode", label: "Vendor code", klass: "loud"},
                         {path: "qty", label: "Quantity"},
                         {path: "qtyDone", label: "Done"},
+                        {path: "dest.name", label: "Destination"},
                     ],
                 },
                 start_line: {
