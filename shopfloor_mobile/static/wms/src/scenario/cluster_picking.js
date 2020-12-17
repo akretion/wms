@@ -12,6 +12,7 @@ const ClusterPicking = {
                 v-if="state.on_scan"
                 v-on:found="on_scan"
                 :input_placeholder="search_input_placeholder"
+                :refocusInput="true"
                 />
             <get-work
                 v-if="state_is('start')"
