@@ -737,7 +737,7 @@ class ClusterPicking(Component):
             if not location_dest.is_sublocation_of(
                 move_line.picking_id.location_dest_id
             ):
-                return self._response_for_scan_destination(
+                return self._response_for_scan_products(
                     move_line, message=self.msg_store.dest_location_not_allowed()
                 )
 
