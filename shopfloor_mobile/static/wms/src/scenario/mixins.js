@@ -17,6 +17,7 @@ export var ScenarioBaseMixin = {
                 },
             },
             lastBarcodeScanned: null,
+            selectedLocationId: null,
             need_confirmation: false,
             show_reset_button: false,
             initial_state_key: "start",
@@ -70,6 +71,14 @@ export var ScenarioBaseMixin = {
             },
             set: function(data) {
                 this.current_state = this._make_current_state(data);
+            },
+        },
+        selectedLocation: {
+            get: function() {
+                return this.selectedLocationId;
+            },
+            set: function(id) {
+                this.selectedLocationId = id;
             },
         },
         lastScanned: {

@@ -5,7 +5,7 @@
  */
 
 Vue.component("batch-move-line", {
-    props: ["batch", "fields", "lastScanned"],
+    props: ["batch", "fields", "lastScanned", "selectedLocation"],
     methods: {
         isLastScanned(product) {
             return product && product.barcode === this.lastScanned;
@@ -27,13 +27,13 @@ Vue.component("batch-move-line", {
                         dest: line.package_dest || line.location_dest,
                     }
                 });
-            }).sort((a, b) => a.done ? 1 : -1);
+            }).filter(line => line.qty > 0).sort((a, b) => a.done ? 1 : -1);
 
             const selected = lines.find(this.isLastScanned) || {};
             selected.selected = true;
 
             const sources = lines.map(line => line.source).filter((value, i, array) => {
-                return array.findIndex(v => v.id = value.id) === i;
+                return array.findIndex(v => v.id === value.id) === i;
             });
 
             const sourceWithLines = sources.map(source => {
@@ -41,16 +41,16 @@ Vue.component("batch-move-line", {
                     source,
                     lines: lines.filter(line =>
                         line.source.id === source.id,
-                    ),
+                    ).sort((a, b) => !a.selected ? 1 : -1),
                 }
-            });
+            }).filter(source => source.lines.length > 0).sort((a, b) => a.source.id !== this.selectedLocation ? 1 : -1);
 
             return sourceWithLines;
         },
     },
     template: `
         <v-container class="mb-16">
-            <div v-for="source in linesBySource">
+            <div v-for="source in linesBySource" :key="source.id">
                 <item-detail-card
                     :record="source.source"
                     :card_color="utils.colors.color_for('detail_main_card')"
@@ -61,7 +61,6 @@ Vue.component("batch-move-line", {
                     :fields="fields"
                     :key="product.id"
                     :selected="product.selected"
-                    v-on:addQuantity="$listeners.addQuantity"
                     >
                     <template v-slot:actions v-if="product.done">
                         <v-btn

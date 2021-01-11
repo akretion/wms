@@ -36,7 +36,7 @@ const ClusterPicking = {
                 :batch="state.data"
                 :fields="state.fields"
                 :lastScanned="lastScanned"
-                @addQuantity="state.on_user_confirm"
+                :selectedLocation="selectedLocation"
                 @cancelLine="state.cancelLine"
                 />
             <batch-picking-line-actions
@@ -169,6 +169,19 @@ const ClusterPicking = {
             );
 
             return move_line || {};
+        },
+        find_src_location: function(pickings, barcode) {
+            let location_src = "";
+
+            pickings.forEach(picking =>
+                picking.move_lines.forEach(line => {
+                    if (line.location_src.barcode === barcode) {
+                        location_src = line.location_src.id;
+                    }
+                })
+            );
+
+            return location_src;
         }
     },
     data: function() {
@@ -241,9 +254,29 @@ const ClusterPicking = {
                             this.lastScanned,
                             line => !line.done);
 
-                        if (!isNaN(intInText) && intInText < 10000 && this.lastScanned) {
+                        if (!isNaN(intInText) && intInText === 0) {
+                            this.wait_call(
+                                this.odoo.call("set_quantity_scan_and_pack", {
+                                    barcode: this.lastScanned,
+                                    picking_batch_id: this.state.data.id,
+                                    move_line_id: last_move_line.id,
+                                    qty: intInText,
+                                })
+                            );
+
+                            this.lastScanned = null;
+                        }
+                        else if (!isNaN(intInText) && intInText > 0 && intInText < 10000 && this.lastScanned) {
+                            // scanning quantity
                             if (last_move_line.id) {
-                                this.state.on_user_confirm(intInText, last_move_line.id);
+                                    this.wait_call(
+                                        this.odoo.call("set_quantity_scan_and_pack", {
+                                            barcode: this.lastScanned,
+                                            picking_batch_id: this.state.data.id,
+                                            move_line_id: last_move_line.id,
+                                            qty: intInText,
+                                        })
+                                    );
                             }
                             else {
                                 this.set_message({
@@ -253,11 +286,24 @@ const ClusterPicking = {
                             }
                         }
                         else {
+                            //scanning barcode
+                            if (!move_line.id && !last_move_line.id) {
+                                // scanning barcode that does not match with a move_line
+                                // and without a previously selected product
+                                // this should try to select a location
+                                return this.selectedLocation = this.find_src_location(
+                                    this.state.data.pickings,
+                                    scanned.text,
+                                );
+                            }
                             if (!move_line.id && last_move_line.id) {
+                                // scanning barcode with previous product selection and the barcode
+                                // doesn't match a product in the picking
+                                // this correspond to scanning a potential location or bin package
                                 this.lastScanned = null;
 
                                 return this.wait_call(
-                                    this.odoo.call("scan_product", {
+                                    this.odoo.call("scan_location_scan_and_pack", {
                                         barcode: scanned.text,
                                         move_line_id: last_move_line.id,
                                         picking_batch_id: this.state.data.id,
@@ -266,9 +312,12 @@ const ClusterPicking = {
                                 );
                             }
                             else if (move_line.id) {
+                                // this is the user scanning a product
+                                // we check first if this is the same product as last picked if it exists
+                                // in both these cases we increment the qty done for the move_line
                                 if (last_move_line.id === move_line.id || !last_move_line.id) {
                                     this.wait_call(
-                                        this.odoo.call("scan_product", {
+                                        this.odoo.call("scan_product_scan_and_pack", {
                                             barcode: scanned.text,
                                             move_line_id: move_line.id,
                                             picking_batch_id: this.state.data.id,
@@ -279,8 +328,11 @@ const ClusterPicking = {
                                     this.lastScanned = scanned.text;
                                 }
                                 else {
+                                    //If the user is trying to scan a new product without unselecting or
+                                    //placing the product previously selected product we warn him that's not possible
+                                    //they must scan a location or unselect first
                                     this.set_message({
-                                        body: "You must scan a destination for the current products",
+                                        body: "You must scan a destination for the current products, or unselect it",
                                         message_type: "error"
                                     });
                                 }
@@ -292,17 +344,6 @@ const ClusterPicking = {
                                 });
                             }
                         }
-                    },
-                    on_user_confirm: (qty, move_line_id) => {
-                        this.wait_call(
-                            this.odoo.call("scan_product", {
-                                barcode: this.lastScanned,
-                                picking_batch_id: this.state.data.id,
-                                move_line_id,
-                                qty: parseInt(qty),
-                                setting: true,
-                            })
-                        );
                     },
                     shipFinished: () => {
                         this.wait_call(
@@ -325,7 +366,7 @@ const ClusterPicking = {
                         this.state_to('select_document', {skip: parseInt(this.$route.query.skip || 0) + 1});
                     },
                     display_info: {
-                        scan_placeholder: "Barcode or quantity",
+                        scan_placeholder: () => `${!this.lastScanned ? "Barcode" : ""}${this.lastScanned ? "Quantity, package" : ""} or location`,
                     },
                     fields: [
                         {path: "supplierCode", label: "Vendor code", klass: "loud"},

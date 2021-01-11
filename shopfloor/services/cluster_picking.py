@@ -8,6 +8,61 @@ from odoo.addons.component.core import Component
 
 from .service import to_float
 
+class ScenarioError(Exception):
+    def __init__(self, response):
+        super().__init__("")
+        self.response = response
+
+class MethodBasedError(Exception):
+    def __init__(self, func_name, func_args):
+        super().__init__("")
+        self.func_name = func_name
+        self.func_args = func_args
+
+class MessageBasedError(Exception):
+    def __init__(self, func_name, func_args):
+        super().__init__("")
+        self.func_name = func_name
+        self.func_args = func_args
+
+class BatchDoesNotExistError(Exception):
+    pass
+
+class OperationNotFound(MethodBasedError):
+    def __init__(self, func_name, func_args):
+        super().__init__(func_name, func_args)
+        self.message_name = "operation_not_found"
+
+class BarcodeNotFoundError(MethodBasedError):
+    def __init__(self, func_name, func_args):
+        super().__init__(func_name, func_args)
+        self.message_name = "barcode_not_found"
+
+class TooMuchProductInCommandError(MessageBasedError):
+    def __init__(self, func_name, func_args):
+        super().__init__(func_name, func_args)
+        self.func_args["message"] = {
+            "message_type": "error",
+            "body": "Too much product in command",
+        }
+
+def response_decorator(called_func):
+    def decorated_response(*args, **kwargs):
+        instance = args[0]
+        try:
+            return called_func(*args, **kwargs)
+        except BatchDoesNotExistError:
+            raise ScenarioError(response=instance._response_batch_does_not_exist())
+        except MethodBasedError as e:
+            f = getattr(instance, e.func_name)
+            e.func_args["message"] = getattr(instance.msg_store, e.message_name)()
+            raise ScenarioError(response=f(**(e.func_args)))
+        except MessageBasedError as e:
+            f = getattr(instance, e.func_name)
+            raise ScenarioError(response=f(**(e.func_args)))
+
+    return decorated_response
+
 
 class ClusterPicking(Component):
     """
@@ -685,36 +740,92 @@ class ClusterPicking(Component):
             force_line=new_line,
         )
 
-    def scan_product(self, picking_batch_id, move_line_id, barcode, qty, setting=False):
+    @response_decorator
+    def get_info_for_scan_and_pack(self, picking_batch_id, move_line_id):
         batch = self.env["stock.picking.batch"].browse(picking_batch_id)
         if not batch.exists():
-            return self._response_batch_does_not_exist()
+            raise BatchDoesNotExistError
         move_line = self.env["stock.move.line"].browse(move_line_id)
         if not move_line.exists():
-            return self._response_for_scan_products(
-                batch, message=self.msg_store.operation_not_found()
+            raise OperationNotFoundError(
+                func_name="_response_for_scan_products",
+                func_args={"batch": batch}
             )
+
+        return batch, move_line
+
+    @response_decorator
+    def set_quantity_for_move_line(self, batch, product, move_line, quantity_to_set):
+        if product and move_line.product_id == product:
+            if quantity_to_set > move_line.product_uom_qty:
+                raise TooMuchProductInCommandError(
+                    func_name="_response_for_scan_products",
+                    func_args={
+                        "batch": batch
+                    }
+                )
+
+            move_line.qty_done = quantity_to_set
+
+            return self._response_for_scan_products(batch)
+        else:
+            raise BarcodeNotFoundError(
+                func_name="_response_for_scan_products",
+                func_args={"batch": batch}
+            )
+
+    def set_quantity_scan_and_pack(self, picking_batch_id, move_line_id, barcode, qty):
+        try:
+            batch, move_line = self.get_info_for_scan_and_pack(picking_batch_id, move_line_id)
+        except ScenarioError as e:
+            return e.response
 
         search = self.actions_for("search")
 
         picking = move_line.picking_id
 
         product = search.product_from_scan(barcode)
-        if product and move_line.product_id == product:
-            quantity_to_set = qty if setting else move_line.qty_done + qty
 
-            if quantity_to_set > move_line.product_uom_qty:
-                return self._response_for_scan_products(
-                    batch,
-                    message={
-                        "message_type": "error",
-                        "body": "Too much product in command",
-                    },
-                )
+        try:
+            return self.set_quantity_for_move_line(
+                batch,
+                product,
+                move_line,
+                qty,
+            )
+        except ScenarioError as e:
+            return e.response
 
-            move_line.qty_done = quantity_to_set
+    def scan_product_scan_and_pack(self, picking_batch_id, move_line_id, barcode, qty):
+        try:
+            batch, move_line = self.get_info_for_scan_and_pack(picking_batch_id, move_line_id)
+        except ScenarioError as e:
+            return e.response
 
-            return self._response_for_scan_products(batch)
+        search = self.actions_for("search")
+
+        picking = move_line.picking_id
+
+        product = search.product_from_scan(barcode)
+        quantity_to_set = move_line.qty_done + qty
+
+        try:
+            return self.set_quantity_for_move_line(
+                batch,
+                product,
+                move_line,
+                quantity_to_set,
+            )
+        except ScenarioError as e:
+            return e.response
+
+    def scan_location_scan_and_pack(self, picking_batch_id, move_line_id, barcode, qty):
+        try:
+            batch, move_line = self.get_info_for_scan_and_pack(picking_batch_id, move_line_id)
+        except ScenarioError as e:
+            return e.response
+
+        search = self.actions_for("search")
 
         location_dest = search.location_from_scan(barcode)
         bin_package = search.package_from_scan(barcode)
@@ -762,19 +873,16 @@ class ClusterPicking(Component):
                 ),
             )
 
-
     def cancel_line(self, picking_batch_id, move_line_id):
-        batch = self.env["stock.picking.batch"].browse(picking_batch_id)
-        if not batch.exists():
-            return self._response_batch_does_not_exist()
-        move_line = self.env["stock.move.line"].browse(move_line_id)
-        if not move_line.exists():
-            return self._response_for_scan_products(
-                batch, message=self.msg_store.operation_not_found()
-            )
+        try:
+            batch, move_line = self.get_info_for_scan_and_pack(picking_batch_id, move_line_id)
+        except ScenarioError as e:
+            return e.response
 
         move_line.qty_done = 0
         move_line.shopfloor_checkout_done = False
+        move_line.result_package_id = None
+        move_line.location_dest_id = move_line.picking_id.location_dest_id
 
         return self._response_for_scan_products(
             batch,
@@ -1309,13 +1417,28 @@ class ShopfloorClusterPickingValidator(Component):
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"}
         }
 
-    def scan_product(self):
+    def scan_product_scan_and_pack(self):
         return {
             "barcode": {"required": True, "type": "string"},
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
             "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
             "qty": {"coerce": to_int, "required": False, "type": "integer"},
-            "setting": {"required": False, "type": "boolean"},
+        }
+
+    def scan_location_scan_and_pack(self):
+        return {
+            "barcode": {"required": True, "type": "string"},
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "qty": {"coerce": to_int, "required": False, "type": "integer"},
+        }
+
+    def set_quantity_scan_and_pack(self):
+        return {
+            "barcode": {"required": True, "type": "string"},
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "qty": {"coerce": to_int, "required": False, "type": "integer"},
         }
 
     def cancel_line(self):
@@ -1472,9 +1595,19 @@ class ShopfloorClusterPickingValidatorResponse(Component):
             }
         )
 
-    def scan_product(self):
+    def scan_product_scan_and_pack(self):
+        return self._response_schema(
+            next_states={"scan_products"}
+        )
+
+    def scan_location_scan_and_pack(self):
         return self._response_schema(
             next_states={"scan_products", "unload_all", "unload_single"}
+        )
+
+    def set_quantity_scan_and_pack(self):
+        return self._response_schema(
+            next_states={"scan_products"}
         )
 
     def cancel_line(self):
