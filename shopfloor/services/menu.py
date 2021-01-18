@@ -74,6 +74,7 @@ class ShopfloorMenu(Component):
             "id",
             "name",
             "scenario",
+            "scan_and_pack": record.scan_and_pack,
             ("picking_type_ids:picking_types", ["id", "name"]),
         ]
 
@@ -113,6 +114,7 @@ class ShopfloorMenuValidatorResponse(Component):
             "id": {"coerce": to_int, "required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
             "scenario": {"type": "string", "nullable": False, "required": True},
+            "scan_and_pack": {"type": "boolean", "nullable": True},
             "picking_types": self.schemas._schema_list_of(self._picking_type_schema),
         }
         schema.update(self.schemas.move_lines_counters())

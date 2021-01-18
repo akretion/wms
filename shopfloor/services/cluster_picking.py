@@ -774,6 +774,24 @@ class ClusterPicking(Component):
                 func_args={"batch": batch}
             )
 
+    def confirm_start_scan_and_pack(self, picking_batch_id):
+        """User confirms they start a batch
+
+        Should have no effect in odoo besides logging and routing the user to
+        the next action. The next action is "start_line" with data about the
+        line to pick.
+
+        Transitions:
+        * start_line: when the batch has at least one line without destination
+          package
+        * start: if the condition above is wrong (rare case of race condition...)
+        """
+        batch = self.env["stock.picking.batch"].browse(picking_batch_id)
+        pickings = batch.mapped("picking_ids")
+        move_lines = pickings.mapped("move_line_ids")
+
+        return self._response_for_scan_products(move_lines)
+
     def set_quantity_scan_and_pack(self, picking_batch_id, move_line_id, barcode, qty):
         try:
             batch, move_line = self.get_info_for_scan_and_pack(picking_batch_id, move_line_id)
@@ -1738,6 +1756,11 @@ class ShopfloorClusterPickingValidatorResponse(Component):
     @property
     def _schema_for_batch_full_details(self):
         return self.schemas.picking_batch(with_pickings="full", no_packaging=True)
+
+    @property
+    def _schema_for_multiple_move_lines(self):
+        schema = self.schemas._schema_list_of(self.schemas.move_line())
+        return schema
 
     @property
     def _schema_for_single_line_details(self):

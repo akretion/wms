@@ -1,0 +1,26 @@
+{
+  "include": [
+    ".",
+    "~/wms/odoo"
+  ],
+
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    "src/experimental",
+    "src/typestubs"
+  ],
+
+  "ignore": [
+    "src/oldstuff"
+  ],
+
+  "stubPath": "src/stubs",
+
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+
+  "pythonVersion": "3.9",
+  "pythonPlatform": "Linux"
+  ]
+}
