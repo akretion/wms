@@ -47,6 +47,11 @@ class ShopfloorMenu(models.Model):
     # and/or their exposure to the scenario api.
     options = Serialized(default={})
 
+    scan_and_pack = fields.Boolean(
+        default=False,
+        string="Activate scan and pack",
+    )
+
     move_create_is_possible = fields.Boolean(compute="_compute_move_create_is_possible")
     # only available for some scenarios, move_create_is_possible defines if the option
     # can be used or not
