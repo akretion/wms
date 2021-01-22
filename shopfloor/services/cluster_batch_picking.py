@@ -1,6 +1,7 @@
 
 # Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+import pdb
 from functools import wraps
 from odoo import _, fields
 from odoo.osv import expression
@@ -81,6 +82,80 @@ class ClusterBatchPicking(Component):
     _usage = "cluster_batch_picking"
     _description = __doc__
 
+    @staticmethod
+    def _sort_key_lines(line):
+        return (
+            line.shopfloor_priority or 10,
+            line.location_id.shopfloor_picking_sequence or "",
+            line.location_id.name,
+            -int(line.move_id.priority or 1),
+            line.move_id.date_expected,
+            line.move_id.sequence,
+            line.move_id.id,
+            line.id,
+        )
+
+    def _get_lines_to_pick(self, move_lines):
+        return move_lines.filtered(
+            lambda l: (
+                l.state in ("assigned", "partially_available")
+                # On 'StockPicking.action_assign()', result_package_id is set to
+                # the same package as 'package_id'. Here, we need to exclude lines
+                # that were already put into a bin, i.e. the destination package
+                # is different.
+                and (not l.result_package_id or l.result_package_id == l.package_id)
+                and (l.picking_id.location_dest_id == l.location_dest_id)
+            ),
+        ).sorted(key=self._sort_key_lines)
+
+
+    def _next_line_for_pick(self, move_lines):
+        remaining_lines = self._get_lines_to_pick(move_lines)
+        return fields.first(remaining_lines)
+
+    def _response_for_scan_products(self, move_lines, batch, message=None):
+        next_line = self._next_line_for_pick(move_lines)
+
+        if not next_line:
+            return self.prepare_unload(batch.id)
+
+        move_lines = self.data.move_lines(move_lines, with_picking=True, with_packaging=True)
+
+        return self._response(
+            next_state="scan_products",
+            data={
+                "move_lines": move_lines,
+                "id": batch.id,
+            },
+            message=message,
+        )
+
+    def _batch_filter(self, batch):
+        if not batch.picking_ids:
+            return False
+        return batch.picking_ids.filtered(self._batch_picking_filter)
+
+    def _batch_picking_filter(self, picking):
+        # Picking type guard
+        if picking.picking_type_id not in self.picking_types:
+            return False
+        # Include done/cancel because we want to be able to work on the
+        # batch even if some pickings are done/canceled. They'll should be
+        # ignored later.
+        # When the batch is already in progress, we do not care
+        # about state of the pickings, because we want to be able
+        # to recover it in any case, even if, for instance, a stock
+        # error changed a picking to unavailable after the user
+        # started to work on the batch.
+        return picking.batch_id.state == "in_progress" or picking.state in (
+            "assigned",
+            "done",
+            "cancel",
+        )
+
+    def _response_batch_does_not_exist(self):
+        return self._response_for_start(message=self.msg_store.record_not_found())
+
     def _batch_picking_base_search_domain(self):
         return [
             "|",
@@ -123,17 +198,37 @@ class ClusterBatchPicking(Component):
             return batch
         return self.env["stock.picking.batch"]
 
+    def _set_quantity_for_move_line(self, move_lines, batch, product, move_line, quantity_to_set, next_state, data):
+        if product and move_line.product_id == product:
+            if quantity_to_set > move_line.product_uom_qty:
+                raise TooMuchProductInCommandError(
+                    state=next_state,
+                    data=data,
+                )
+
+            move_line.qty_done = quantity_to_set
+
+            return self._response_for_scan_products(move_lines, batch)
+        else:
+            raise BarcodeNotFoundError(
+                state=next_state,
+                data=data,
+            )
+
     def _get_batch(self, picking_batch_id):
         batch = self.env["stock.picking.batch"].browse(picking_batch_id)
         if not batch.exists():
             raise BatchDoesNotExistError
+        return batch
 
-    def _get_move_line(self, move_line_id):
+    def _get_move_line(self, move_line_id, next_state, data):
         move_line = self.env["stock.move.line"].browse(move_line_id)
         if not move_line.exists():
             raise OperationNotFoundError(
-                func_args={"batch": batch}
+                state=next_state,
+                data=data
             )
+        return move_line
 
     @response_decorator
     def find_batch(self):
@@ -171,6 +266,30 @@ class ClusterBatchPicking(Component):
             )
 
     @response_decorator
+    def scan_product(self, picking_batch_id, move_line_id, barcode, qty):
+        batch = self._get_batch(picking_batch_id)
+        pickings = batch.mapped("picking_ids")
+        move_lines = pickings.mapped("move_line_ids")
+        move_line = self._get_move_line(move_line_id, next_state="scan_products", data="move_lines")
+
+        search = self.actions_for("search")
+
+        picking = move_line.picking_id
+
+        product = search.product_from_scan(barcode)
+        quantity_to_set = move_line.qty_done + qty
+
+        return self._set_quantity_for_move_line(
+            move_lines,
+            batch,
+            product,
+            move_line,
+            quantity_to_set,
+            next_state="scan_products",
+            data=move_lines,
+        )
+
+    @response_decorator
     def confirm_start(self, picking_batch_id):
         """User confirms they start a batch
 
@@ -183,11 +302,11 @@ class ClusterBatchPicking(Component):
           package
         * start: if the condition above is wrong (rare case of race condition...)
         """
-        batch = self.env["stock.picking.batch"].browse(picking_batch_id)
+        batch = self._get_batch(picking_batch_id)
         pickings = batch.mapped("picking_ids")
         move_lines = pickings.mapped("move_line_ids")
 
-        return self._response_for_scan_products(move_lines)
+        return self._response_for_scan_products(move_lines, batch)
 
 class ShopfloorClusterBatchPickingValidator(Component):
     """Validators for the Cluster Picking endpoints"""
@@ -204,6 +323,34 @@ class ShopfloorClusterBatchPickingValidator(Component):
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"}
         }
 
+    def scan_product(self):
+        return {
+            "barcode": {"required": True, "type": "string"},
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "qty": {"coerce": to_int, "required": False, "type": "integer"},
+        }
+
+    @response_decorator
+    def prepare_unload(self, picking_batch_id):
+        """Initiate the unloading phase of the scenario
+
+        It goes to different screens depending if all the move lines have
+        the same destination or not.
+
+        Transitions:
+        * unload_all: when all lines go to the same destination
+        * unload_single: when lines have different destinations
+        """
+        batch = self.env["stock.picking.batch"].browse(picking_batch_id)
+        if not batch.exists():
+            return self._response_batch_does_not_exist()
+        if self._are_all_dest_location_same(batch):
+            return self._response_for_unload_all(batch)
+        else:
+            # the lines have different destinations
+            return self._unload_next_package(batch)
+
 class ShopfloorClusterPickingValidatorResponse(Component):
     """Validators for the Cluster Picking endpoints responses"""
 
@@ -219,10 +366,29 @@ class ShopfloorClusterPickingValidatorResponse(Component):
         """
         return {
             "confirm_start": self._schema_for_batch_details,
+            "unload_all": self._schema_for_batch_details,
+            "unload_single": self._schema_for_batch_details,
+            "scan_products": self._schema_for_move_lines_details,
+            "start": {},
         }
 
     def find_batch(self):
         return self._response_schema(next_states={"confirm_start"})
+
+    def scan_product(self):
+        return self._response_schema(
+            next_states={
+                # we reopen a batch already started where all the lines were
+                # already picked and have to be unloaded to the same
+                # destination
+                "unload_all",
+                # we reopen a batch already started where all the lines were
+                # already picked and have to be unloaded to the different
+                # destinations
+                "unload_single",
+                "scan_products",
+            }
+        )
 
     def confirm_start(self):
         return self._response_schema(
@@ -235,9 +401,16 @@ class ShopfloorClusterPickingValidatorResponse(Component):
                 # already picked and have to be unloaded to the different
                 # destinations
                 "unload_single",
-                "show_move_lines_by_location",
+                "scan_products",
             }
         )
+
+    @property
+    def _schema_for_move_lines_details(self):
+        return {
+            "move_lines": self.schemas._schema_list_of(self.schemas.move_line(with_packaging=True, with_picking=True)),
+            "id": {"required": True, "type": "integer"},
+        }
 
     @property
     def _schema_for_batch_details(self):

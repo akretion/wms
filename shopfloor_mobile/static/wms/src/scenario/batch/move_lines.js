@@ -5,7 +5,7 @@
  */
 
 Vue.component("batch-move-line", {
-    props: ["batch", "fields", "lastScanned", "selectedLocation"],
+    props: ["moveLines", "fields", "lastScanned", "selectedLocation"],
     methods: {
         isLastScanned(product) {
             return product && product.barcode === this.lastScanned;
@@ -13,8 +13,7 @@ Vue.component("batch-move-line", {
     },
     computed: {
         linesBySource: function() {
-            const lines = this.batch.pickings.flatMap((picking) => {
-                return picking.move_lines.map((line) => {
+            const lines = this.moveLines.map((line) => {
                     return {
                         name: line.product.display_name,
                         qty: line.quantity,
@@ -26,7 +25,6 @@ Vue.component("batch-move-line", {
                         id: line.id,
                         dest: line.package_dest || line.location_dest,
                     }
-                });
             }).filter(line => line.qty > 0).sort((a, b) => a.done ? 1 : -1);
 
             const selected = lines.find(this.isLastScanned) || {};
