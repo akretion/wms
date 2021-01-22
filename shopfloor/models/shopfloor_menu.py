@@ -89,6 +89,7 @@ class ShopfloorMenu(models.Model):
             ("single_pack_transfer", "Single Pack Transfer"),
             ("zone_picking", "Zone Picking"),
             ("cluster_picking", "Cluster Picking"),
+            ("cluster_batch_picking", "Cluster Batch Picking"),
             ("checkout", "Checkout/Packing"),
             ("delivery", "Delivery"),
             ("location_content_transfer", "Location Content Transfer"),

@@ -253,6 +253,11 @@
             type="module"
         />
         <script
+            id="script_scenario_cluster_batch_picking"
+            t-attf-src="/shopfloor_mobile/assets/src/scenario/cluster_batch_picking.js?v=#{app_version}"
+            type="module"
+        />
+        <script
             id="script_scenario_cluster_picking"
             t-attf-src="/shopfloor_mobile/assets/src/scenario/cluster_picking.js?v=#{app_version}"
             type="module"
