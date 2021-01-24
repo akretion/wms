@@ -23,9 +23,10 @@ class StateBasedError(Exception):
         self.data = data
 
 class MessageNameBasedError(StateBasedError):
-    def __init__(self, state, data, message_name):
+    def __init__(self, state, data, message_name, **kw):
         super().__init__(state, data)
         self.message_name = message_name
+        self.kw = kw
 
 class MessageBasedError(StateBasedError):
     def __init__(self, state, data, message):
@@ -42,6 +43,14 @@ class OperationNotFoundError(MessageNameBasedError):
 class BarcodeNotFoundError(MessageNameBasedError):
     def __init__(self, state, data):
         super().__init__(state, data, message_name="barcode_not_found")
+
+class UnableToPickMoreError(MessageNameBasedError):
+    def __init__(self, state, data, **kw):
+        super().__init__(state, data, message_name="unable_to_pick_more", **kw)
+
+class DestLocationNotAllowed(MessageNameBasedError):
+    def __init__(self, state, data):
+        super().__init__(state, data, message_name="dest_location_not_allowed")
 
 class TooMuchProductInCommandError(MessageBasedError):
     def __init__(self, state, data):
@@ -61,7 +70,7 @@ def response_decorator(called_func):
         except BatchDoesNotExistError:
             return instance._response_batch_does_not_exist()
         except MessageNameBasedError as e:
-            message = getattr(instance.msg_store, e.message_name)()
+            message = getattr(instance.msg_store, e.message_name)(**(e.kw))
             return instance._response(
                 state=e.state,
                 data=e.data,
@@ -69,7 +78,7 @@ def response_decorator(called_func):
             )
         except MessageBasedError as e:
             return instance._response(
-                state=e.state,
+                next_state=e.state,
                 data=e.data,
                 message=e.message
             )
@@ -113,23 +122,6 @@ class ClusterBatchPicking(Component):
         remaining_lines = self._get_lines_to_pick(move_lines)
         return fields.first(remaining_lines)
 
-    def _response_for_scan_products(self, move_lines, batch, message=None):
-        next_line = self._next_line_for_pick(move_lines)
-
-        if not next_line:
-            return self.prepare_unload(batch.id)
-
-        move_lines = self.data.move_lines(move_lines, with_picking=True, with_packaging=True)
-
-        return self._response(
-            next_state="scan_products",
-            data={
-                "move_lines": move_lines,
-                "id": batch.id,
-            },
-            message=message,
-        )
-
     def _batch_filter(self, batch):
         if not batch.picking_ids:
             return False
@@ -151,6 +143,28 @@ class ClusterBatchPicking(Component):
             "assigned",
             "done",
             "cancel",
+        )
+
+    def _create_data_for_scan_products(
+        self,
+        move_lines,
+        batch,
+    ):
+        return {
+            "move_lines": self.data.move_lines(move_lines, with_picking=True, with_packaging=True),
+            "id": batch.id,
+        }
+
+    def _response_for_scan_products(self, move_lines, batch, message=None):
+        next_line = self._next_line_for_pick(move_lines)
+
+        if not next_line:
+            return self.prepare_unload(batch.id)
+
+        return self._response(
+            next_state="scan_products",
+            data=self._create_data_for_scan_products(move_lines, batch),
+            message=message,
         )
 
     def _response_batch_does_not_exist(self):
@@ -226,7 +240,7 @@ class ClusterBatchPicking(Component):
         if not move_line.exists():
             raise OperationNotFoundError(
                 state=next_state,
-                data=data
+                data=data,
             )
         return move_line
 
@@ -266,18 +280,23 @@ class ClusterBatchPicking(Component):
             )
 
     @response_decorator
-    def scan_product(self, picking_batch_id, move_line_id, barcode, qty):
+    def scan_product(self, picking_batch_id, move_line_id, barcode):
         batch = self._get_batch(picking_batch_id)
         pickings = batch.mapped("picking_ids")
         move_lines = pickings.mapped("move_line_ids")
-        move_line = self._get_move_line(move_line_id, next_state="scan_products", data="move_lines")
+        move_line = self._get_move_line(
+            move_line_id,
+            next_state="scan_products",
+            data=self._create_data_for_scan_products(
+                move_lines,
+                batch,
+            ),
+        )
 
         search = self.actions_for("search")
 
-        picking = move_line.picking_id
-
         product = search.product_from_scan(barcode)
-        quantity_to_set = move_line.qty_done + qty
+        quantity_to_set = move_line.qty_done + 1
 
         return self._set_quantity_for_move_line(
             move_lines,
@@ -286,7 +305,10 @@ class ClusterBatchPicking(Component):
             move_line,
             quantity_to_set,
             next_state="scan_products",
-            data=move_lines,
+            data=self._create_data_for_scan_products(
+                move_lines,
+                batch,
+            ),
         )
 
     @response_decorator
@@ -308,28 +330,104 @@ class ClusterBatchPicking(Component):
 
         return self._response_for_scan_products(move_lines, batch)
 
-class ShopfloorClusterBatchPickingValidator(Component):
-    """Validators for the Cluster Picking endpoints"""
+    @response_decorator
+    def set_quantity(self, picking_batch_id, move_line_id, barcode, qty):
+        batch = self._get_batch(picking_batch_id)
+        pickings = batch.mapped("picking_ids")
+        move_lines = pickings.mapped("move_line_ids")
+        move_line = self._get_move_line(
+            move_line_id,
+            next_state="scan_products",
+            data=self._create_data_for_scan_products(
+                move_lines,
+                batch,
+            ),
+        )
 
-    _inherit = "base.shopfloor.validator"
-    _name = "shopfloor.cluster_batch_picking.validator"
-    _usage = "cluster_batch_picking.validator"
+        search = self.actions_for("search")
 
-    def find_batch(self):
-        return {}
+        product = search.product_from_scan(barcode)
 
-    def confirm_start(self):
-        return {
-            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"}
-        }
+        return self._set_quantity_for_move_line(
+            move_lines,
+            batch,
+            product,
+            move_line,
+            qty,
+            next_state="scan_products",
+            data=self._create_data_for_scan_products(
+                move_lines,
+                batch,
+            ),
+        )
 
-    def scan_product(self):
-        return {
-            "barcode": {"required": True, "type": "string"},
-            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
-            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
-            "qty": {"coerce": to_int, "required": False, "type": "integer"},
-        }
+    @response_decorator
+    def set_destination(self, picking_batch_id, move_line_id, barcode, qty):
+        batch = self._get_batch(picking_batch_id)
+        pickings = batch.mapped("picking_ids")
+        move_lines = pickings.mapped("move_line_ids")
+        move_line = self._get_move_line(move_line_id, next_state="scan_products", data="move_lines")
+
+        search = self.actions_for("search")
+
+        location_dest = search.location_from_scan(barcode)
+        bin_package = search.package_from_scan(barcode)
+
+        if not location_dest and not bin_package:
+            raise BarcodeNotFoundError(
+                state="scan_products",
+                data=self._create_data_for_scan_products(
+                    move_lines,
+                    batch,
+                ),
+            )
+
+        new_line, qty_check = move_line._split_qty_to_be_done(qty)
+
+        if qty_check == "greater":
+            raise UnableToPickMoreError(
+                state="scan_products",
+                data=self._create_data_for_scan_products(
+                    move_lines,
+                    batch,
+                ),
+                quantity=move_line.product_uom_qty,
+            )
+
+        if location_dest:
+            if not location_dest.is_sublocation_of(
+                move_line.picking_id.location_dest_id
+            ):
+                raise UnableToPickMoreError(
+                    state="scan_products",
+                    data=self._create_data_for_scan_products(
+                        move_lines,
+                        batch,
+                    ),
+                )
+
+            move_line.write({"qty_done": qty, "location_dest_id": location_dest.id})
+            move_line.shopfloor_checkout_done = True
+
+            return self._response_for_scan_products(
+                move_lines,
+                batch,
+                message=self.msg_store.x_units_put_in_location(
+                    move_line.qty_done, move_line.product_id, location_dest
+                ),
+            )
+
+        if bin_package:
+            move_line.write({"qty_done": qty, "result_package_id": bin_package.id})
+            move_line.shopfloor_checkout_done = True
+
+            return self._response_for_scan_products(
+                move_lines,
+                batch,
+                message=self.msg_store.x_units_put_in_package(
+                    move_line.qty_done, move_line.product_id, move_line.result_package_id
+                ),
+            )
 
     @response_decorator
     def prepare_unload(self, picking_batch_id):
@@ -350,6 +448,44 @@ class ShopfloorClusterBatchPickingValidator(Component):
         else:
             # the lines have different destinations
             return self._unload_next_package(batch)
+
+class ShopfloorClusterBatchPickingValidator(Component):
+    """Validators for the Cluster Picking endpoints"""
+
+    _inherit = "base.shopfloor.validator"
+    _name = "shopfloor.cluster_batch_picking.validator"
+    _usage = "cluster_batch_picking.validator"
+
+    def find_batch(self):
+        return {}
+
+    def confirm_start(self):
+        return {
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"}
+        }
+
+    def set_quantity(self):
+        return {
+            "barcode": {"required": True, "type": "string"},
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "qty": {"coerce": to_int, "required": True, "type": "integer"},
+        }
+
+    def scan_product(self):
+        return {
+            "barcode": {"required": True, "type": "string"},
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+        }
+
+    def set_destination(self):
+        return {
+            "barcode": {"required": True, "type": "string"},
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "qty": {"coerce": to_int, "required": True, "type": "integer"},
+        }
 
 class ShopfloorClusterPickingValidatorResponse(Component):
     """Validators for the Cluster Picking endpoints responses"""
@@ -375,17 +511,25 @@ class ShopfloorClusterPickingValidatorResponse(Component):
     def find_batch(self):
         return self._response_schema(next_states={"confirm_start"})
 
+    def set_quantity(self):
+        return self._response_schema(
+            next_states={
+                "scan_products",
+            }
+        )
+
+    def set_destination(self):
+        return self._response_schema(
+            next_states={
+                "unload_all",
+                "unload_single",
+                "scan_products",
+            }
+        )
+
     def scan_product(self):
         return self._response_schema(
             next_states={
-                # we reopen a batch already started where all the lines were
-                # already picked and have to be unloaded to the same
-                # destination
-                "unload_all",
-                # we reopen a batch already started where all the lines were
-                # already picked and have to be unloaded to the different
-                # destinations
-                "unload_single",
                 "scan_products",
             }
         )
