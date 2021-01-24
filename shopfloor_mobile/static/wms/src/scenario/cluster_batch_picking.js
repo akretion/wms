@@ -249,7 +249,7 @@ const ClusterBatchPicking = {
 
                         if (!isNaN(intInText) && intInText === 0) {
                             this.wait_call(
-                                this.odoo.call("set_quantity_scan_and_pack", {
+                                this.odoo.call("set_quantity", {
                                     barcode: this.lastScanned,
                                     picking_batch_id: this.state.data.id,
                                     move_line_id: last_move_line.id,
@@ -263,7 +263,7 @@ const ClusterBatchPicking = {
                             // scanning quantity
                             if (last_move_line.id) {
                                     this.wait_call(
-                                        this.odoo.call("set_quantity_scan_and_pack", {
+                                        this.odoo.call("set_quantity", {
                                             barcode: this.lastScanned,
                                             picking_batch_id: this.state.data.id,
                                             move_line_id: last_move_line.id,
@@ -296,7 +296,7 @@ const ClusterBatchPicking = {
                                 this.lastScanned = null;
 
                                 return this.wait_call(
-                                    this.odoo.call("scan_location_scan_and_pack", {
+                                    this.odoo.call("set_destination", {
                                         barcode: scanned.text,
                                         move_line_id: last_move_line.id,
                                         picking_batch_id: this.state.data.id,
