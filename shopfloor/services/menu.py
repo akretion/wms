@@ -74,7 +74,7 @@ class ShopfloorMenu(Component):
             "id",
             "name",
             "scenario",
-            "scan_and_pack": record.scan_and_pack,
+            "scan_and_pack",
             ("picking_type_ids:picking_types", ["id", "name"]),
         ]
 

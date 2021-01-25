@@ -1,7 +1,6 @@
 
 # Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-import pdb
 from functools import wraps
 from odoo import _, fields
 from odoo.osv import expression
@@ -72,7 +71,7 @@ def response_decorator(called_func):
         except MessageNameBasedError as e:
             message = getattr(instance.msg_store, e.message_name)(**(e.kw))
             return instance._response(
-                state=e.state,
+                next_state=e.state,
                 data=e.data,
                 message=message
             )
@@ -449,6 +448,24 @@ class ClusterBatchPicking(Component):
             # the lines have different destinations
             return self._unload_next_package(batch)
 
+    @response_decorator
+    def cancel_line(self, picking_batch_id, move_line_id):
+        batch = self._get_batch(picking_batch_id)
+        pickings = batch.mapped("picking_ids")
+        move_lines = pickings.mapped("move_line_ids")
+        move_line = self._get_move_line(move_line_id, next_state="scan_products", data="move_lines")
+
+        move_line.qty_done = 0
+        move_line.shopfloor_checkout_done = False
+        move_line.result_package_id = None
+        move_line.location_dest_id = move_line.picking_id.location_dest_id
+
+        return self._response_for_scan_products(
+            move_lines,
+            batch,
+        )
+
+
 class ShopfloorClusterBatchPickingValidator(Component):
     """Validators for the Cluster Picking endpoints"""
 
@@ -485,6 +502,12 @@ class ShopfloorClusterBatchPickingValidator(Component):
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
             "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
             "qty": {"coerce": to_int, "required": True, "type": "integer"},
+        }
+
+    def cancel_line(self):
+        return {
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
         }
 
 class ShopfloorClusterPickingValidatorResponse(Component):
@@ -547,6 +570,11 @@ class ShopfloorClusterPickingValidatorResponse(Component):
                 "unload_single",
                 "scan_products",
             }
+        )
+
+    def cancel_line(self):
+        return self._response_schema(
+            next_states={"scan_products"}
         )
 
     @property

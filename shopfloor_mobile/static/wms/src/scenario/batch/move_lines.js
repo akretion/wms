@@ -5,7 +5,7 @@
  */
 
 Vue.component("batch-move-line", {
-    props: ["moveLines", "fields", "lastScanned", "selectedLocation"],
+    props: ["moveLines", "fields", "lastScanned", "selectedLocation", "lastPickedLine", "currentLocation"],
     methods: {
         isLastScanned(product) {
             return product && product.barcode === this.lastScanned;
@@ -25,7 +25,7 @@ Vue.component("batch-move-line", {
                         id: line.id,
                         dest: line.package_dest || line.location_dest,
                     }
-            }).filter(line => line.qty > 0).sort((a, b) => a.done ? 1 : -1);
+            }).filter(line => line.qty > 0 && !(line.done && line.id !==  this.lastPickedLine)).sort((a, b) => a.done ? 1 : -1);
 
             const selected = lines.find(this.isLastScanned) || {};
             selected.selected = true;
@@ -41,8 +41,18 @@ Vue.component("batch-move-line", {
                         line.source.id === source.id,
                     ).sort((a, b) => !a.selected ? 1 : -1),
                 }
-            }).filter(source => source.lines.length > 0).sort((a, b) => a.source.id !== this.selectedLocation ? 1 : -1);
+            }).filter(source => source.lines.length > 0).sort(
+                (a, b) => a.name < b.name ? 1 : -1
+            );
 
+            const pivotIndex = sourceWithLines.findIndex(source => source.source.id === this.currentLocation);
+
+            if (pivotIndex !== -1) {
+                const removed = sourceWithLines.splice(0, pivotIndex);
+                sourceWithLines.push(...removed);
+            }
+
+            //(a, b) => a.source.id !== this.selectedLocation ? 1 : -1
             return sourceWithLines;
         },
     },
@@ -51,7 +61,7 @@ Vue.component("batch-move-line", {
             <div v-for="source in linesBySource" :key="source.id">
                 <item-detail-card
                     :record="source.source"
-                    :card_color="utils.colors.color_for('detail_main_card')"
+                    :card_color="utils.colors.color_for(selectedLocation === source.source.id ? 'detail_main_card_selected' : 'detail_main_card')"
                     />
                 <detail-simple-product
                     v-for="product in source.lines"
