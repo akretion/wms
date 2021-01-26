@@ -202,16 +202,6 @@ const ClusterBatchPicking = {
                 },
                 confirm_start: {
                     on_confirm: () => {
-                        const is_scan_and_pack = this.$root.appmenu.menus.find(
-                            m => m.id === this._get_menu_item_id(),
-                        ).scan_and_pack;
-                        if (is_scan_and_pack) {
-                            return this.wait_call(
-                                this.odoo.call("confirm_start_scan_and_pack", {
-                                    picking_batch_id: this.current_batch().id,
-                                })
-                            );
-                        }
                         this.wait_call(
                             this.odoo.call("confirm_start", {
                                 picking_batch_id: this.current_batch().id,
