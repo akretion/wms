@@ -183,6 +183,122 @@ class ClusterBatchPicking(Component):
             "id": batch.id,
         }
 
+
+    def _are_all_dest_location_same(self, batch):
+        lines_to_unload = self._lines_to_unload(batch)
+        return len(lines_to_unload.mapped("location_dest_id")) == 1
+
+    def _lines_to_unload(self, batch):
+        return self._lines_for_picking_batch(batch, filter_func=self._filter_for_unload)
+
+    def _lines_for_picking_batch(self, picking_batch, filter_func=lambda x: x):
+        lines = picking_batch.mapped("picking_ids.move_line_ids").filtered(filter_func)
+        # TODO test line sorting and all these methods to retrieve lines
+
+        # Sort line by source location,
+        # so that the picker start w/ products in the same location.
+        # Postponed lines must come always
+        # after ALL the other lines in the batch are processed.
+        return lines.sorted(key=self._sort_key_lines)
+
+    def _filter_for_unload(self, line):
+        return (
+            line.state in ("assigned", "partially_available")
+            and line.qty_done > 0
+            and line.result_package_id
+            and not line.shopfloor_unloaded
+        )
+
+    def _unload_next_package(self, batch, completion_info_popup=None):
+        next_package = self._next_bin_package_for_unload_single(batch)
+        if next_package:
+            return self._response_for_unload_single(
+                batch, next_package, popup=completion_info_popup
+            )
+        return self._unload_end(batch, completion_info_popup=completion_info_popup)
+
+    def _next_bin_package_for_unload_single(self, batch):
+        packages = self._bin_packages_to_unload(batch)
+        return fields.first(packages)
+
+    def _bin_packages_to_unload(self, batch):
+        lines = self._lines_to_unload(batch)
+        packages = lines.mapped("result_package_id").sorted()
+        return packages
+
+    def _response_for_unload_single(self, batch, package, message=None, popup=None):
+        return self._response(
+            next_state="unload_single",
+            data=self._data_for_unload_single(batch, package),
+            message=message,
+            popup=popup,
+        )
+
+    def _data_for_unload_single(self, batch, package):
+        line = fields.first(
+            package.planned_move_line_ids.filtered(self._filter_for_unload)
+        )
+        data = self.data.picking_batch(batch)
+        data.update(
+            {
+                "package": self.data.package(package),
+                "location_dest": self.data.location(line.location_dest_id),
+            }
+        )
+        return data
+
+    def _unload_end(self, batch, completion_info_popup=None):
+        """Try to close the batch if all transfers are done.
+
+        Returns to `start_line` transition if some lines could still be processed,
+        otherwise try to validate all the transfers of the batch.
+        """
+        if all(picking.state == "done" for picking in batch.picking_ids):
+            # do not use the 'done()' method because it does many things we
+            # don't care about
+            batch.state = "done"
+            return self._response_for_start(
+                message=self.msg_store.batch_transfer_complete(),
+                popup=completion_info_popup,
+            )
+
+        next_line = self._next_line_for_pick(batch)
+        if next_line:
+            return self._response_for_start_line(
+                next_line,
+                message=self.msg_store.batch_transfer_line_done(),
+                popup=completion_info_popup,
+            )
+        else:
+            # TODO add tests for this (for instance a picking is not 'done'
+            # because a move was unassigned, we want to validate the batch to
+            # produce backorders)
+            batch.mapped("picking_ids")._action_done()
+            batch.state = "done"
+            # Unassign not validated pickings from the batch, they will be
+            # processed in another batch automatically later on
+            pickings_not_done = batch.mapped("picking_ids").filtered(
+                lambda p: p.state != "done"
+            )
+            pickings_not_done.batch_id = False
+            return self._response_for_start(
+                message=self.msg_store.batch_transfer_complete(),
+                popup=completion_info_popup,
+            )
+
+    def _response_for_start_line(self, move_line, message=None, popup=None):
+
+        return self._response(
+            next_state="start_line",
+            data=self._data_move_line(move_line),
+            message=message,
+            popup=popup,
+        )
+
+    def _response_for_start(self, message=None, popup=None):
+        return self._response(next_state="start", message=message, popup=popup)
+
+
     def _response_for_confirm_start(self, batch):
         return self._response(
             next_state="confirm_start",
