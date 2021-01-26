@@ -255,8 +255,9 @@ const ClusterBatchPicking = {
                         if (selectedLocation && !last_move_line.id) {
                             this.selectedLocation = selectedLocation;
                             this.currentLocation = selectedLocation;
+                            this.reset_notification();
                         }
-                        else if(this.selectedLocation) {
+                        else if (this.selectedLocation) {
                             if (!last_move_line.id && move_line.id) {
                                 this.wait_call(
                                     this.odoo.call("scan_product", {
@@ -317,6 +318,13 @@ const ClusterBatchPicking = {
                                 }
                             }
                         }
+                        else {
+                            this.set_message({
+                                message_type: "error",
+                                body: "You need to scan a source location",
+                            });
+                        }
+
                     },
                     shipFinished: () => {
                         this.wait_call(
