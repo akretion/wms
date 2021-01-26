@@ -1,7 +1,6 @@
 
 # Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-import pdb
 from functools import wraps, reduce
 from odoo import _, fields
 from odoo.osv import expression
@@ -226,6 +225,22 @@ class ClusterBatchPicking(Component):
         lines = self._lines_to_unload(batch)
         packages = lines.mapped("result_package_id").sorted()
         return packages
+
+    def _response_for_unload_all(self, batch, message=None):
+        return self._response(
+            next_state="unload_all",
+            data=self._data_for_unload_all(batch),
+            message=message,
+        )
+
+    def _data_for_unload_all(self, batch):
+        lines = self._lines_to_unload(batch)
+        # all the lines destinations are the same here, it looks
+        # only for the first one
+        first_line = fields.first(lines)
+        data = self.data.picking_batch(batch)
+        data.update({"location_dest": self.data.location(first_line.location_dest_id)})
+        return data
 
     def _response_for_unload_single(self, batch, package, message=None, popup=None):
         return self._response(
@@ -588,7 +603,7 @@ class ClusterBatchPicking(Component):
             move_line.shopfloor_checkout_done = True
 
             return self._response_for_scan_products(
-                move_lines,
+                batch.mapped("picking_ids.move_line_ids"),
                 batch,
                 message=self.msg_store.x_units_put_in_location(
                     move_line.qty_done, move_line.product_id, location_dest
@@ -600,7 +615,7 @@ class ClusterBatchPicking(Component):
             move_line.shopfloor_checkout_done = True
 
             return self._response_for_scan_products(
-                move_lines,
+                batch.mapped("picking_ids.move_line_ids"),
                 batch,
                 message=self.msg_store.x_units_put_in_package(
                     move_line.qty_done, move_line.product_id, move_line.result_package_id
@@ -741,6 +756,12 @@ class ShopfloorClusterBatchPickingValidator(Component):
             "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
         }
 
+    def prepare_unload(self):
+        return {
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"}
+        }
+
+
 class ShopfloorClusterPickingValidatorResponse(Component):
     """Validators for the Cluster Picking endpoints responses"""
 
@@ -801,6 +822,18 @@ class ShopfloorClusterPickingValidatorResponse(Component):
                 # destinations
                 "unload_single",
                 "scan_products",
+            }
+        )
+
+    def prepare_unload(self):
+        return self._response_schema(
+            next_states={
+                # when all lines have been processed and have same
+                # destination
+                "unload_all",
+                # when all lines have been processed and have different
+                # destinations
+                "unload_single",
             }
         )
 
