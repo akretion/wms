@@ -32,6 +32,7 @@ Vue.component("batch-move-line", {
                         supplierCode: line.product.supplier_code,
                         id: line.id,
                         dest: this.getLineDest(line),
+                        picking_dest: line.location_dest,
                     }
             }).filter(line => line.qty > 0 && !(line.done && line.id !==  this.lastPickedLine)).sort((a, b) => a.done ? 1 : -1);
 

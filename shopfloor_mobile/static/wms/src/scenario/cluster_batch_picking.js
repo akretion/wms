@@ -252,7 +252,7 @@ const ClusterBatchPicking = {
                             scanned.text,
                         );
 
-                        if (selectedLocation) {
+                        if (selectedLocation && !last_move_line.id) {
                             this.selectedLocation = selectedLocation;
                             this.currentLocation = selectedLocation;
                         }
@@ -345,6 +345,7 @@ const ClusterBatchPicking = {
                         {path: "supplierCode", label: "Vendor code", klass: "loud"},
                         {path: "qty", label: "Quantity"},
                         {path: "qtyDone", label: "Done"},
+                        {path: "picking_dest.name", label: "Picking destination"},
                         {path: "dest.name", label: "Should be put in"},
                     ],
                 },
