@@ -1,6 +1,7 @@
 
 # Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
+import pdb
 from functools import wraps, reduce
 from odoo import _, fields
 from odoo.osv import expression
@@ -362,7 +363,7 @@ class ClusterBatchPicking(Component):
             return batch
         return self.env["stock.picking.batch"]
 
-    def _set_quantity_for_move_line(self, move_lines, batch, product, move_line, quantity_to_set, next_state, data):
+    def _set_quantity_for_move_line(self, move_lines, batch, product, move_line, quantity_to_set, message=None, next_state="scan_products", data={}):
         if product and move_line.product_id == product:
             if quantity_to_set > move_line.product_uom_qty:
                 raise TooMuchProductInCommandError(
@@ -372,7 +373,7 @@ class ClusterBatchPicking(Component):
 
             move_line.qty_done = quantity_to_set
 
-            return self._response_for_scan_products(move_lines, batch)
+            return self._response_for_scan_products(move_lines, batch, message)
         else:
             raise BarcodeNotFoundError(
                 state=next_state,
@@ -538,6 +539,26 @@ class ClusterBatchPicking(Component):
                     batch,
                 ),
             )
+
+        if location_dest.id is move_line.location_id.id:
+            product = move_line.mapped("product_id")
+            return self._set_quantity_for_move_line(
+                move_lines,
+                batch,
+                product,
+                move_line,
+                0,
+                message={
+                    "message_type": "success",
+                    "body": "Product put back in place",
+                },
+                next_state="scan_products",
+                data=self._create_data_for_scan_products(
+                    move_lines,
+                    batch,
+                ),
+            )
+
 
         new_line, qty_check = move_line._split_qty_to_be_done(qty)
 
