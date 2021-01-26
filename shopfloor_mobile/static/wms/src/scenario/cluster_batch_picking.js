@@ -303,7 +303,7 @@ const ClusterBatchPicking = {
                                         })
                                     );
                                 }
-                                else if (move_line) {
+                                else if (move_line.id) {
                                     this.set_message({
                                         message_type: 'error',
                                         body: `You can't scan another product before scanning a package or destination location`,
@@ -355,7 +355,7 @@ const ClusterBatchPicking = {
                         {path: "supplierCode", label: "Vendor code", klass: "loud"},
                         {path: "qty", label: "Quantity"},
                         {path: "qtyDone", label: "Done"},
-                        {path: "dest.name", label: "Destination"},
+                        {path: "dest.name", label: "Should be put in"},
                     ],
                 },
                 unload_all: {

@@ -10,6 +10,14 @@ Vue.component("batch-move-line", {
         isLastScanned(product) {
             return product && product.barcode === this.lastScanned;
         },
+        getLineDest(line) {
+            if (line.suggested_package_dest.length > 0) {
+                return line.suggested_package_dest[0];
+            }
+            else if (line.suggested_location_dest.length > 0) {
+                return line.suggested_location_dest[0];
+            }
+        }
     },
     computed: {
         linesBySource: function() {
@@ -23,7 +31,7 @@ Vue.component("batch-move-line", {
                         barcode: line.product.barcode,
                         supplierCode: line.product.supplier_code,
                         id: line.id,
-                        dest: line.package_dest || line.location_dest,
+                        dest: this.getLineDest(line),
                     }
             }).filter(line => line.qty > 0 && !(line.done && line.id !==  this.lastPickedLine)).sort((a, b) => a.done ? 1 : -1);
 

@@ -98,6 +98,12 @@ class BaseShopfloorSchemaResponse(Component):
             "package_dest": self._schema_dict_of(
                 self.package(with_packaging=with_packaging), required=False
             ),
+            "suggested_package_dest": self._schema_list_of(
+                self.package(), required=False
+            ),
+            "suggested_location_dest": self._schema_list_of(
+                self.location(), required=False
+            ),
             "location_src": self._schema_dict_of(self.location()),
             "location_dest": self._schema_dict_of(self.location()),
             "priority": {"type": "string", "nullable": True, "required": False},

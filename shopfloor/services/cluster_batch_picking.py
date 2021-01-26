@@ -1,7 +1,7 @@
 
 # Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-from functools import wraps
+from functools import wraps, reduce
 from odoo import _, fields
 from odoo.osv import expression
 
@@ -149,8 +149,37 @@ class ClusterBatchPicking(Component):
         move_lines,
         batch,
     ):
+        picking_destination = {}
+        for picking in batch.picking_ids:
+            picking_destination[picking.id] = {
+            }
+
+            suggested_location_dest = []
+            suggested_package_dest = []
+
+            for line_in_picking in picking.move_line_ids:
+                if line_in_picking.location_dest_id and line_in_picking.location_dest_id != picking.location_dest_id:
+                    suggested_location_dest.append(
+                        self.data.location(line_in_picking.mapped("location_dest_id"))
+                    )
+                if line_in_picking.result_package_id:
+                    suggested_package_dest.append(
+                        self.data.package(line_in_picking.mapped("result_package_id"))
+                    )
+
+            suggested_package_dest = reduce(lambda l, x: l.append(x) or l if x not in l else l, suggested_package_dest, [])
+            suggested_location_dest = reduce(lambda l, x: l.append(x) or l if x not in l else l, suggested_location_dest, [])
+
+            picking_destination[picking.id]["suggested_package_dest"] = suggested_package_dest
+            picking_destination[picking.id]["suggested_location_dest"] = suggested_location_dest
+
+        move_lines_data = self.data.move_lines(move_lines, with_picking=True, with_packaging=True)
+        for line in move_lines_data:
+            picking = line["picking"]
+            line.update(picking_destination[picking["id"]])
+
         return {
-            "move_lines": self.data.move_lines(move_lines, with_picking=True, with_packaging=True),
+            "move_lines": move_lines_data,
             "id": batch.id,
         }
 
