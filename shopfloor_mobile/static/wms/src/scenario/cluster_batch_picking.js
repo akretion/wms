@@ -300,7 +300,7 @@ const ClusterBatchPicking = {
                                         body: `You can't scan another product before scanning a package or destination location`,
                                     });
                                 }
-                                else {
+                                else if (last_move_line.id) {
                                     this.wait_call(
                                         this.odoo.call("set_destination", {
                                             barcode: scanned.text,
@@ -314,6 +314,12 @@ const ClusterBatchPicking = {
                                             this.selectedLocation = null;
                                             this.lastPickedLine = last_move_line.id;
                                         }
+                                    });
+                                }
+                                else {
+                                    this.set_message({
+                                        message_type: 'error',
+                                        body: `You need to scan a product or a location`,
                                     });
                                 }
                             }
