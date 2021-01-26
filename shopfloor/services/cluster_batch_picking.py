@@ -183,6 +183,12 @@ class ClusterBatchPicking(Component):
             "id": batch.id,
         }
 
+    def _response_for_confirm_start(self, batch):
+        return self._response(
+            next_state="confirm_start",
+            data=self.data.picking_batch(batch, with_pickings=True),
+        )
+
     def _response_for_scan_products(self, move_lines, batch, message=None):
         next_line = self._next_line_for_pick(move_lines)
 
@@ -256,6 +262,13 @@ class ClusterBatchPicking(Component):
                 state=next_state,
                 data=data,
             )
+
+    def _response_for_manual_selection(self, batches, message=None):
+        data = {
+            "records": self.data.picking_batches(batches),
+            "size": len(batches),
+        }
+        return self._response(next_state="manual_selection", data=data, message=message)
 
     def _get_batch(self, picking_batch_id):
         batch = self.env["stock.picking.batch"].browse(picking_batch_id)
@@ -494,6 +507,50 @@ class ClusterBatchPicking(Component):
             batch,
         )
 
+    @response_decorator
+    def list_batch(self):
+        """List picking batch on which user can work
+
+        Returns a list of all the available records for the current picking
+        type.
+
+        Transitions:
+        * manual_selection: to the selection screen
+        """
+        batches = self._batch_picking_search()
+        return self._response_for_manual_selection(batches)
+
+    @response_decorator
+    def select(self, picking_batch_id):
+        """Manually select a picking batch
+
+        The client application can use the service /picking_batch/search
+        to get the list of candidate batches. Then, it starts to work on
+        the selected batch by calling this.
+
+        Note: it should be able to work only on batches which are in draft or
+        (in progress and assigned to the current user), the search method that
+        lists batches filter them, but it has to be checked again here in case
+        of race condition.
+
+        Transitions:
+        * manual_selection: a selected batch cannot be used (assigned to someone else
+          concurrently for instance)
+        * confirm_start: after the batch has been assigned to the user
+        """
+        batches = self._batch_picking_search(batch_ids=[picking_batch_id])
+        selected = self._select_a_picking_batch(batches)
+        if selected:
+            return self._response_for_confirm_start(selected)
+        else:
+            return self._response(
+                base_response=self.list_batch(),
+                message={
+                    "message_type": "warning",
+                    "body": _("This batch cannot be selected."),
+                },
+            )
+
 
 class ShopfloorClusterBatchPickingValidator(Component):
     """Validators for the Cluster Picking endpoints"""
@@ -533,6 +590,14 @@ class ShopfloorClusterBatchPickingValidator(Component):
             "qty": {"coerce": to_int, "required": True, "type": "integer"},
         }
 
+    def list_batch(self):
+        return {}
+
+    def select(self):
+        return {
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"}
+        }
+
     def cancel_line(self):
         return {
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
@@ -557,6 +622,7 @@ class ShopfloorClusterPickingValidatorResponse(Component):
             "unload_all": self._schema_for_batch_details,
             "unload_single": self._schema_for_batch_details,
             "scan_products": self._schema_for_move_lines_details,
+            "manual_selection": self._schema_for_batch_selection,
             "start": {},
         }
 
@@ -606,6 +672,12 @@ class ShopfloorClusterPickingValidatorResponse(Component):
             next_states={"scan_products"}
         )
 
+    def list_batch(self):
+        return self._response_schema(next_states={"manual_selection"})
+
+    def select(self):
+        return self._response_schema(next_states={"manual_selection", "confirm_start"})
+
     @property
     def _schema_for_move_lines_details(self):
         return {
@@ -616,3 +688,7 @@ class ShopfloorClusterPickingValidatorResponse(Component):
     @property
     def _schema_for_batch_details(self):
         return self.schemas.picking_batch(with_pickings=True)
+
+    @property
+    def _schema_for_batch_selection(self):
+        return self.schemas._schema_search_results_of(self.schemas.picking_batch())
