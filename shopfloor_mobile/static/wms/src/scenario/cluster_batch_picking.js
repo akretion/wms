@@ -157,10 +157,10 @@ const ClusterBatchPicking = {
 
             return move_line || {};
         },
-        find_src_location: function(move_lines, barcode) {
+        find_src_location: function(move_lines, barcode, filter=() => true) {
             let location_src = "";
 
-            move_lines.forEach(line => {
+            move_lines.filter(filter).forEach(line => {
                 if (line.location_src.barcode === barcode) {
                     location_src = line.location_src.id;
                 }
@@ -250,6 +250,7 @@ const ClusterBatchPicking = {
                         const selectedLocation = this.find_src_location(
                             this.state.data.move_lines,
                             scanned.text,
+                            line => !line.done,
                         );
 
                         if (selectedLocation && !last_move_line.id) {
@@ -317,18 +318,45 @@ const ClusterBatchPicking = {
                                     });
                                 }
                                 else {
-                                    this.set_message({
-                                        message_type: 'error',
-                                        body: `You need to scan a product or a location`,
-                                    });
+                                    const selectedFromAllLocation = this.find_src_location(
+                                        this.state.data.move_lines,
+                                        scanned.text,
+                                    );
+
+                                    if (selectedFromAllLocation === "") {
+                                        this.set_message({
+                                            message_type: 'error',
+                                            body: `You need to scan a product or a location`,
+                                        });
+                                    }
+                                    else {
+                                        this.set_message({
+                                            message_type: 'error',
+                                            body: `You can't select this location`,
+                                        });
+                                    }
+
                                 }
                             }
                         }
                         else {
-                            this.set_message({
-                                message_type: "error",
-                                body: "You need to scan a source location",
-                            });
+                            const selectedFromAllLocation = this.find_src_location(
+                                this.state.data.move_lines,
+                                scanned.text,
+                            );
+
+                            if (selectedFromAllLocation === "") {
+                                this.set_message({
+                                    message_type: "error",
+                                    body: "You need to scan a source location",
+                                });
+                            }
+                            else {
+                                this.set_message({
+                                    message_type: 'error',
+                                    body: `You can't select this location`,
+                                });
+                            }
                         }
 
                     },
