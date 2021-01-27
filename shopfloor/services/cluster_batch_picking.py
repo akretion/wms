@@ -591,7 +591,7 @@ class ClusterBatchPicking(Component):
             if not location_dest.is_sublocation_of(
                 move_line.picking_id.location_dest_id
             ):
-                raise UnableToPickMoreError(
+                raise DestLocationNotAllowed(
                     state="scan_products",
                     data=self._create_data_for_scan_products(
                         move_lines,
