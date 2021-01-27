@@ -259,15 +259,27 @@ const ClusterBatchPicking = {
                             this.reset_notification();
                         }
                         else if (this.selectedLocation) {
-                            if (!last_move_line.id && move_line.id) {
-                                this.wait_call(
-                                    this.odoo.call("scan_product", {
-                                        barcode: scanned.text,
-                                        move_line_id: move_line.id,
-                                        picking_batch_id: this.state.data.id,
-                                        qty: 1,
-                                    })
-                                );
+                            if (move_line.id) {
+                                if (last_move_line.id === move_line.id) {
+                                    this.wait_call(
+                                        this.odoo.call("scan_product", {
+                                            barcode: scanned.text,
+                                            move_line_id: move_line.id,
+                                            picking_batch_id: this.state.data.id,
+                                            qty: 1,
+                                        })
+                                    );
+                                }
+                                else if (!last_move_line.id) {
+                                    this.wait_call(
+                                        this.odoo.call("set_quantity", {
+                                            barcode: scanned.text,
+                                            move_line_id: move_line.id,
+                                            picking_batch_id: this.state.data.id,
+                                            qty: 1,
+                                        })
+                                    );
+                                }
 
                                 this.lastScanned = scanned.text;
                             }
