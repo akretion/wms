@@ -238,7 +238,7 @@ class ClusterBatchPicking(Component):
         # all the lines destinations are the same here, it looks
         # only for the first one
         first_line = fields.first(lines)
-        data = self.data.picking_batch(batch)
+        data = self.data.picking_batch(batch, with_pickings=True)
         data.update({"location_dest": self.data.location(first_line.location_dest_id)})
         return data
 
@@ -777,8 +777,8 @@ class ShopfloorClusterPickingValidatorResponse(Component):
         """
         return {
             "confirm_start": self._schema_for_batch_details,
-            "unload_all": self._schema_for_batch_details,
-            "unload_single": self._schema_for_batch_details,
+            "unload_all": self._schema_for_unload_all,
+            "unload_single": self._schema_for_unload_single,
             "scan_products": self._schema_for_move_lines_details,
             "manual_selection": self._schema_for_batch_selection,
             "start": {},
@@ -862,3 +862,16 @@ class ShopfloorClusterPickingValidatorResponse(Component):
     @property
     def _schema_for_batch_selection(self):
         return self.schemas._schema_search_results_of(self.schemas.picking_batch())
+
+    @property
+    def _schema_for_unload_all(self):
+        schema = self.schemas.picking_batch()
+        schema["location_dest"] = self.schemas._schema_dict_of(self.schemas.location())
+        return schema
+
+    @property
+    def _schema_for_unload_single(self):
+        schema = self.schemas.picking_batch()
+        schema["package"] = self.schemas._schema_dict_of(self.schemas.package())
+        schema["location_dest"] = self.schemas._schema_dict_of(self.schemas.location())
+        return schema
