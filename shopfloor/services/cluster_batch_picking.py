@@ -380,6 +380,19 @@ class ClusterBatchPicking(Component):
                 data=data,
             )
 
+    def _unload_write_destination_on_lines(self, lines, location):
+        lines.write({"shopfloor_unloaded": True, "location_dest_id": location.id})
+        lines.package_level_id.location_dest_id = location
+        for line in lines:
+            # We set the picking to done only when the last line is
+            # unloaded to avoid backorders.
+            picking = line.picking_id
+            if picking.state == "done":
+                continue
+            picking_lines = picking.mapped("move_line_ids")
+            if all(l.shopfloor_unloaded for l in picking_lines):
+                picking.action_done()
+
     def _response_for_manual_selection(self, batches, message=None):
         data = {
             "records": self.data.picking_batches(batches),
@@ -826,6 +839,13 @@ class ShopfloorClusterBatchPickingValidator(Component):
     def prepare_unload(self):
         return {
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"}
+        }
+
+    def set_destination_all(self):
+        return {
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "barcode": {"required": True, "type": "string"},
+            "confirmation": {"type": "boolean", "nullable": True, "required": False},
         }
 
 
