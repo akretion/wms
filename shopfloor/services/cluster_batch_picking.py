@@ -51,6 +51,10 @@ class DestLocationNotAllowed(MessageNameBasedError):
     def __init__(self, state, data):
         super().__init__(state, data, message_name="dest_location_not_allowed")
 
+class LocationNotFound(MessageNameBasedError):
+    def __init__(self, state, data):
+        super().__init__(state, data, message_name="no_location_found")
+
 class TooMuchProductInCommandError(MessageBasedError):
     def __init__(self, state, data):
         message = {
@@ -103,24 +107,6 @@ class ClusterBatchPicking(Component):
             line.id,
         )
 
-    def _get_lines_to_pick(self, move_lines):
-        return move_lines.filtered(
-            lambda l: (
-                l.state in ("assigned", "partially_available")
-                # On 'StockPicking.action_assign()', result_package_id is set to
-                # the same package as 'package_id'. Here, we need to exclude lines
-                # that were already put into a bin, i.e. the destination package
-                # is different.
-                and (not l.result_package_id or l.result_package_id == l.package_id)
-                and (l.picking_id.location_dest_id == l.location_dest_id)
-            ),
-        ).sorted(key=self._sort_key_lines)
-
-
-    def _next_line_for_pick(self, move_lines):
-        remaining_lines = self._get_lines_to_pick(move_lines)
-        return fields.first(remaining_lines)
-
     def _batch_filter(self, batch):
         if not batch.picking_ids:
             return False
@@ -143,6 +129,39 @@ class ClusterBatchPicking(Component):
             "done",
             "cancel",
         )
+
+    def _get_lines_to_pick(self, move_lines):
+        return move_lines.filtered(
+            lambda l: (
+                l.state in ("assigned", "partially_available")
+                # On 'StockPicking.action_assign()', result_package_id is set to
+                # the same package as 'package_id'. Here, we need to exclude lines
+                # that were already put into a bin, i.e. the destination package
+                # is different.
+                and (not l.result_package_id or l.result_package_id == l.package_id)
+                and (l.picking_id.location_dest_id == l.location_dest_id)
+            ),
+        ).sorted(key=self._sort_key_lines)
+
+    def _get_batch(self, picking_batch_id):
+        batch = self.env["stock.picking.batch"].browse(picking_batch_id)
+        if not batch.exists():
+            raise BatchDoesNotExistError
+        return batch
+
+    def _get_move_line(self, move_line_id, next_state, data):
+        move_line = self.env["stock.move.line"].browse(move_line_id)
+        if not move_line.exists():
+            raise OperationNotFoundError(
+                state=next_state,
+                data=data,
+            )
+        return move_line
+
+
+    def _next_line_for_pick(self, move_lines):
+        remaining_lines = self._get_lines_to_pick(move_lines)
+        return fields.first(remaining_lines)
 
     def _create_data_for_scan_products(
         self,
@@ -302,40 +321,6 @@ class ClusterBatchPicking(Component):
                 popup=completion_info_popup,
             )
 
-    def _response_for_start_line(self, move_line, message=None, popup=None):
-
-        return self._response(
-            next_state="start_line",
-            data=self._data_move_line(move_line),
-            message=message,
-            popup=popup,
-        )
-
-    def _response_for_start(self, message=None, popup=None):
-        return self._response(next_state="start", message=message, popup=popup)
-
-
-    def _response_for_confirm_start(self, batch):
-        return self._response(
-            next_state="confirm_start",
-            data=self.data.picking_batch(batch, with_pickings=True),
-        )
-
-    def _response_for_scan_products(self, move_lines, batch, message=None):
-        next_line = self._next_line_for_pick(move_lines)
-
-        if not next_line:
-            return self.prepare_unload(batch.id)
-
-        return self._response(
-            next_state="scan_products",
-            data=self._create_data_for_scan_products(move_lines, batch),
-            message=message,
-        )
-
-    def _response_batch_does_not_exist(self):
-        return self._response_for_start(message=self.msg_store.record_not_found())
-
     def _batch_picking_base_search_domain(self):
         return [
             "|",
@@ -402,20 +387,46 @@ class ClusterBatchPicking(Component):
         }
         return self._response(next_state="manual_selection", data=data, message=message)
 
-    def _get_batch(self, picking_batch_id):
-        batch = self.env["stock.picking.batch"].browse(picking_batch_id)
-        if not batch.exists():
-            raise BatchDoesNotExistError
-        return batch
+    def _response_for_confirm_unload_all(self, batch, message=None):
+        return self._response(
+            next_state="confirm_unload_all",
+            data=self._data_for_unload_all(batch),
+            message=message,
+        )
 
-    def _get_move_line(self, move_line_id, next_state, data):
-        move_line = self.env["stock.move.line"].browse(move_line_id)
-        if not move_line.exists():
-            raise OperationNotFoundError(
-                state=next_state,
-                data=data,
-            )
-        return move_line
+    def _response_for_start_line(self, move_line, message=None, popup=None):
+
+        return self._response(
+            next_state="start_line",
+            data=self._data_move_line(move_line),
+            message=message,
+            popup=popup,
+        )
+
+    def _response_for_start(self, message=None, popup=None):
+        return self._response(next_state="start", message=message, popup=popup)
+
+
+    def _response_for_confirm_start(self, batch):
+        return self._response(
+            next_state="confirm_start",
+            data=self.data.picking_batch(batch, with_pickings=True),
+        )
+
+    def _response_for_scan_products(self, move_lines, batch, message=None):
+        next_line = self._next_line_for_pick(move_lines)
+
+        if not next_line:
+            return self.prepare_unload(batch.id)
+
+        return self._response(
+            next_state="scan_products",
+            data=self._create_data_for_scan_products(move_lines, batch),
+            message=message,
+        )
+
+    def _response_batch_does_not_exist(self):
+        return self._response_for_start(message=self.msg_store.record_not_found())
 
     @response_decorator
     def find_batch(self):
@@ -703,6 +714,62 @@ class ClusterBatchPicking(Component):
                 },
             )
 
+    @response_decorator
+    def set_destination_all(self, picking_batch_id, barcode, confirmation=False):
+        """Set the destination for all the lines of the batch with a dest. package
+
+        This method must be used only if all the move lines which have a destination
+        package and qty done have the same destination location.
+
+        A scanned location outside of the source location of the operation type is
+        invalid.
+
+        Transitions:
+        * start_line: the batch still have move lines without destination package
+        * unload_all: invalid destination, have to scan a good one
+        * confirm_unload_all: the scanned location is not the expected one (but
+          still a valid one)
+        * start: batch is totally done. In this case, this method *has*
+          to handle the closing of the batch to create backorders.
+        """
+        batch = self.env["stock.picking.batch"].browse(picking_batch_id)
+        if not batch.exists():
+            raise BatchDoesNotExistError
+
+        # In case /set_destination_all was called and the destinations were
+        # in fact no the same... restart the unloading step over
+        if not self._are_all_dest_location_same(batch):
+            return self.prepare_unload(batch.id)
+
+        lines = self._lines_to_unload(batch)
+        if not lines:
+            return self._unload_end(batch)
+
+        first_line = fields.first(lines)
+        picking_type = fields.first(batch.picking_ids).picking_type_id
+        scanned_location = self.actions_for("search").location_from_scan(barcode)
+        if not scanned_location:
+            return self._response_for_unload_all(
+                batch, message=self.msg_store.no_location_found()
+            )
+        if not scanned_location.is_sublocation_of(
+            picking_type.default_location_dest_id
+        ) or not scanned_location.is_sublocation_of(
+            lines.mapped("move_id.location_dest_id"), func=all
+        ):
+            return self._response_for_unload_all(
+                batch, message=self.msg_store.dest_location_not_allowed()
+            )
+
+        if not scanned_location.is_sublocation_of(first_line.location_dest_id):
+            if not confirmation:
+                return self._response_for_confirm_unload_all(batch)
+
+        self._unload_write_destination_on_lines(lines, scanned_location)
+        completion_info = self.actions_for("completion.info")
+        completion_info_popup = completion_info.popup(lines)
+        return self._unload_end(batch, completion_info_popup=completion_info_popup)
+
 
 class ShopfloorClusterBatchPickingValidator(Component):
     """Validators for the Cluster Picking endpoints"""
@@ -777,11 +844,12 @@ class ShopfloorClusterPickingValidatorResponse(Component):
         """
         return {
             "confirm_start": self._schema_for_batch_details,
+            "confirm_unload_all": self._schema_for_unload_all,
+            "manual_selection": self._schema_for_batch_selection,
+            "scan_products": self._schema_for_move_lines_details,
+            "start": {},
             "unload_all": self._schema_for_unload_all,
             "unload_single": self._schema_for_unload_single,
-            "scan_products": self._schema_for_move_lines_details,
-            "manual_selection": self._schema_for_batch_selection,
-            "start": {},
         }
 
     def find_batch(self):
@@ -840,6 +908,11 @@ class ShopfloorClusterPickingValidatorResponse(Component):
     def cancel_line(self):
         return self._response_schema(
             next_states={"scan_products"}
+        )
+
+    def set_destination_all(self):
+        return self._response_schema(
+            next_states={"unload_all", "confirm_unload_all"}
         )
 
     def list_batch(self):
