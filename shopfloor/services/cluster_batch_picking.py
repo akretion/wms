@@ -783,6 +783,95 @@ class ClusterBatchPicking(Component):
         completion_info_popup = completion_info.popup(lines)
         return self._unload_end(batch, completion_info_popup=completion_info_popup)
 
+    @response_decorator
+    def stock_issue(self, picking_batch_id, move_line_id):
+        """Declare a stock issue for a line
+
+        After errors in the stock, the user cannot take all the products
+        because there is physically not enough goods. The move line is deleted
+        (unreserve), and an inventory is created to reduce the quantity in the
+        source location to prevent future errors until a correction. Beware:
+        the quantity already reserved by other lines should remain reserved so
+        the inventory's quantity must be set to the quantity of lines reserved
+        by other move lines (but not the current one).
+
+        The other lines not yet picked in the batch for the same product, lot,
+        package are unreserved as well (moves lines deleted, which unreserve
+        their quantity on the move).
+
+        A second inventory is created in draft to have someone do an inventory
+        check.
+
+        Transitions:
+        * start_line: when the batch still contains lines without destination
+          package
+        * unload_all: if all lines have a destination package and same
+          destination
+        * unload_single: if all lines have a destination package and different
+          destination
+        * start: all lines are done/confirmed (because all lines were unloaded
+          and the last line has a stock issue). In this case, this method *has*
+          to handle the closing of the batch to create backorders (_unload_end)
+        """
+        batch = self._get_batch(picking_batch_id)
+
+        move_line = self._get_move_line(move_line_id, next_state="scan_products", data="move_lines")
+
+        inventory = self.actions_for("inventory")
+        # create a draft inventory for a user to check
+        inventory.create_control_stock(
+            move_line.location_id,
+            move_line.product_id,
+            move_line.package_id,
+            move_line.lot_id,
+        )
+        move = move_line.move_id
+        lot = move_line.lot_id
+        package = move_line.package_id
+        location = move_line.location_id
+
+        # unreserve every lines for the same product/lot in the same batch and
+        # not done yet, so the same user doesn't have to declare 2 times the
+        # stock issue for the same thing!
+        domain = self._domain_stock_issue_unlink_lines(move_line)
+        unreserve_move_lines = move_line | self.env["stock.move.line"].search(domain)
+        unreserve_moves = unreserve_move_lines.mapped("move_id").sorted()
+        unreserve_move_lines.unlink()
+
+        # Then, create an inventory with just enough qty so the other assigned
+        # move lines for the same product in other batches and the other move lines
+        # already picked stay assigned.
+        inventory.create_stock_issue(move, location, package, lot)
+
+        # try to reassign the moves in case we have stock in another location
+        unreserve_moves._action_assign()
+
+        return self._response_for_scan_products(move_lines, batch)
+
+    def _domain_stock_issue_unlink_lines(self, move_line):
+        # Since we have not enough stock, delete the move lines, which will
+        # in turn unreserve the moves. The moves lines we delete are those
+        # in the same batch (we don't want to interfere with other operators
+        # work, they'll have to declare a stock issue), and not yet started.
+        # The goal is to prevent the same operator to declare twice the same
+        # stock issue for the same product/lot/package.
+        batch = move_line.picking_id.batch_id
+        move = move_line.move_id
+        lot = move_line.lot_id
+        package = move_line.package_id
+        location = move_line.location_id
+        domain = [
+            ("location_id", "=", location.id),
+            ("product_id", "=", move.product_id.id),
+            ("package_id", "=", package.id),
+            ("lot_id", "=", lot.id),
+            ("state", "not in", ("cancel", "done")),
+            ("qty_done", "=", 0),
+            ("picking_id.batch_id", "=", batch.id),
+        ]
+        return domain
+
+
 
 class ShopfloorClusterBatchPickingValidator(Component):
     """Validators for the Cluster Picking endpoints"""
@@ -846,6 +935,12 @@ class ShopfloorClusterBatchPickingValidator(Component):
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
             "barcode": {"required": True, "type": "string"},
             "confirmation": {"type": "boolean", "nullable": True, "required": False},
+        }
+
+    def stock_issue(self):
+        return {
+            "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
         }
 
 
@@ -933,6 +1028,20 @@ class ShopfloorClusterPickingValidatorResponse(Component):
     def set_destination_all(self):
         return self._response_schema(
             next_states={"unload_all", "confirm_unload_all"}
+        )
+
+    def stock_issue(self):
+        return self._response_schema(
+            next_states={
+                # when we still have lines to process
+                "scan_products",
+                # when all lines have been processed and have same
+                # destination
+                "unload_all",
+                # when all lines have been processed and have different
+                # destinations
+                "unload_single",
+            }
         )
 
     def list_batch(self):
