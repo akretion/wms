@@ -89,10 +89,11 @@ Vue.component("batch-move-line", {
                     </template>
                     <template v-slot:actions>
                         <line-actions-popup
-                            line="product"
+                            @action="$listeners.action"
+                            :line="product"
                             :actions="[
-                                {name: 'Declare stock out', event_name: 'action_stock_out'},
-                                {name: 'Change pack or lot', event_name: 'action_change_pack_lot'},
+                                {name: 'Declare stock out', event_name: 'actionStockOut', move_line_id: product.id},
+                                {name: 'Change pack or lot', event_name: 'actionChangePack'},
                             ]"
                             xxxkey="make_state_component_key(['line-actions', product.id])"
                             xxv-on:action="state.on_action"

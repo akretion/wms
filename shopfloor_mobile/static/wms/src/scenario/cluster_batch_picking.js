@@ -40,6 +40,7 @@ const ClusterBatchPicking = {
                 :currentLocation="currentLocation"
                 :lastPickedLine="lastPickedLine"
                 @cancelLine="state.cancelLine"
+                @action="state.actionStockOut"
                 />
             <batch-picking-line-actions
                 v-if="state_is('start_line')"
@@ -227,6 +228,16 @@ const ClusterBatchPicking = {
                                 picking_batch_id: this.state.data.id,
                             })
                         );
+                    },
+                    actionStockOut: ({move_line_id, event_name}) => {
+                        if (event_name === 'actionStockOut') {
+                            this.wait_call(
+                                this.odoo.call('stock_issue', {
+                                    move_line_id,
+                                    picking_batch_id: this.state.data.id,
+                                })
+                            );
+                        }
                     },
                     on_scan: scanned => {
                         const intInText = parseInt(scanned.text);

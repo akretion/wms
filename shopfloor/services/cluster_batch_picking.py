@@ -814,7 +814,6 @@ class ClusterBatchPicking(Component):
           to handle the closing of the batch to create backorders (_unload_end)
         """
         batch = self._get_batch(picking_batch_id)
-
         move_line = self._get_move_line(move_line_id, next_state="scan_products", data="move_lines")
 
         inventory = self.actions_for("inventory")
@@ -846,7 +845,16 @@ class ClusterBatchPicking(Component):
         # try to reassign the moves in case we have stock in another location
         unreserve_moves._action_assign()
 
-        return self._response_for_scan_products(move_lines, batch)
+        pickings = batch.mapped("picking_ids")
+        move_lines = pickings.mapped("move_line_ids")
+
+        return self._response_for_scan_products(
+            move_lines,
+            batch,
+            message=self.msg_store.stock_issue_for_line(
+                move.product_id.name,
+            ),
+        )
 
     def _domain_stock_issue_unlink_lines(self, move_line):
         # Since we have not enough stock, delete the move lines, which will

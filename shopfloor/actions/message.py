@@ -515,3 +515,9 @@ class MessageAction(Component):
             "message_type": "info",
             "body": _("Package has been opened. You can move partial quantities."),
         }
+
+    def stock_issue_for_line(self, name):
+        return {
+            "message_type": "info",
+            "body": _("Stock issue declared for {}").format(name),
+        }
