@@ -1027,7 +1027,7 @@ class ShopfloorClusterPickingValidatorResponse(Component):
 
     def set_destination_all(self):
         return self._response_schema(
-            next_states={"unload_all", "confirm_unload_all"}
+            next_states={"unload_all", "confirm_unload_all", "start"}
         )
 
     def stock_issue(self):
