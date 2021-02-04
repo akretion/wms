@@ -212,7 +212,7 @@ class Checkout(Component):
                     picking = pickings
         return self._select_picking(picking, "select_document", skip)
 
-    def _select_picking(self, picking, state_for_error, skip):
+    def _select_picking(self, picking, state_for_error, skip=0):
         if not picking:
             if state_for_error == "manual_selection":
                 return self._response_for_manual_selection(
