@@ -176,6 +176,8 @@ const ClusterBatchPicking = {
             usage: "cluster_batch_picking",
             initial_state_key: "start",
             scan_destination_qty: 0,
+            currentLocation: null,
+            lastPickedLine: null,
             states: {
                 start: {
                     on_get_work: evt => {
