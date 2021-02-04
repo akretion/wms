@@ -277,9 +277,14 @@ const ClusterBatchPicking = {
                                             barcode: scanned.text,
                                             move_line_id: move_line.id,
                                             picking_batch_id: this.state.data.id,
+                                            location_id: this.selectedLocation,
                                             qty: 1,
                                         })
-                                    );
+                                        ,(result) => {
+                                            if (!result.message || result.message.message_type !== "error") {
+                                                this.lastScanned = scanned.text;
+                                            }
+                                        });
                                 }
                                 else if (!last_move_line.id) {
                                     this.wait_call(
@@ -287,12 +292,16 @@ const ClusterBatchPicking = {
                                             barcode: scanned.text,
                                             move_line_id: move_line.id,
                                             picking_batch_id: this.state.data.id,
+                                            location_id: this.selectedLocation,
                                             qty: 1,
                                         })
-                                    );
+                                        ,(result) => {
+                                            if (!result.message || result.message.message_type !== "error") {
+                                                this.lastScanned = scanned.text;
+                                            }
+                                        });
                                 }
 
-                                this.lastScanned = scanned.text;
                             }
                             else {
                                 if (!isNaN(intInText) && intInText === 0) {
@@ -301,6 +310,7 @@ const ClusterBatchPicking = {
                                             barcode: this.lastScanned,
                                             picking_batch_id: this.state.data.id,
                                             move_line_id: last_move_line.id,
+                                            location_id: this.selectedLocation,
                                             qty: intInText,
                                         })
                                     );
@@ -314,6 +324,7 @@ const ClusterBatchPicking = {
                                             barcode: this.lastScanned,
                                             picking_batch_id: this.state.data.id,
                                             move_line_id: last_move_line.id,
+                                            location_id: this.selectedLocation,
                                             qty: intInText,
                                         })
                                     );

@@ -55,6 +55,14 @@ class LocationNotFound(MessageNameBasedError):
     def __init__(self, state, data):
         super().__init__(state, data, message_name="no_location_found")
 
+class ProductNotInSource(MessageBasedError):
+    def __init__(self, state, data):
+        message = {
+            "message_type": "error",
+            "body": "Product is not in source location",
+        }
+        super().__init__(state, data, message)
+
 class TooMuchProductInCommandError(MessageBasedError):
     def __init__(self, state, data):
         message = {
@@ -477,7 +485,7 @@ class ClusterBatchPicking(Component):
             )
 
     @response_decorator
-    def scan_product(self, picking_batch_id, move_line_id, barcode):
+    def scan_product(self, picking_batch_id, move_line_id, location_id, barcode):
         batch = self._get_batch(picking_batch_id)
         pickings = batch.mapped("picking_ids")
         move_lines = pickings.mapped("move_line_ids")
@@ -489,6 +497,16 @@ class ClusterBatchPicking(Component):
                 batch,
             ),
         )
+
+        if move_line.location_id.id != location_id:
+            raise ProductNotInSource(
+                state="scan_products",
+                data=self._create_data_for_scan_products(
+                    move_lines,
+                    batch,
+                ),
+            )
+
 
         search = self.actions_for("search")
 
@@ -528,7 +546,7 @@ class ClusterBatchPicking(Component):
         return self._response_for_scan_products(move_lines, batch)
 
     @response_decorator
-    def set_quantity(self, picking_batch_id, move_line_id, barcode, qty):
+    def set_quantity(self, picking_batch_id, move_line_id, location_id, barcode, qty):
         batch = self._get_batch(picking_batch_id)
         pickings = batch.mapped("picking_ids")
         move_lines = pickings.mapped("move_line_ids")
@@ -544,6 +562,15 @@ class ClusterBatchPicking(Component):
         search = self.actions_for("search")
 
         product = search.product_from_scan(barcode)
+
+        if move_line.location_id.id != location_id:
+            raise ProductNotInSource(
+                state="scan_products",
+                data=self._create_data_for_scan_products(
+                    move_lines,
+                    batch,
+                ),
+            )
 
         return self._set_quantity_for_move_line(
             move_lines,
@@ -901,6 +928,7 @@ class ShopfloorClusterBatchPickingValidator(Component):
             "barcode": {"required": True, "type": "string"},
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
             "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "location_id": {"coerce": to_int, "required": True, "type": "integer"},
             "qty": {"coerce": to_int, "required": True, "type": "integer"},
         }
 
@@ -909,6 +937,7 @@ class ShopfloorClusterBatchPickingValidator(Component):
             "barcode": {"required": True, "type": "string"},
             "picking_batch_id": {"coerce": to_int, "required": True, "type": "integer"},
             "move_line_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "location_id": {"coerce": to_int, "required": True, "type": "integer"},
         }
 
     def set_destination(self):
