@@ -242,7 +242,7 @@ const ClusterBatchPicking = {
                         }
                     },
                     on_scan: scanned => {
-                        const intInText = parseInt(scanned.text);
+                        const intInText = "" + scanned.text == parseInt(scanned.text, 10) && parseInt(scanned.text, 10);
                         let move_line = this.find_move_line(
                             this.state.data.move_lines,
                             scanned.text,
