@@ -9,14 +9,14 @@
 import {ScenarioBaseMixin} from "./mixins.js";
 import {process_registry} from "../services/process_registry.js";
 
-export var SingleLotStatesMixin = {
+export var SingleLotMrpWhStatesMixin = {
     data: function () {
         return {
             states: {
-                // Generic state for when to start w/ scanning a lot or loc
+                // Generic state for when to start w/ scanning a lot
                 start: {
                     display_info: {
-                        title: "Commencer par scanner un lot ou un emplacement",
+                        title: "Commencer par scanner un lot",
                         scan_placeholder: "Scanner lot",
                     },
                     on_scan: (scanned) => {
@@ -38,8 +38,9 @@ export var SingleLotStatesMixin = {
                     on_scan: (scanned, confirmation = false) => {
                         this.state_set_data({location_barcode: scanned.text});
                         this.wait_call(
-                            this.odoo.call("validate", {
+                            this.odoo.call("validate_transfer", {
                                 move_line_id: this.state.data.id,
+                                production_id: this.state.data.production_id,
                                 location_barcode: scanned.text,
                                 confirmation: confirmation,
                             })
@@ -58,8 +59,8 @@ export var SingleLotStatesMixin = {
     },
 };
 
-const SingleLotTransfer = {
-    mixins: [ScenarioBaseMixin, SingleLotStatesMixin],
+const SingleLotMrpWhTransfer = {
+    mixins: [ScenarioBaseMixin, SingleLotMrpWhStatesMixin],
     template: `
         <Screen :screen_info="screen_info">
             <template v-slot:header>
@@ -87,7 +88,7 @@ const SingleLotTransfer = {
     `,
     data: function () {
         return {
-            usage: "single_lot_transfer",
+            usage: "single_lot_mrp_wh_transfer",
             show_reset_button: true,
             initial_state_key: "start",
             states: {
@@ -101,6 +102,6 @@ const SingleLotTransfer = {
         };
     },
 };
-process_registry.add("single_lot_transfer", SingleLotTransfer);
+process_registry.add("single_lot_mrp_wh_transfer", SingleLotMrpWhTransfer);
 
-export default SingleLotTransfer;
+export default SingleLotMrpWhTransfer;

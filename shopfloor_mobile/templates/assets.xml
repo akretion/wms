@@ -157,6 +157,11 @@
                 t-attf-src="/shopfloor_mobile/assets/src/scenario/single_lot_mrp_transfer.js?v=#{app_version}"
                 type="module"
             />
+            <script
+                id="script_scenario_single_lot_mrp_wh_transfer"
+                t-attf-src="/shopfloor_mobile/assets/src/scenario/single_lot_mrp_wh_transfer.js?v=#{app_version}"
+                type="module"
+            />
         </script>
     </template>
     <template
