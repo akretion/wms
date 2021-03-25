@@ -8,6 +8,7 @@
 
 import {ScenarioBaseMixin} from "./mixins.js";
 import {process_registry} from "../services/process_registry.js";
+import {translation_registry} from "/shopfloor_mobile/assets/src/services/translation_registry.js";
 
 export var SinglePackStatesMixin = {
     data: function () {
@@ -16,8 +17,8 @@ export var SinglePackStatesMixin = {
                 // Generic state for when to start w/ scanning a pack or loc
                 start: {
                     display_info: {
-                        title: "Start by scanning a pack or a location",
-                        scan_placeholder: "Scan pack",
+                        title: "Commencer par scanner un colis",
+                        scan_placeholder: "Scanner colis",
                     },
                     on_scan: (scanned) => {
                         const data = this.state.data;
@@ -31,8 +32,8 @@ export var SinglePackStatesMixin = {
                 },
                 scan_location: {
                     display_info: {
-                        title: "Set a location",
-                        scan_placeholder: "Scan location",
+                        title: "Définir l'emplacement",
+                        scan_placeholder: "Scanner emplacement",
                         show_cancel_button: true,
                     },
                     on_scan: (scanned, confirmation = false) => {
