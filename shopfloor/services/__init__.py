@@ -6,6 +6,7 @@ from . import menu
 
 # process services
 from . import checkout
+from . import stock_batch_transfer
 from . import zone_picking
 from . import cluster_picking
 from . import delivery
