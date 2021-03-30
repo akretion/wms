@@ -32,6 +32,11 @@
                 type="module"
             />
             <script
+                id="script_component_batch_prod_by_dest"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/batch/move_line_by_product_dest.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
                 id="script_component_packaging_qty_picker"
                 t-attf-src="/shopfloor_mobile/static/wms/src/components/packaging-qty-picker.js?v=#{mod_version}"
                 type="module"
@@ -107,6 +112,16 @@
                 type="module"
             />
             <!-- Scenario -->
+            <script
+                id="script_scenario_stock_batch_transfer"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/stock_batch_transfer.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_stock_batch_scan_products"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/stock-batch/scan_products.js?v=#{mod_version}"
+                type="module"
+            />
             <script
                 id="script_scenario_single_pack_transfer"
                 t-attf-src="/shopfloor_mobile/static/wms/src/scenario/single_pack_transfer.js?v=#{mod_version}"
