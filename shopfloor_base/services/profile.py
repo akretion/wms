@@ -22,6 +22,7 @@ class ShopfloorProfile(Component):
 
     def _search(self, name_fragment=None):
         domain = self._get_base_search_domain()
+        domain.append(("warehouse_id.company_id", "=", self.env.user.company_id.id))
         if name_fragment:
             domain.append(("name", "ilike", name_fragment))
         records = self.env[self._expose_model].search(domain)

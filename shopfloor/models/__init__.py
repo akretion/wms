@@ -1,3 +1,4 @@
+from . import auth_api_key
 from . import priority_postpone_mixin
 from . import shopfloor_menu
 from . import stock_picking_type
