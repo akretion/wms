@@ -277,7 +277,7 @@ const Checkout = {
                 },
             };
         },
-        select_delivery_packaging_manual_select_options: function () {
+        select_delivery_packaging_manual_select_options: function() {
             return {
                 showActions: false,
                 list_item_options: {
@@ -286,12 +286,13 @@ const Checkout = {
                 },
             };
         },
-        select_line_manual_select_opts: function () {
+        select_line_manual_select_opts: function() {
             return {
                 group_color: this.utils.colors.color_for("screen_step_todo"),
+                card_klass: "loud-labels",
             };
         },
-        select_package_manual_select_opts: function () {
+        select_package_manual_select_opts: function() {
             return {
                 multiple: true,
                 initValue: this.selected_line_ids(),
@@ -300,23 +301,23 @@ const Checkout = {
                 list_item_options: {actions: ["action_qty_edit"]},
             };
         },
-        selectable_lines: function () {
+        selectable_lines: function() {
             const stored = this.state_get_data("select_package");
             return _.result(stored, "selected_move_lines", []);
         },
-        selectable_line_ids: function () {
+        selectable_line_ids: function() {
             return this.selectable_lines().map(_.property("id"));
         },
-        selected_lines: function () {
-            return this.selectable_lines().filter(function (x) {
+        selected_lines: function() {
+            return this.selectable_lines().filter(function(x) {
                 return x.qty_done > 0;
             });
         },
-        selected_line_ids: function () {
+        selected_line_ids: function() {
             return this.selected_lines().map(_.property("id"));
         },
     },
-    data: function () {
+    data: function() {
         return {
             usage: "checkout",
             initial_state_key: "select_document",
