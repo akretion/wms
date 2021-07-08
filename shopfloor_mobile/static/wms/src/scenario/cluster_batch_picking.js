@@ -150,7 +150,10 @@ const ClusterBatchPicking = {
             let move_line;
 
             move_lines.filter(filter).forEach(line => {
-                if (line.product.barcode === barcode) {
+                if (
+                    line.product.barcode === barcode ||
+                    line.product.barcodes.findIndex(b => b.name === barcode) != -1
+                ) {
                     move_line = move_line !== undefined ? move_line : line;
                 }
             });
@@ -182,14 +185,16 @@ const ClusterBatchPicking = {
                         location_id: this.selectedLocation,
                         qty: 1,
                     }),
-                    result => {
-                        if (
-                            !result.message ||
-                            result.message.message_type !== "error"
-                        ) {
-                            this.lastScanned = scanned.text;
+                    {
+                        callback: result => {
+                            if (
+                                !result.message ||
+                                result.message.message_type !== "error"
+                            ) {
+                                this.lastScanned = scanned.text;
+                            }
                         }
-                    }
+                    },
                 );
             } else if (!last_move_line.id) {
                 this.wait_call(
@@ -200,24 +205,25 @@ const ClusterBatchPicking = {
                         location_id: this.selectedLocation,
                         qty: 1,
                     }),
-                    result => {
-                        if (
-                            !result.message ||
-                            result.message.message_type !== "error"
-                        ) {
-                            this.lastScanned = scanned.text;
+                    {
+                        callback: result => {
+                            if (
+                                !result.message ||
+                                result.message.message_type !== "error"
+                            ) {
+                                this.lastScanned = scanned.text;
+                            }
                         }
-                    }
+                    },
                 );
-            }
-            else {
+            } else {
                 this.set_message({
                     message_type: "error",
                     body: `You can't scan another product before scanning a package or destination location`,
                 });
             }
         },
-        on_scan_with_selected_location: function ({
+        on_scan_with_selected_location: function({
             scanned,
             move_line,
             last_move_line,
@@ -266,17 +272,18 @@ const ClusterBatchPicking = {
                             picking_batch_id: this.state.data.id,
                             qty: last_move_line.qty_done,
                         }),
-                        result => {
-                            if (
-                                result.message &&
-                                result.message.message_type ===
-                                    "success"
-                            ) {
-                                this.lastScanned = null;
-                                this.selectedLocation = null;
-                                this.lastPickedLine = last_move_line.id;
+                        {
+                            callback: result => {
+                                if (
+                                    result.message &&
+                                    result.message.message_type === "success"
+                                ) {
+                                    this.lastScanned = null;
+                                    this.selectedLocation = null;
+                                    this.lastPickedLine = last_move_line.id;
+                                }
                             }
-                        }
+                        },
                     );
                 }
             }
@@ -460,7 +467,7 @@ const ClusterBatchPicking = {
                         this.lastPickedLine = null;
                         this.currentLocation = null;
                         this.selectedLocation = null;
-                    }
+                    },
                 },
                 unload_all: {
                     display_info: {

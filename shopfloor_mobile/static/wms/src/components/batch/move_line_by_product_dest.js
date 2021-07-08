@@ -4,33 +4,26 @@
  * License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
  */
 
-Vue.component("batch-move-line", {
+Vue.component("batch-product-by-dest", {
     props: [
         "moveLines",
         "fields",
         "lastScanned",
         "selectedLocation",
-        "lastPickedLine",
+        "lastPickedLines",
         "currentLocation",
     ],
     methods: {
         isLastScanned(product) {
             return (
+                this.lastScanned &&
                 product &&
-                (product.barcode === this.lastScanned ||
-                    product.barcodes.includes(this.lastScanned))
+                this.lastScanned.includes(product.barcode)
             );
-        },
-        getLineDest(line) {
-            if (line.suggested_package_dest.length > 0) {
-                return line.suggested_package_dest[0];
-            } else if (line.suggested_location_dest.length > 0) {
-                return line.suggested_location_dest[0];
-            }
         },
     },
     computed: {
-        linesBySource: function() {
+        productByDest: function() {
             const lines = this.moveLines
                 .map(line => {
                     return {
@@ -40,62 +33,90 @@ Vue.component("batch-move-line", {
                         done: line.done,
                         source: line.location_src,
                         barcode: line.product.barcode,
-                        barcodes: line.product.barcodes.map(b => b.name),
                         supplierCode: line.product.supplier_code,
                         id: line.id,
-                        dest: this.getLineDest(line),
-                        picking_dest: line.location_dest,
+                        dest: line.location_dest,
+                        productId: line.product.id,
                     };
                 })
                 .filter(
                     line =>
-                        line.qty > 0 && !(line.done && line.id !== this.lastPickedLine)
+                        line.qty > 0 &&
+                        !(line.done && this.lastPickedLines.indexOf(line.id) === -1)
                 )
                 .sort((a, b) => (a.done ? 1 : -1));
 
-            const selected = lines.find(this.isLastScanned) || {};
+            const linesByProduct = Object.values(
+                lines.reduce((acc, line) => {
+                    (acc["" + line.productId + line.done] =
+                        acc["" + line.productId + line.done] || []).push(line);
+                    return acc;
+                }, {})
+            ).map(prodLines => {
+                return prodLines.reduce(
+                    (acc, lineProd) => ({
+                        name: lineProd.name,
+                        qty: acc.qty + lineProd.qty,
+                        qtyDone: acc.qtyDone + lineProd.qtyDone,
+                        done: acc.done && lineProd.done,
+                        barcode: lineProd.barcode,
+                        supplierCode: lineProd.supplierCode,
+                        id: [lineProd.id, ...acc.id],
+                        dest: lineProd.dest,
+                        productId: lineProd.productId,
+                    }),
+                    {
+                        qty: 0,
+                        qtyDone: 0,
+                        done: true,
+                        id: [],
+                    }
+                );
+            });
+
+            const selected = linesByProduct.find(this.isLastScanned) || {};
             selected.selected = true;
 
-            const sources = lines
-                .map(line => line.source)
+            const dests = linesByProduct
+                .map(line => line.dest)
                 .filter((value, i, array) => {
                     return array.findIndex(v => v.id === value.id) === i;
                 });
 
-            const sourceWithLines = sources
-                .map(source => {
+            const destWithProducts = dests
+                .map(dest => {
                     return {
-                        source,
-                        lines: lines
-                            .filter(line => line.source.id === source.id)
+                        dest,
+                        lines: linesByProduct
+                            .filter(line => line.dest.id === dest.id)
                             .sort((a, b) => (!a.selected ? 1 : -1)),
                     };
                 })
-                .filter(source => source.lines.length > 0)
+                .filter(dest => dest.lines.length > 0)
                 .sort((a, b) => (a.name < b.name ? 1 : -1));
 
-            const pivotIndex = sourceWithLines.findIndex(
-                source => source.source.id === this.currentLocation
+            const pivotIndex = destWithProducts.findIndex(
+                dest => dest.dest.id === this.currentLocation
             );
 
             if (pivotIndex !== -1) {
-                const removed = sourceWithLines.splice(0, pivotIndex);
-                sourceWithLines.push(...removed);
+                const removed = destWithProducts.splice(0, pivotIndex);
+                destWithProducts.push(...removed);
             }
 
             //(a, b) => a.source.id !== this.selectedLocation ? 1 : -1
-            return sourceWithLines;
+            return destWithProducts;
         },
     },
     template: `
         <v-container class="mb-16">
-            <div v-for="source in linesBySource" :key="source.id">
+            <div v-for="dest in productByDest" :key="dest.id">
                 <item-detail-card
-                    :record="source.source"
-                    :card_color="utils.colors.color_for(selectedLocation === source.source.id ? 'detail_main_card_selected' : 'detail_main_card')"
+                    :record="dest.dest"
+                    :card_color="utils.colors.color_for(selectedLocation === dest.dest.id ? 'detail_main_card_selected' : 'detail_main_card')"
                     />
                 <detail-simple-product
-                    v-for="product in source.lines"
+                    v-for="product in dest.lines"
                     :product="product"
                     :fields="fields"
                     :key="product.id"

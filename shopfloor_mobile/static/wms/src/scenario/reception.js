@@ -152,7 +152,6 @@ const Reception = {
                                 this.wait_call(
                                     this.odoo.call("set_quantity", {
                                         partner_id: this.partnerId,
-                                        barcode,
                                         move_lines_picking: move_lines_picking.map(
                                             line => line.id
                                         ),
@@ -160,7 +159,11 @@ const Reception = {
                                     })
                                 );
                             } else if (
-                                barcode === move_lines_picking[0].product.barcode || (move_lines_picking[0].product.barcodes && move_lines_picking[0].product.barcodes.findIndex(b => b.name === barcode) !== -1)
+                                barcode === move_lines_picking[0].product.barcode ||
+                                (move_lines_picking[0].product.barcodes &&
+                                    move_lines_picking[0].product.barcodes.findIndex(
+                                        b => b.name === barcode
+                                    ) !== -1)
                             ) {
                                 this.wait_call(
                                     this.odoo.call("scan_product", {

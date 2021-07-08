@@ -32,8 +32,18 @@
                 type="module"
             />
             <script
+                id="script_component_batch_prod_by_dest"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/batch/move_line_by_product_dest.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
                 id="script_component_packaging_qty_picker"
                 t-attf-src="/shopfloor_mobile/static/wms/src/components/packaging-qty-picker.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_component_detail_simple_location"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/detail/detail_simple_location.js?v=#{mod_version}"
                 type="module"
             />
             <script
@@ -77,6 +87,11 @@
                 type="module"
             />
             <script
+                id="script_component_detail_simple_product"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/detail/detail_simple_product.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
                 id="script_component_batch_picking_detail"
                 t-attf-src="/shopfloor_mobile/static/wms/src/components/batch_picking_detail.js?v=#{mod_version}"
                 type="module"
@@ -92,8 +107,33 @@
                 type="module"
             />
             <script
+                id="script_component_contacts_detail"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/contacts/contact-detail.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_component_contacts_list"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/contacts/contact-list.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_component_product_reception_product_list"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/product/reception-product-list.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_component_product_reception_product"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/product/reception-product.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
                 id="script_component_picking_summary"
                 t-attf-src="/shopfloor_mobile/static/wms/src/components/scenario_picking_detail/picking_summary.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_component_batch_move_lines"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/batch/move_lines.js?v=#{mod_version}"
                 type="module"
             />
             <script
@@ -132,6 +172,16 @@
                 type="module"
             />
             <!-- Scenario -->
+            <script
+                id="script_scenario_stock_batch_transfer"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/stock_batch_transfer.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_stock_batch_scan_products"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/stock-batch/scan_products.js?v=#{mod_version}"
+                type="module"
+            />
             <script
                 id="script_scenario_single_pack_transfer"
                 t-attf-src="/shopfloor_mobile/static/wms/src/scenario/single_pack_transfer.js?v=#{mod_version}"
@@ -175,6 +225,21 @@
             <script
                 id="script_scenario_delivery"
                 t-attf-src="/shopfloor_mobile/static/wms/src/scenario/delivery.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_reception"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/reception.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_reception_choosing_contact"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/reception/choosing_reception_contact.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_reception_scanning"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/reception/reception_scanning_product.js?v=#{mod_version}"
                 type="module"
             />
             <script

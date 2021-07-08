@@ -84,7 +84,7 @@ const CheckoutScanAndPack = {
         },
         is_confirming: function() {
             return this.state_is("scan_products") && this.confirming;
-        }
+        },
     },
     data: function() {
         return {
@@ -162,7 +162,7 @@ const CheckoutScanAndPack = {
                             {
                                 callback: ({data}) => {
                                     this.confirming = true;
-                                }
+                                },
                             }
                         );
                         this.lastScanned = null;
@@ -194,14 +194,13 @@ const CheckoutScanAndPack = {
                                 })
                             );
                             this.confirming = false;
-                        }
-                        else {
+                        } else {
                             this.confirming = false;
                         }
                     },
                     enter: () => {
                         this.confirming = this.state.data.confirm;
-                    }
+                    },
                 },
                 start: {
                     options: {
