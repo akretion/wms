@@ -55,4 +55,46 @@
             eval="[(4, ref('shopfloor.picking_type_location_content_transfer_demo'))]"
         />
     </record>
+
+    <record id="shopfloor_menu_checkout_scan_and_pack" model="shopfloor.menu">
+        <field name="name">Checkout Scan And Pack</field>
+        <field name="sequence">70</field>
+        <field name="scenario_id" ref="shopfloor.scenario_checkout_scan_and_pack" />
+        <field
+            name="picking_type_ids"
+            eval="[(4, ref('shopfloor.picking_type_checkout_scan_and_pack_demo'))]"
+        />
+    </record>
+	    
+    <record id="shopfloor_menu_cluster_batch_picking" model="shopfloor.menu">
+        <field name="name">Cluster Batch Picking</field>
+        <field name="sequence">70</field>
+        <field name="scenario_id" ref="shopfloor.scenario_cluster_batch_picking" />
+        <field
+            name="picking_type_ids"
+            eval="[(4, ref('shopfloor.picking_type_cluster_batch_picking_demo'))]"
+        />
+    </record>
+
+    <record id="shopfloor_menu_reception" model="shopfloor.menu">
+        <field name="name">Reception</field>
+        <field name="sequence">70</field>
+        <field name="allow_move_create" eval="1" />
+        <field name="scenario_id" ref="shopfloor.scenario_reception" />
+        <field
+            name="picking_type_ids"
+            eval="[(4, ref('shopfloor.picking_type_reception_demo'))]"
+        />
+    </record>
+
+    <record id="shopfloor_menu_stock_batch_transfer" model="shopfloor.menu">
+        <field name="name">Stock Batch Transfer</field>
+        <field name="sequence">70</field>
+        <field name="allow_move_create" eval="1" />
+        <field name="scenario_id" ref="shopfloor.scenario_location_content_transfer" />
+        <field
+            name="picking_type_ids"
+            eval="[(4, ref('shopfloor.picking_type_stock_batch_transfer_demo'))]"
+        />
+    </record>
 </odoo>

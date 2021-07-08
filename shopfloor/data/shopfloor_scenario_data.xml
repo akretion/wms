@@ -24,14 +24,31 @@
         <field name="name">Cluster Picking</field>
         <field name="key">cluster_picking</field>
     </record>
+    <record id="scenario_cluster_batch_picking" model="shopfloor.scenario">
+        <field name="name">Cluster Batch Picking</field>
+        <field name="key">cluster_batch_picking</field>
+    </record>
     <record id="scenario_checkout" model="shopfloor.scenario">
         <field name="name">Checkout</field>
         <field name="key">checkout</field>
+    </record>
+    <record id="scenario_checkout_scan_and_pack" model="shopfloor.scenario">
+        <field name="name">Checkout Scan and Pack</field>
+        <field name="key">checkout_scan_and_pack</field>
     </record>
     <record id="scenario_delivery" model="shopfloor.scenario">
         <field name="name">Delivery</field>
         <field name="key">delivery</field>
         <field name="options_edit">{"must_move_entire_pack": true}</field>
+    </record>
+
+    <record id="scenario_reception" model="shopfloor.scenario">
+        <field name="name">Reception</field>
+        <field name="key">reception</field>
+    </record>
+    <record id="scenario_stock_batch_transfer" model="shopfloor.scenario">
+        <field name="name">Stock Batch Transfer</field>
+        <field name="key">stock_batch_transfer</field>
     </record>
     <record id="scenario_location_content_transfer" model="shopfloor.scenario">
         <field name="name">Location content transfer</field>
