@@ -8,7 +8,7 @@ import {ItemDetailMixin} from "/shopfloor_mobile_base/static/wms/src/components/
 
 Vue.component("item-detail-card", {
     mixins: [ItemDetailMixin],
-    props: ["card_color"],
+    props: ["card_color", "outlined"],
     template: `
     <div :class="wrapper_klass">
         <v-card :color="card_color" tile :class="{'theme--dark': opts.theme_dark, 'main': opts.main, 'no-outline': opts.no_outline}" v-if="!_.isEmpty(record)">
@@ -21,7 +21,6 @@ Vue.component("item-detail-card", {
                             @click="opts.on_title_action ? opts.on_title_action(record): on_detail_action(record, opts.title_action_field)">
                         <btn-info-icon v-if="!opts.title_action_icon"/>
                         <v-icon v-if="opts.title_action_icon">{{ opts.title_action_icon }}</v-icon>
-
                     </v-btn>
                 </slot>
             </v-card-title>
@@ -32,7 +31,7 @@ Vue.component("item-detail-card", {
                 <!-- TODO: this loop is the same in list-item => make it a component -->
                 <v-card-text class="details" v-if="opts.fields.length">
                     <div v-for="(field, index) in opts.fields" :class="'field-detail ' + field.path.replace('.', '-') + ' ' + (field.klass || '')">
-                        <div v-if="raw_value(record, field) || field.display_no_value">
+                        <div v-if="raw_value(record, field) !== undefined || field.display_no_value">
                             <span v-if="field.label" class="label">{{ field.label }}:</span>
                             <component
                                 v-if="field.render_component"
