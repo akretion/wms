@@ -13,6 +13,7 @@
             <xpath expr="//group[@name='additional_info']/.." position="inside">
                 <group string="Shopfloor">
                     <field name="shopfloor_picking_sequence" />
+                    <field name="shopfloor_is_stock_transfer_input_location" />
                 </group>
             </xpath>
         </field>

@@ -15,8 +15,8 @@ class DataAction(Component):
             record.with_context(location=record.id), self._location_parser, **kw
         )
 
-    def locations(self, record, **kw):
-        return self.location(record, multi=True)
+    def locations(self, records, **kw):
+        return [self.location(rec, **kw) for rec in records]
 
     @property
     def _location_parser(self):
@@ -165,14 +165,18 @@ class DataAction(Component):
             "id",
             "qty_done",
             "product_uom_qty:quantity",
+            "shopfloor_checkout_done:done",
             ("product_id:product", self._product_parser),
             ("lot_id:lot", self._lot_parser),
             ("location_id:location_src", self._location_parser),
             ("location_dest_id:location_dest", self._location_parser),
             (
-                "move_id:priority",
-                lambda rec, fname: rec.move_id.priority or "",
+                "result_package_id:package_dest",
+                lambda rec, fname: self.package(
+                    rec.result_package_id, rec.picking_id, with_packaging=True
+                ),
             ),
+            ("move_id:priority", lambda rec, fname: rec.move_id.priority or "",),
         ]
 
     @ensure_model("stock.package_level")
@@ -225,10 +229,17 @@ class DataAction(Component):
             "display_name",
             "default_code",
             "barcode",
+            (
+                "barcode_ids:barcodes",
+                lambda record, fname: self._product_barcode_list(record[fname]),
+            ),
             ("packaging_ids:packaging", self._product_packaging),
             ("uom_id:uom", self._simple_record_parser() + ["factor", "rounding"]),
             ("seller_ids:supplier_code", self._product_supplier_code),
         ]
+
+    def _product_barcode_list(self, rec):
+        return self._jsonify(rec, self._simple_record_parser(), multi=True,)
 
     def _product_packaging(self, rec, field):
         return self._jsonify(
@@ -246,8 +257,10 @@ class DataAction(Component):
     @ensure_model("stock.picking.batch")
     def picking_batch(self, record, with_pickings=False, **kw):
         parser = self._picking_batch_parser
+
         if with_pickings:
             parser.append(("picking_ids:pickings", self._picking_parser))
+
         return self._jsonify(record, parser, **kw)
 
     def picking_batches(self, record, with_pickings=False, **kw):

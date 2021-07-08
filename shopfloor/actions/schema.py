@@ -7,8 +7,22 @@ class ShopfloorSchemaAction(Component):
 
     _inherit = "shopfloor.schema.action"
 
-    def picking(self):
-        return {
+    def partner(self, with_picking_count=False):
+        schema = {
+            "id": {"required": True, "type": "integer"},
+            "name": {"type": "string", "nullable": False, "required": True},
+        }
+
+        if with_picking_count:
+            schema["picking_count"] = {
+                "type": "integer",
+                "required": True,
+                "nullable": False,
+            }
+        return schema
+
+    def picking(self, with_move_lines=False, no_packaging=False):
+        schema = {
             "id": {"required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
             "origin": {"type": "string", "nullable": True, "required": False},
@@ -20,11 +34,19 @@ class ShopfloorSchemaAction(Component):
             "scheduled_date": {"type": "string", "nullable": False, "required": True},
         }
 
+        if with_move_lines:
+            schema["move_lines"] = self._schema_list_of(
+                self.move_line(with_packaging=not no_packaging)
+            )
+
+        return schema
+
     def move_line(self, with_packaging=False, with_picking=False):
         schema = {
             "id": {"type": "integer", "required": True},
             "qty_done": {"type": "float", "required": True},
             "quantity": {"type": "float", "required": True},
+            "done": {"type": "boolean", "required": False},
             "product": self._schema_dict_of(self.product()),
             "lot": {
                 "type": "dict",
@@ -37,6 +59,12 @@ class ShopfloorSchemaAction(Component):
             ),
             "package_dest": self._schema_dict_of(
                 self.package(with_packaging=with_packaging), required=False
+            ),
+            "suggested_package_dest": self._schema_list_of(
+                self.package(), required=False
+            ),
+            "suggested_location_dest": self._schema_list_of(
+                self.location(), required=False
             ),
             "location_src": self._schema_dict_of(self.location()),
             "location_dest": self._schema_dict_of(self.location()),
@@ -59,6 +87,7 @@ class ShopfloorSchemaAction(Component):
             "display_name": {"type": "string", "nullable": False, "required": True},
             "default_code": {"type": "string", "nullable": True, "required": True},
             "barcode": {"type": "string", "nullable": True, "required": False},
+            "barcodes": self._schema_list_of(self.barcode()),
             "supplier_code": {"type": "string", "nullable": True, "required": False},
             "packaging": self._schema_list_of(self.packaging()),
             "uom": self._schema_dict_of(
@@ -67,6 +96,12 @@ class ShopfloorSchemaAction(Component):
                     rounding={"required": True, "nullable": True, "type": "float"},
                 )
             ),
+        }
+
+    def barcode(self):
+        return {
+            "id": {"required": True, "type": "integer"},
+            "name": {"type": "string", "nullable": False, "required": True},
         }
 
     def package(self, with_packaging=False):
@@ -111,7 +146,7 @@ class ShopfloorSchemaAction(Component):
             "barcode": {"type": "string", "nullable": True, "required": True},
         }
 
-    def picking_batch(self, with_pickings=False):
+    def picking_batch(self, with_pickings=False, no_packaging=False):
         schema = {
             "id": {"required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
@@ -119,8 +154,12 @@ class ShopfloorSchemaAction(Component):
             "move_line_count": {"required": True, "type": "integer"},
             "weight": {"required": True, "nullable": True, "type": "float"},
         }
-        if with_pickings:
+        if with_pickings is True:
             schema["pickings"] = self._schema_list_of(self.picking())
+        if with_pickings == "full":
+            schema["pickings"] = self._schema_list_of(
+                self.picking(with_move_lines=True, no_packaging=no_packaging)
+            )
         return schema
 
     def package_level(self):
