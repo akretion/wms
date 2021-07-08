@@ -32,6 +32,7 @@ class ShopfloorSchemaAction(Component):
             "id": {"type": "integer", "required": True},
             "qty_done": {"type": "float", "required": True},
             "quantity": {"type": "float", "required": True},
+            "done": {"type": "boolean", "required": False},
             "product": self._schema_dict_of(self.product()),
             "lot": {
                 "type": "dict",
@@ -66,6 +67,7 @@ class ShopfloorSchemaAction(Component):
             "display_name": {"type": "string", "nullable": False, "required": True},
             "default_code": {"type": "string", "nullable": True, "required": True},
             "barcode": {"type": "string", "nullable": True, "required": False},
+            "barcodes": self._schema_list_of(self.barcode()),
             "supplier_code": {"type": "string", "nullable": True, "required": False},
             "packaging": self._schema_list_of(self.packaging()),
             "uom": self._schema_dict_of(
@@ -74,6 +76,12 @@ class ShopfloorSchemaAction(Component):
                     rounding={"required": True, "nullable": True, "type": "float"},
                 )
             ),
+        }
+
+    def barcode(self):
+        return {
+            "id": {"required": True, "type": "integer"},
+            "name": {"type": "string", "nullable": False, "required": True},
         }
 
     def package(self, with_packaging=False):
