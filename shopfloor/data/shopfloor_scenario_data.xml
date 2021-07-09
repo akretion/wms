@@ -45,6 +45,10 @@
         <field name="name">Reception</field>
         <field name="key">reception</field>
     </record>
+    <record id="scenario_stock_batch_transfer" model="shopfloor.scenario">
+        <field name="name">Stock Batch Transfer</field>
+        <field name="key">stock_batch_transfer</field>
+    </record>
     <record id="scenario_location_content_transfer" model="shopfloor.scenario">
         <field name="name">Location content transfer</field>
         <field name="key">location_content_transfer</field>
