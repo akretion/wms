@@ -20,7 +20,7 @@ const StockBatchTransfer = {
                 :input_placeholder="search_input_placeholder"
                 />
                 <div
-                v-if="state_is('start') && (state.data.input_locations.length === 0)"
+                    v-if="state_is('start') && (!state.data.input_locations || state.data.input_locations.length === 0)"
                 >
                     There is no transfer to process
                 </div>
@@ -84,7 +84,12 @@ const StockBatchTransfer = {
                         this.lastPickedLines = null;
                     },
                     display_info: {
-                        title: "Go to the first location",
+                        title: () => {
+                            if (!this.currentDestLocation)
+                                return "Go to the first location";
+                            else
+                                return "Scanning products";
+                        },
                         scan_placeholder: () => {
                             if (!this.currentDestLocation)
                                 return `Scan a destination location`;
