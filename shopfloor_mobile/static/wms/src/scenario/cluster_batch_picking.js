@@ -285,6 +285,11 @@ const ClusterBatchPicking = {
                             }
                         },
                     );
+                } else {
+                    this.set_message({
+                        message_type: "error",
+                        body: "You must scan a product in this location",
+                    });
                 }
             }
         },
