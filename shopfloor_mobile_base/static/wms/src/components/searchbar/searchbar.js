@@ -52,7 +52,9 @@ Vue.component("searchbar", {
             this.entered = "";
         },
         on_screen_reload: function(evt) {
-            if (this.reload_steal_focus) this.$refs.input.focus();
+            if (this.reload_steal_focus) {
+                this.$refs.input && this.$refs.input.focus()
+            }
         },
         refocus: function() {
             if (this.refocusInput) {
