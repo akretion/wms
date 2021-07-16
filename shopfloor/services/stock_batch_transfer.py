@@ -403,6 +403,7 @@ class StockBatchTransfer(Component):
             qty,
             move_lines_children=move_lines_children,
             dest_location_id=dest_location.id,
+            product=product,
         )
 
         return self._create_response_for_scan_products(
