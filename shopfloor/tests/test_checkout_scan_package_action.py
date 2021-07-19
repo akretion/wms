@@ -335,7 +335,7 @@ class CheckoutScanPackageActionCase(CheckoutCommonCase, CheckoutSelectPackageMix
             [
                 {
                     "packaging_id": packaging.id,
-                    "pack_length": packaging.pack_length,
+                    "pack_length": packaging.packaging_length,
                     "width": packaging.width,
                     "height": packaging.height,
                 }

@@ -729,7 +729,7 @@ class LocationContentTransfer(Component):
             move_line.product_uom_qty = move_line.qty_done = quantity
             current_move = move_line.move_id
             new_move_vals = current_move._split(quantity)
-            new_move = self.env["stock.move"].browse(new_move_vals)
+            new_move = self.env["stock.move"].create(new_move_vals)
             new_move._action_confirm(merge=False)
             new_move.move_line_ids = move_line
             # Ensure that the remaining qty to process is reserved as before
