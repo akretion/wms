@@ -47,21 +47,25 @@ class ZonePickingSelectLineCase(ZonePickingCommonCase):
         self.assertTrue(order_mapping[move1_line] > order_mapping[move2_line])
 
         # Test by priority
-        self.picking2.move_lines.write({"priority": "0"})
-        (self.pickings - self.picking2).move_lines.write({"priority": "1"})
+        self.picking2.write({"priority": "0"})
+        (self.pickings - self.picking2).write({"priority": "1"})
 
         self.service.work.current_lines_order = "priority"
         move_lines = self.service._find_location_move_lines()
         order_mapping = {line: i for i, line in enumerate(move_lines)}
         # picking2 lines stay at the end as they are low priority
-        # but move1_line comes before the other
-        self.assertTrue(order_mapping[move1_line] > len(move_lines) - 4)
-        self.assertTrue(order_mapping[move2_line] > len(move_lines) - 3)
+        self.assertTrue(move1_line in move_lines[-2:])
+        self.assertTrue(move2_line in move_lines[-2:])
+
+        # but move1_line comes after the other
+        self.assertTrue(order_mapping[move1_line] > order_mapping[move2_line] )
+
         # swap dates again
         move2.write({"date": future})
         move1.write({"date": today})
         # and increase priority
-        self.picking2.move_lines.write({"priority": "0"})
+        self.picking2.write({"priority": "1"})
+        (self.pickings - self.picking2).write({"priority": "0"})
         move_lines = self.service._find_location_move_lines()
         order_mapping = {line: i for i, line in enumerate(move_lines)}
         self.assertEqual(order_mapping[move1_line], 0)

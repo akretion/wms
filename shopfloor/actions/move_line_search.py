@@ -102,10 +102,10 @@ class MoveLineSearch(Component):
             )
         return lambda line: line
 
-    def counters_for_lines(self, lines, priority_selection=("2", "3")):
+    def counters_for_lines(self, lines):
         # Not using mapped/filtered to support simple lists and generators
         priority_lines = [
-            x for x in lines if x.picking_id.priority in priority_selection
+            x for x in lines if x.picking_id.priority == 1
         ]
         return {
             "lines_count": len(lines),
