@@ -120,7 +120,7 @@ class StockBatchTransfer(Component):
             move_lines = picking.mapped("move_line_ids")
 
             if all([line.shopfloor_checkout_done for line in move_lines]):
-                picking.action_done()
+                picking._action_done()
 
     def _create_response_for_scan_products(
         self,

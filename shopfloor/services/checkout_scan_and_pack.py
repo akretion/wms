@@ -340,7 +340,7 @@ class CheckoutScanAndPack(Component):
         # odoo.exceptions.UserError:
         # ('You cannot move the same package content more than once in the same
         # transfer or split the same package into two location.', '')
-        picking.action_done()
+        picking._action_done()
         return self._response_for_select_document(
             message=self.msg_store.transfer_done_success(picking)
         )

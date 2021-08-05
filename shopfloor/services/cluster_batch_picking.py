@@ -352,7 +352,7 @@ class ClusterBatchPicking(Component):
                 continue
             picking_lines = picking.mapped("move_line_ids")
             if all(l.shopfloor_unloaded for l in picking_lines):
-                picking.action_done()
+                picking._action_done()
 
     def _response_for_manual_selection(self, batches, message=None):
         data = {
