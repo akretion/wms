@@ -257,6 +257,7 @@ class DataAction(Component):
     @ensure_model("stock.picking.batch")
     def picking_batch(self, record, with_pickings=False, **kw):
         parser = self._picking_batch_parser
+
         if with_pickings:
             parser.append(("picking_ids:pickings", self._picking_parser))
 
