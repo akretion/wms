@@ -189,8 +189,8 @@ const ClusterBatchPicking = {
                             ) {
                                 this.lastScanned = scanned.text;
                             }
-                        }
-                    },
+                        },
+                    }
                 );
             } else if (!last_move_line.id) {
                 this.wait_call(
@@ -209,8 +209,8 @@ const ClusterBatchPicking = {
                             ) {
                                 this.lastScanned = scanned.text;
                             }
-                        }
-                    },
+                        },
+                    }
                 );
             } else {
                 this.set_message({
@@ -278,11 +278,10 @@ const ClusterBatchPicking = {
                                     this.selectedLocation = null;
                                     this.lastPickedLine = last_move_line.id;
                                 }
-                            }
-                        },
+                            },
+                        }
                     );
-                }
-                else {
+                } else {
                     this.set_message({
                         message_type: "error",
                         body: "You must scan a product in this location",

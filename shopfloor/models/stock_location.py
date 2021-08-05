@@ -15,6 +15,13 @@ class StockLocation(models.Model):
         "('09' is before '19', '9' is not). It is recommended to use an"
         " Export then an Import to populate this field using a spreadsheet.",
     )
+    shopfloor_is_stock_transfer_input_location = fields.Boolean(
+        string="Is stock batch transfer source location/sublocation",
+        help="Stock batch transfer location and sublocation may be shown to the user "
+        "during the 2nd step of 2-step reception. We need to know what "
+        "input location to display to the user",
+        default=False,
+    )
     source_move_line_ids = fields.One2many(
         comodel_name="stock.move.line", inverse_name="location_id", readonly=True
     )
