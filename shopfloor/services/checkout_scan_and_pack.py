@@ -193,16 +193,17 @@ class CheckoutScanAndPack(Component):
                 )
 
                 pickings = lines.mapped("picking_id")
-                if skip >= len(pickings):
-                    picking = pickings[-1]
-                    raise NoMoreOrderToSkip(
-                        state="scan_products",
-                        data={
-                            "picking": self._create_data_for_scan_products(picking),
-                            "skip": skip,
-                        },
-                    )
-                picking = pickings[skip : skip + 1]  # take the first one
+                if pickings:
+                    if skip >= len(pickings):
+                        picking = pickings[-1]
+                        raise NoMoreOrderToSkip(
+                            state="scan_products",
+                            data={
+                                "picking": self._create_data_for_scan_products(picking),
+                                "skip": skip,
+                            },
+                        )
+                    picking = pickings[skip : skip + 1]  # take the first one
 
         if not picking:
             package = search.package_from_scan(barcode)

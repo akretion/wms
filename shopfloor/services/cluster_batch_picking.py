@@ -40,7 +40,7 @@ class ClusterBatchPicking(Component):
             line.location_id.shopfloor_picking_sequence or "",
             line.location_id.name,
             -int(line.move_id.priority or 1),
-            line.move_id.date_expected,
+            line.move_id.date,
             line.move_id.sequence,
             line.move_id.id,
             line.id,
