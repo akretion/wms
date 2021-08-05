@@ -54,6 +54,11 @@ const StockBatchTransfer = {
         screen_title: function() {
             return "Input Stock Transfer";
         },
+        findLocationInData: function(barcode) {
+            return this.state.data.move_lines
+                .map(line => line.location_dest.barcode)
+                .find(location_barcode => location_barcode === barcode);
+        }
     },
     data: function() {
         return {
@@ -103,7 +108,7 @@ const StockBatchTransfer = {
 
                         if (this.currentDestLocation) {
                             if (this.lastScanned.length > 0) {
-                                if (intInText && intInText !== 0) {
+                                if (intInText !== false) {
                                     this.wait_call(
                                         this.odoo.call("set_product_qty", {
                                             barcode: this.lastScanned[0],
@@ -111,7 +116,21 @@ const StockBatchTransfer = {
                                                 .currentSourceLocation,
                                             dest_location_id: this.currentDestLocation,
                                             qty: intInText,
-                                        })
+                                        }),
+                                        {
+                                            callback: ({message, data}) => {
+                                                if (
+                                                    message &&
+                                                    message.message_type === "success"
+                                                ) {
+                                                    this.lastScanned = [];
+                                                    if (data.scan_products) {
+                                                        this.lastPickedLines =
+                                                            data.scan_products.move_lines_done;
+                                                    }
+                                                }
+                                            },
+                                        }
                                     );
                                 } else if (this.lastScanned.includes(text)) {
                                     this.wait_call(
@@ -161,26 +180,37 @@ const StockBatchTransfer = {
                                     );
                                 }
                             } else {
-                                this.wait_call(
-                                    this.odoo.call("drop_product_to_location", {
-                                        barcode: text,
-                                        current_source_location_id: this
-                                            .currentSourceLocation,
-                                        dest_location_id: this.currentDestLocation,
-                                    }),
-                                    {
-                                        callback: ({data}) => {
-                                            if (
-                                                data.scan_products.selected_product &&
-                                                data.scan_products.selected_product
-                                                    .length > 0
-                                            ) {
-                                                this.lastScanned =
-                                                    data.scan_products.selected_product;
-                                            }
-                                        },
-                                    }
-                                );
+                                if (this.findLocationInData(text)) {
+                                    this.wait_call(
+                                        this.odoo.call("set_current_location", {
+                                            barcode: text,
+                                            current_source_location_id: this
+                                                .currentSourceLocation,
+                                        })
+                                    );
+                                }
+                                else {
+                                    this.wait_call(
+                                        this.odoo.call("drop_product_to_location", {
+                                            barcode: text,
+                                            current_source_location_id: this
+                                                .currentSourceLocation,
+                                            dest_location_id: this.currentDestLocation,
+                                        }),
+                                        {
+                                            callback: ({data}) => {
+                                                if (
+                                                    data.scan_products.selected_product &&
+                                                    data.scan_products.selected_product
+                                                        .length > 0
+                                                ) {
+                                                    this.lastScanned =
+                                                        data.scan_products.selected_product;
+                                                }
+                                            },
+                                        }
+                                    );
+                                }
                             }
                         } else {
                             this.wait_call(
