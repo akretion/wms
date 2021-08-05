@@ -9,6 +9,7 @@ from . import checkout
 from . import checkout_scan_and_pack
 from . import zone_picking
 from . import cluster_picking
+from . import cluster_batch_picking
 from . import delivery
 from . import location_content_transfer
 from . import single_pack_transfer
