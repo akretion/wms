@@ -43,7 +43,6 @@ class StockBatchTransfer(Component):
             ("picking_id.picking_type_id", "in", self.picking_types.ids),
             ("picking_id.state", "=", "assigned"),
             ("location_id.id", "=", location_id),
-            ("product_uom_qty", ">", 0),
         ]
 
     def _get_data_for_scan_products(
@@ -199,13 +198,14 @@ class StockBatchTransfer(Component):
         quantity_to_add = qty
         move_line_index = 0
 
+        for move_line in product_move_lines:
+            move_line.qty_done = 0
+
         while quantity_to_add > 0 and move_line_index < len(product_move_lines):
             current_move_line = product_move_lines[move_line_index]
-            quantity_possible_to_add = (
-                current_move_line.product_uom_qty - current_move_line.qty_done
-            )
+            quantity_possible_to_add = current_move_line.product_uom_qty
             quantity_added_to_move_line = min(quantity_possible_to_add, quantity_to_add)
-            current_move_line.qty_done += quantity_added_to_move_line
+            current_move_line.qty_done = quantity_added_to_move_line
             quantity_to_add -= quantity_added_to_move_line
 
             if current_move_line.qty_done == current_move_line.product_uom_qty:
@@ -348,10 +348,15 @@ class StockBatchTransfer(Component):
                 state="scan_products", data=data,
             )
 
+        qty = 1
+
+        for move_line in product_move_lines:
+            qty += move_line.qty_done
+
         self._set_product_move_line_quantity(
             current_source_location,
             product_move_lines,
-            1,
+            qty,
             move_lines_children=move_lines_children,
             dest_location_id=dest_location.id,
             product=product,
@@ -397,6 +402,14 @@ class StockBatchTransfer(Component):
                 state="scan_products", data=data,
             )
 
+        message = None
+
+        if qty == 0:
+            message = {
+                "message_type": "success",
+                "body": "Product succesfully put back in source location",
+            }
+
         self._set_product_move_line_quantity(
             current_source_location,
             product_move_lines,
@@ -411,6 +424,7 @@ class StockBatchTransfer(Component):
             current_source_location.id,
             dest_location.id,
             product.barcode_ids,
+            message=message,
         )
 
     @response_decorator
