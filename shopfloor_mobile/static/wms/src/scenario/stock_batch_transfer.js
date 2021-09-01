@@ -188,6 +188,7 @@ const StockBatchTransfer = {
                                                 .currentSourceLocation,
                                         })
                                     );
+                                    this.lastScanned = [];
                                 }
                                 else {
                                     this.wait_call(
@@ -220,6 +221,7 @@ const StockBatchTransfer = {
                                         .currentSourceLocation,
                                 })
                             );
+                            this.lastScanned = [];
                         }
                     },
                     fields: [
