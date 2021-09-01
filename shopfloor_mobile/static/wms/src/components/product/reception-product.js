@@ -7,7 +7,7 @@
 Vue.component("reception-product", {
     props: ["product", "fields"],
     methods: {
-        line_color: function(line) {
+        line_color: function (line) {
             if (line.done) {
                 return this.utils.colors.color_for("pack_line_done");
             }

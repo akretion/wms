@@ -13,21 +13,21 @@ Vue.component("scan-products", {
         },
     },
     computed: {
-        all_lines_done: function() {
-            return this.products.every(prod => prod.done);
+        all_lines_done: function () {
+            return this.products.every((prod) => prod.done);
         },
-        no_products: function() {
-            return this.products.every(prod => prod.qty_done === 0);
+        no_products: function () {
+            return this.products.every((prod) => prod.qty_done === 0);
         },
-        formatedProducts: function() {
+        formatedProducts: function () {
             return this.products
-                .map(prod => ({
+                .map((prod) => ({
                     id: prod.product.id,
-                    name: prod.product.name,
+                    name: prod.product.display_name,
                     qty: prod.quantity,
                     qtyDone: prod.qty_done,
                     done: prod.done,
-                    barcodes: prod.product.barcodes.map(b => b.name),
+                    barcodes: prod.product.barcodes.map((b) => b.name),
                     supplierCode: prod.product.supplier_code,
                 }))
                 .sort((a, b) => (a.done && !this.isLastScanned(a) ? 1 : -1));

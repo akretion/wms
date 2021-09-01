@@ -30,9 +30,9 @@ Vue.component("batch-move-line", {
         },
     },
     computed: {
-        linesBySource: function() {
+        linesBySource: function () {
             const lines = this.moveLines
-                .map(line => {
+                .map((line) => {
                     return {
                         name: line.product.display_name,
                         qty: line.quantity,
@@ -40,7 +40,7 @@ Vue.component("batch-move-line", {
                         done: line.done,
                         source: line.location_src,
                         barcode: line.product.barcode,
-                        barcodes: line.product.barcodes.map(b => b.name),
+                        barcodes: line.product.barcodes.map((b) => b.name),
                         supplierCode: line.product.supplier_code,
                         id: line.id,
                         dest: this.getLineDest(line),
@@ -48,7 +48,7 @@ Vue.component("batch-move-line", {
                     };
                 })
                 .filter(
-                    line =>
+                    (line) =>
                         line.qty > 0 && !(line.done && line.id !== this.lastPickedLine)
                 )
                 .sort((a, b) => (a.done ? 1 : -1));
@@ -57,25 +57,25 @@ Vue.component("batch-move-line", {
             selected.selected = true;
 
             const sources = lines
-                .map(line => line.source)
+                .map((line) => line.source)
                 .filter((value, i, array) => {
-                    return array.findIndex(v => v.id === value.id) === i;
+                    return array.findIndex((v) => v.id === value.id) === i;
                 });
 
             const sourceWithLines = sources
-                .map(source => {
+                .map((source) => {
                     return {
                         source,
                         lines: lines
-                            .filter(line => line.source.id === source.id)
+                            .filter((line) => line.source.id === source.id)
                             .sort((a, b) => (!a.selected ? 1 : -1)),
                     };
                 })
-                .filter(source => source.lines.length > 0)
+                .filter((source) => source.lines.length > 0)
                 .sort((a, b) => (a.name < b.name ? 1 : -1));
 
             const pivotIndex = sourceWithLines.findIndex(
-                source => source.source.id === this.currentLocation
+                (source) => source.source.id === this.currentLocation
             );
 
             if (pivotIndex !== -1) {

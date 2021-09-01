@@ -176,7 +176,10 @@ class DataAction(Component):
                     rec.result_package_id, rec.picking_id, with_packaging=True
                 ),
             ),
-            ("move_id:priority", lambda rec, fname: rec.move_id.priority or "",),
+            (
+                "move_id:priority",
+                lambda rec, fname: rec.move_id.priority or "",
+            ),
         ]
 
     @ensure_model("stock.package_level")
@@ -239,7 +242,11 @@ class DataAction(Component):
         ]
 
     def _product_barcode_list(self, rec):
-        return self._jsonify(rec, self._simple_record_parser(), multi=True,)
+        return self._jsonify(
+            rec,
+            self._simple_record_parser(),
+            multi=True,
+        )
 
     def _product_packaging(self, rec, field):
         return self._jsonify(

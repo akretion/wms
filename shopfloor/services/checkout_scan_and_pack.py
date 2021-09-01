@@ -43,7 +43,9 @@ class CheckoutScanAndPack(Component):
     _description = __doc__
 
     def _get_data_for_scan_products(
-        self, picking_id, move_line_id=None,
+        self,
+        picking_id,
+        move_line_id=None,
     ):
         picking = self.env["stock.picking"].browse(picking_id)
         move_line = self.env["stock.move.line"].browse(move_line_id)
@@ -57,7 +59,8 @@ class CheckoutScanAndPack(Component):
         )
 
     def _create_data_for_scan_products(
-        self, picking,
+        self,
+        picking,
     ):
         data = self.data.picking(picking)
         data.update(
@@ -70,7 +73,11 @@ class CheckoutScanAndPack(Component):
         return data
 
     def _create_response_for_scan_products(
-        self, picking, message=None, skip=None, confirm=False,
+        self,
+        picking,
+        message=None,
+        skip=None,
+        confirm=False,
     ):
         return self._response(
             next_state="scan_products",
@@ -83,7 +90,10 @@ class CheckoutScanAndPack(Component):
         )
 
     def _set_move_line_qty(
-        self, move_line, qty, picking,
+        self,
+        move_line,
+        qty,
+        picking,
     ):
 
         if qty > move_line.product_uom_qty:
@@ -138,7 +148,9 @@ class CheckoutScanAndPack(Component):
         data.update(
             {
                 "move_lines": self.data.move_lines(
-                    move_lines, with_packaging=done, with_package_dest=True,
+                    move_lines,
+                    with_packaging=done,
+                    with_package_dest=True,
                 )
             }
         )
@@ -278,7 +290,8 @@ class CheckoutScanAndPack(Component):
         * scan_products: in all cases
         """
         picking, move_line, message = self._get_data_for_scan_products(
-            picking_id, move_line_id,
+            picking_id,
+            move_line_id,
         )
 
         if message:
@@ -326,7 +339,10 @@ class CheckoutScanAndPack(Component):
         lines = picking.move_line_ids
         if not confirmation:
             if not all(line.qty_done == line.product_uom_qty for line in lines):
-                return self._create_response_for_scan_products(picking, confirm=True,)
+                return self._create_response_for_scan_products(
+                    picking,
+                    confirm=True,
+                )
             elif not all(line.shopfloor_checkout_done for line in lines):
                 return self._create_response_for_scan_products(
                     picking,

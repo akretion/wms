@@ -50,11 +50,11 @@ const Reception = {
     `,
     mounted() {},
     computed: {
-        partnerId: function() {
+        partnerId: function () {
             return this.state.data.id;
         },
     },
-    data: function() {
+    data: function () {
         return {
             usage: "reception",
             initial_state_key: "start",
@@ -62,7 +62,7 @@ const Reception = {
             errorNotFound: undefined,
             states: {
                 start: {
-                    onSelectContact: partner_id => {
+                    onSelectContact: (partner_id) => {
                         this.wait_call(this.odoo.call("list_move_lines", {partner_id}));
                     },
                     fields: [
@@ -122,7 +122,7 @@ const Reception = {
                             this.odoo.call("finish_receipt", {
                                 partner_id: this.partnerId,
                                 move_lines_picked: this.state.data.move_lines_picked.map(
-                                    line => line.id
+                                    (line) => line.id
                                 ),
                             })
                         );
@@ -140,7 +140,7 @@ const Reception = {
                                         partner_id: this.partnerId,
                                         barcode,
                                         move_lines_picking: move_lines_picking.map(
-                                            line => line.id
+                                            (line) => line.id
                                         ),
                                     })
                                 );
@@ -153,7 +153,7 @@ const Reception = {
                                     this.odoo.call("set_quantity", {
                                         partner_id: this.partnerId,
                                         move_lines_picking: move_lines_picking.map(
-                                            line => line.id
+                                            (line) => line.id
                                         ),
                                         qty: intInText,
                                     })
@@ -162,7 +162,7 @@ const Reception = {
                                 barcode === move_lines_picking[0].product.barcode ||
                                 (move_lines_picking[0].product.barcodes &&
                                     move_lines_picking[0].product.barcodes.findIndex(
-                                        b => b.name === barcode
+                                        (b) => b.name === barcode
                                     ) !== -1)
                             ) {
                                 this.wait_call(
@@ -177,7 +177,7 @@ const Reception = {
                                         partner_id: this.partnerId,
                                         barcode,
                                         move_lines_picking: move_lines_picking.map(
-                                            line => line.id
+                                            (line) => line.id
                                         ),
                                         location_dest: barcode,
                                     })

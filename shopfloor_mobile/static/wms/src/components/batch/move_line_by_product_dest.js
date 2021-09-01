@@ -23,9 +23,9 @@ Vue.component("batch-product-by-dest", {
         },
     },
     computed: {
-        productByDest: function() {
+        productByDest: function () {
             const lines = this.moveLines
-                .map(line => {
+                .map((line) => {
                     return {
                         name: line.product.display_name,
                         qty: line.quantity,
@@ -40,7 +40,7 @@ Vue.component("batch-product-by-dest", {
                     };
                 })
                 .filter(
-                    line =>
+                    (line) =>
                         line.qty > 0 &&
                         !(line.done && this.lastPickedLines.indexOf(line.id) === -1)
                 )
@@ -52,7 +52,7 @@ Vue.component("batch-product-by-dest", {
                         acc["" + line.productId + line.done] || []).push(line);
                     return acc;
                 }, {})
-            ).map(prodLines => {
+            ).map((prodLines) => {
                 return prodLines.reduce(
                     (acc, lineProd) => ({
                         name: lineProd.name,
@@ -78,25 +78,25 @@ Vue.component("batch-product-by-dest", {
             selected.selected = true;
 
             const dests = linesByProduct
-                .map(line => line.dest)
+                .map((line) => line.dest)
                 .filter((value, i, array) => {
-                    return array.findIndex(v => v.id === value.id) === i;
+                    return array.findIndex((v) => v.id === value.id) === i;
                 });
 
             const destWithProducts = dests
-                .map(dest => {
+                .map((dest) => {
                     return {
                         dest,
                         lines: linesByProduct
-                            .filter(line => line.dest.id === dest.id)
+                            .filter((line) => line.dest.id === dest.id)
                             .sort((a, b) => (!a.selected ? 1 : -1)),
                     };
                 })
-                .filter(dest => dest.lines.length > 0)
+                .filter((dest) => dest.lines.length > 0)
                 .sort((a, b) => (a.name < b.name ? 1 : -1));
 
             const pivotIndex = destWithProducts.findIndex(
-                dest => dest.dest.id === this.currentLocation
+                (dest) => dest.dest.id === this.currentLocation
             );
 
             if (pivotIndex !== -1) {

@@ -67,7 +67,7 @@ const CheckoutScanAndPack = {
         </Screen>
         `,
     methods: {
-        manual_selection_manual_select_options: function() {
+        manual_selection_manual_select_options: function () {
             return {
                 group_title_default: "Pickings to process",
                 group_color: this.utils.colors.color_for("screen_step_todo"),
@@ -82,11 +82,11 @@ const CheckoutScanAndPack = {
                 },
             };
         },
-        is_confirming: function() {
+        is_confirming: function () {
             return this.state_is("scan_products") && this.confirming;
         },
     },
-    data: function() {
+    data: function () {
         return {
             usage: "checkout_scan_and_pack",
             initial_state_key: "start",
@@ -94,7 +94,7 @@ const CheckoutScanAndPack = {
             confirming: false,
             states: {
                 scan_products: {
-                    on_scan: scanned => {
+                    on_scan: (scanned) => {
                         const intInText = parseInt(scanned.text);
                         if (
                             !isNaN(intInText) &&
@@ -102,7 +102,7 @@ const CheckoutScanAndPack = {
                             this.lastScanned
                         ) {
                             const moveLinesSelected = this.state.data.picking.move_lines.filter(
-                                line =>
+                                (line) =>
                                     line.product.barcode === this.lastScanned &&
                                     !line.done
                             );
@@ -185,7 +185,7 @@ const CheckoutScanAndPack = {
                         {path: "qty", label: "Quantity"},
                         {path: "qtyDone", label: "Done"},
                     ],
-                    on_confirm: confirm => {
+                    on_confirm: (confirm) => {
                         if (confirm === "yes") {
                             this.wait_call(
                                 this.odoo.call("done", {

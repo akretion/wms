@@ -43,24 +43,24 @@ const StockBatchTransfer = {
         </Screen>
         `,
     computed: {
-        currentDestLocation: function() {
+        currentDestLocation: function () {
             return this.state.data.selected_location;
         },
-        currentSourceLocation: function() {
+        currentSourceLocation: function () {
             return this.state.data.id;
         },
     },
     methods: {
-        screen_title: function() {
+        screen_title: function () {
             return "Input Stock Transfer";
         },
-        findLocationInData: function(barcode) {
+        findLocationInData: function (barcode) {
             return this.state.data.move_lines
-                .map(line => line.location_dest.barcode)
-                .find(location_barcode => location_barcode === barcode);
-        }
+                .map((line) => line.location_dest.barcode)
+                .find((location_barcode) => location_barcode === barcode);
+        },
     },
-    data: function() {
+    data: function () {
         return {
             usage: "stock_batch_transfer",
             initial_state_key: "start",
@@ -92,8 +92,7 @@ const StockBatchTransfer = {
                         title: () => {
                             if (!this.currentDestLocation)
                                 return "Go to the first location";
-                            else
-                                return "Scanning products";
+                            else return "Scanning products";
                         },
                         scan_placeholder: () => {
                             if (!this.currentDestLocation)
@@ -188,8 +187,7 @@ const StockBatchTransfer = {
                                                 .currentSourceLocation,
                                         })
                                     );
-                                }
-                                else {
+                                } else {
                                     this.wait_call(
                                         this.odoo.call("drop_product_to_location", {
                                             barcode: text,
@@ -200,7 +198,8 @@ const StockBatchTransfer = {
                                         {
                                             callback: ({data}) => {
                                                 if (
-                                                    data.scan_products.selected_product &&
+                                                    data.scan_products
+                                                        .selected_product &&
                                                     data.scan_products.selected_product
                                                         .length > 0
                                                 ) {

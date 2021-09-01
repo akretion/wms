@@ -74,22 +74,22 @@ export var ScenarioBaseMixin = {
             },
         },
         selectedLocation: {
-            get: function() {
+            get: function () {
                 return this.selectedLocationId;
             },
-            set: function(id) {
+            set: function (id) {
                 this.selectedLocationId = id;
             },
         },
         lastScanned: {
-            get: function() {
+            get: function () {
                 return this.lastBarcodeScanned;
             },
-            set: function(barcode) {
+            set: function (barcode) {
                 this.lastBarcodeScanned = barcode;
             },
         },
-        search_input_placeholder: function() {
+        search_input_placeholder: function () {
             const placeholder = this.state.display_info.scan_placeholder;
             return _.isFunction(placeholder) ? placeholder.call(this) : placeholder;
         },
@@ -202,7 +202,7 @@ export var ScenarioBaseMixin = {
         /*
         Switch state to given one.
         */
-        state_to: function(state_key, query) {
+        state_to: function (state_key, query) {
             return this.$router
                 .push({
                     name: this.usage,
@@ -313,8 +313,8 @@ export var ScenarioBaseMixin = {
         _global_state_key: function (state_key) {
             return this.usage + "/" + state_key;
         },
-        wait_call: function(promise, {keepMessage, callback = () => {}} = {}) {
-            return promise.then(result => {
+        wait_call: function (promise, {keepMessage, callback = () => {}} = {}) {
+            return promise.then((result) => {
                 callback(result);
                 this.on_call_success(result, keepMessage);
             }, this.on_call_error);
@@ -331,7 +331,7 @@ export var ScenarioBaseMixin = {
                 state.exit();
             }
         },
-        on_call_success: function(result, keepMessage) {
+        on_call_success: function (result, keepMessage) {
             if (_.isUndefined(result)) {
                 console.error(result);
                 alert("Something went wrong. Check log.");

@@ -111,7 +111,7 @@ const ClusterBatchPicking = {
         </Screen>
     `,
     computed: {
-        manual_select_picking_fields: function() {
+        manual_select_picking_fields: function () {
             return [
                 {path: "picking_count", label: "Operations"},
                 {path: "move_line_count", label: "Lines"},
@@ -119,7 +119,7 @@ const ClusterBatchPicking = {
         },
     },
     methods: {
-        screen_title: function() {
+        screen_title: function () {
             if (_.isEmpty(this.current_batch()) || this.state_is("confirm_start"))
                 return this.menu_item().name;
             let title = this.current_batch().name;
@@ -129,30 +129,30 @@ const ClusterBatchPicking = {
             }
             return title;
         },
-        current_batch: function() {
+        current_batch: function () {
             return this.state_get_data("confirm_start");
         },
-        current_picking: function() {
+        current_picking: function () {
             const data = this.state_get_data("start_line") || {};
             if (!data.picking) {
                 return null;
             }
             return data.picking;
         },
-        action_full_bin: function() {
+        action_full_bin: function () {
             this.wait_call(
                 this.odoo.call("prepare_unload", {
                     picking_batch_id: this.current_batch().id,
                 })
             );
         },
-        find_move_line: function(move_lines, barcode, filter = () => true) {
+        find_move_line: function (move_lines, barcode, filter = () => true) {
             let move_line;
 
-            move_lines.filter(filter).forEach(line => {
+            move_lines.filter(filter).forEach((line) => {
                 if (
                     line.product.barcode === barcode ||
-                    line.product.barcodes.findIndex(b => b.name === barcode) != -1
+                    line.product.barcodes.findIndex((b) => b.name === barcode) != -1
                 ) {
                     move_line = move_line !== undefined ? move_line : line;
                 }
@@ -160,10 +160,10 @@ const ClusterBatchPicking = {
 
             return move_line || {};
         },
-        find_src_location: function(move_lines, barcode, filter = () => true) {
+        find_src_location: function (move_lines, barcode, filter = () => true) {
             let location_src = "";
 
-            move_lines.filter(filter).forEach(line => {
+            move_lines.filter(filter).forEach((line) => {
                 if (line.location_src.barcode === barcode) {
                     location_src = line.location_src.id;
                 }
@@ -171,7 +171,7 @@ const ClusterBatchPicking = {
 
             return location_src;
         },
-        handle_product_move_line: function({scanned, move_line, last_move_line}) {
+        handle_product_move_line: function ({scanned, move_line, last_move_line}) {
             if (last_move_line.id === move_line.id) {
                 this.wait_call(
                     this.odoo.call("scan_product", {
@@ -182,15 +182,15 @@ const ClusterBatchPicking = {
                         qty: 1,
                     }),
                     {
-                        callback: result => {
+                        callback: (result) => {
                             if (
                                 !result.message ||
                                 result.message.message_type !== "error"
                             ) {
                                 this.lastScanned = scanned.text;
                             }
-                        }
-                    },
+                        },
+                    }
                 );
             } else if (!last_move_line.id) {
                 this.wait_call(
@@ -202,15 +202,15 @@ const ClusterBatchPicking = {
                         qty: 1,
                     }),
                     {
-                        callback: result => {
+                        callback: (result) => {
                             if (
                                 !result.message ||
                                 result.message.message_type !== "error"
                             ) {
                                 this.lastScanned = scanned.text;
                             }
-                        }
-                    },
+                        },
+                    }
                 );
             } else {
                 this.set_message({
@@ -219,7 +219,7 @@ const ClusterBatchPicking = {
                 });
             }
         },
-        on_scan_with_selected_location: function({
+        on_scan_with_selected_location: function ({
             scanned,
             move_line,
             last_move_line,
@@ -269,7 +269,7 @@ const ClusterBatchPicking = {
                             qty: last_move_line.qty_done,
                         }),
                         {
-                            callback: result => {
+                            callback: (result) => {
                                 if (
                                     result.message &&
                                     result.message.message_type === "success"
@@ -278,11 +278,10 @@ const ClusterBatchPicking = {
                                     this.selectedLocation = null;
                                     this.lastPickedLine = last_move_line.id;
                                 }
-                            }
-                        },
+                            },
+                        }
                     );
-                }
-                else {
+                } else {
                     this.set_message({
                         message_type: "error",
                         body: "You must scan a product in this location",
@@ -291,7 +290,7 @@ const ClusterBatchPicking = {
             }
         },
     },
-    data: function() {
+    data: function () {
         // TODO: add a title to each screen
         return {
             usage: "cluster_batch_picking",
@@ -301,10 +300,10 @@ const ClusterBatchPicking = {
             lastPickedLine: null,
             states: {
                 start: {
-                    on_get_work: evt => {
+                    on_get_work: (evt) => {
                         this.wait_call(this.odoo.call("find_batch"));
                     },
-                    on_manual_selection: evt => {
+                    on_manual_selection: (evt) => {
                         this.wait_call(this.odoo.call("list_batch"));
                     },
                 },
@@ -313,7 +312,7 @@ const ClusterBatchPicking = {
                         this.state_to("start");
                         this.reset_notification();
                     },
-                    on_select: selected => {
+                    on_select: (selected) => {
                         this.wait_call(
                             this.odoo.call("select", {
                                 picking_batch_id: selected.id,
@@ -338,7 +337,7 @@ const ClusterBatchPicking = {
                             this.odoo.call("unassign", {
                                 picking_batch_id: this.current_batch().id,
                             })
-                        ).then(function() {
+                        ).then(function () {
                             self.state_reset_data_all();
                         });
                     },
@@ -361,19 +360,19 @@ const ClusterBatchPicking = {
                             );
                         }
                     },
-                    on_scan: scanned => {
+                    on_scan: (scanned) => {
                         const intInText =
                             "" + scanned.text == parseInt(scanned.text, 10) &&
                             parseInt(scanned.text, 10);
                         let move_line = this.find_move_line(
                             this.state.data.move_lines,
                             scanned.text,
-                            line => !line.done
+                            (line) => !line.done
                         );
                         let last_move_line = this.find_move_line(
                             this.state.data.move_lines,
                             this.lastScanned,
-                            line => !line.done
+                            (line) => !line.done
                         );
 
                         //0) Nothing selected:
@@ -387,7 +386,7 @@ const ClusterBatchPicking = {
                         const selectedLocation = this.find_src_location(
                             this.state.data.move_lines,
                             scanned.text,
-                            line => !line.done
+                            (line) => !line.done
                         );
 
                         if (selectedLocation && !last_move_line.id) {
@@ -500,7 +499,7 @@ const ClusterBatchPicking = {
                         title: "Unload all bins confirm",
                         scan_placeholder: "Scan location",
                     },
-                    on_user_confirm: answer => {
+                    on_user_confirm: (answer) => {
                         // TODO: check if this used
                         // -> no flag is set to enable the confirmation dialog,
                         // we only display a message, unlike `confirm_start`
@@ -525,7 +524,7 @@ const ClusterBatchPicking = {
                         title: "Unload single bin",
                         scan_placeholder: "Scan location",
                     },
-                    on_scan: scanned => {
+                    on_scan: (scanned) => {
                         this.wait_call(
                             this.odoo.call("unload_scan_pack", {
                                 picking_batch_id: this.current_batch().id,
@@ -540,7 +539,7 @@ const ClusterBatchPicking = {
                         title: "Set destination",
                         scan_placeholder: "Scan location",
                     },
-                    on_scan: scanned => {
+                    on_scan: (scanned) => {
                         this.wait_call(
                             this.odoo.call("unload_scan_destination", {
                                 picking_batch_id: this.current_batch().id,
@@ -555,7 +554,7 @@ const ClusterBatchPicking = {
                         title: "Set destination confirm",
                         scan_placeholder: "Scan location",
                     },
-                    on_scan: scanned => {
+                    on_scan: (scanned) => {
                         this.wait_call(
                             this.odoo.call("unload_scan_destination", {
                                 picking_batch_id: this.current_batch().id,

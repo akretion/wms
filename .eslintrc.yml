@@ -17,7 +17,6 @@ globals:
   odoo: readonly
   openerp: readonly
   Promise: readonly
-  Vue: readonly
   VueI18n: readonly
   VueRouter: readonly
   Vue2Storage: readonly

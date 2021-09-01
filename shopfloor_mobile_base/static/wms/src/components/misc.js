@@ -191,9 +191,9 @@ Vue.component("line-actions-popup", {
         },
     },
     computed: {
-        actionsWithCondition: function() {
+        actionsWithCondition: function () {
             return this.actions.filter(
-                action => action.condition === undefined || action.condition
+                (action) => action.condition === undefined || action.condition
             );
         },
     },

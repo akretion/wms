@@ -7,7 +7,7 @@
 Vue.component("reception-scanning-product", {
     props: ["stateData"],
     methods: {
-        constructDataFromLines: function(moveLines, done) {
+        constructDataFromLines: function (moveLines, done) {
             const products = moveLines.reduce((acc, line) => {
                 acc[line.product.id] = acc[line.product.id] || {
                     name: line.product.display_name,
@@ -23,7 +23,7 @@ Vue.component("reception-scanning-product", {
 
             return Object.values(products);
         },
-        splitMoveLinesByDest: function(moveLines, done) {
+        splitMoveLinesByDest: function (moveLines, done) {
             const products = moveLines.reduce((acc, line) => {
                 acc[line.product.id + "," + line.location_dest.id] = acc[
                     line.product.id + "," + line.location_dest.id
@@ -44,18 +44,18 @@ Vue.component("reception-scanning-product", {
         },
     },
     computed: {
-        moveLinesPicked: function() {
+        moveLinesPicked: function () {
             const moveLines = this.stateData.data.move_lines_picked;
             const moveLineByDest = this.splitMoveLinesByDest(moveLines, true);
 
             return moveLineByDest;
         },
-        moveLinesPicking: function() {
+        moveLinesPicking: function () {
             const moveLines = this.stateData.data.move_lines_picking;
 
             return this.constructDataFromLines(moveLines);
         },
-        moveLinesPickingDest: function() {
+        moveLinesPickingDest: function () {
             return this.stateData.data.move_lines_picking[0].location_dest;
         },
     },

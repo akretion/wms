@@ -63,7 +63,7 @@
         <field
             name="picking_type_ids"
             eval="[(4, ref('shopfloor.picking_type_reception_demo'))]"
-            />
+        />
     </record>
     <record id="shopfloor_menu_checkout_scan_and_pack" model="shopfloor.menu">
         <field name="name">Checkout Scan And Pack</field>
