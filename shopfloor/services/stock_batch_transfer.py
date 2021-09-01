@@ -71,9 +71,12 @@ class StockBatchTransfer(Component):
             product_move_lines = [
                 line
                 for line in move_lines_children
-                if line.product_id.barcode == product_barcode
-                or product_barcode
-                in [barcode.name for barcode in line.product_id.mapped("barcode_ids")]
+                if (
+                    line.product_id.barcode == product_barcode
+                    or product_barcode
+                    in [barcode.name for barcode in line.product_id.mapped("barcode_ids")]
+                )
+                and ((not dest_location_id) or line.location_dest_id.id == dest_location_id)
             ]
             product = search.product_from_scan(product_barcode)
 
