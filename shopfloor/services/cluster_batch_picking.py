@@ -142,7 +142,7 @@ class ClusterBatchPicking(Component):
             ] = suggested_location_dest
 
         move_lines_data = self.data.move_lines(
-            move_lines, with_picking=True, with_packaging=True
+            move_lines.sorted(key=self._sort_key_lines), with_picking=True, with_packaging=True
         )
         for line in move_lines_data:
             picking = line["picking"]
