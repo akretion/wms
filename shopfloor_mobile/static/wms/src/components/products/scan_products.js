@@ -23,7 +23,7 @@ Vue.component("scan-products", {
             return this.products
                 .map(prod => ({
                     id: prod.product.id,
-                    name: prod.product.name,
+                    name: prod.product.display_name,
                     qty: prod.quantity,
                     qtyDone: prod.qty_done,
                     done: prod.done,
