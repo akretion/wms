@@ -282,3 +282,45 @@ class DataAction(Component):
             "id",
             "name",
         ]
+
+    def purchase_order(self, record, **kw):
+        parser = self._purchase_order_parser
+        data = self._jsonify(record, parser, **kw)
+
+        if data:
+            for order in data:
+                order.update({"order_line_count": len(order["order_line"])})
+                order.pop("order_line")
+
+        return data
+
+    def purchase_orders(self, record, **kw):
+        return self.purchase_order(record, multi=True)
+
+    @property
+    def _purchase_order_parser(self):
+        return [
+            "id",
+            "name",
+            "date_order",
+            "date_planned",
+            ("partner_id:partner", self._partner_parser),
+            "order_line",
+        ]
+
+    @ensure_model("stock.inventory")
+    def inventory(self, record, **kw):
+        return self._jsonify(record, self._inventory_parser, **kw)
+
+    def inventories(self, record, **kw):
+        return self.inventory(record, multi=True)
+
+    @property
+    def _inventory_parser(self):
+        return [
+            "id",
+            "name",
+            "date",
+            ("location_ids:locations", self._location_parser),
+            ("product_ids:products", self._product_parser),
+        ]

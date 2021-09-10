@@ -45,8 +45,18 @@ class Inventory(Component):
     ):
         pass
 
+    @response_decorator
     def list_inventory(self):
-        pass
+        inventories = self.env["stock.inventory"].search(
+            [("state", "=", "confirm")],
+            order="date asc",
+        )
+
+        inventories_data = self.data.inventories(inventories)
+
+        return self._response(
+            next_state="start", data={"inventories": inventories_data},
+        );
 
     @response_decorator
     def scan_product(self):
@@ -84,57 +94,16 @@ class ShopfloorStockBatchTransferValidatorResponse(Component):
         """
         return {
             "start": self._schema_inventory,
-            "scan_products": self._schema_inventory_lines,
         }
 
     @property
     def _schema_inventory(self):
         return {
-            "input_locations": self.schemas._schema_list_of(
-                self.schemas_detail.location_detail()
+            "inventories": self.schemas._schema_list_of(
+                self.schemas_detail.inventory()
             ),
         }
 
-    @property
-    def _schema_move_lines(self):
-        return {
-            "move_lines": self.schemas._schema_list_of(
-                self.schemas.move_line(with_packaging=True, with_picking=True)
-            ),
-            "id": {"required": True, "type": "integer"},
-            "selected_location": {
-                "required": False,
-                "type": "integer",
-                "nullable": True,
-            },
-            "selected_product": {
-                "type": "list",
-                "nullable": True,
-                "schema": {"type": "string"},
-                "required": False,
-            },
-            "move_lines_done": {
-                "type": "list",
-                "nullable": True,
-                "schema": {"type": "integer"},
-            },
-        }
-
-    def list_input_location(self):
+    def list_inventory(self):
         return self._response_schema(next_states={"start"},)
-
-    def scan_location(self):
-        return self._response_schema(next_states={"start", "scan_products"})
-
-    def set_current_location(self):
-        return self._response_schema(next_states={"scan_products"})
-
-    def drop_product_to_location(self):
-        return self._response_schema(next_states={"scan_products"})
-
-    def set_product_qty(self):
-        return self._response_schema(next_states={"scan_products"})
-
-    def set_product_destination(self):
-        return self._response_schema(next_states={"scan_products"})
 

@@ -171,3 +171,26 @@ class ShopfloorSchemaAction(Component):
                 "nullable": True,
             },
         }
+
+    def purchase_order(self):
+        return {
+            "id": {"required": True, "type": "integer"},
+            "name": {"required": True, "type": "string"},
+            "partner": self._schema_dict_of(self.partner()),
+            "order_line_count": {
+                "type": "integer",
+                "nullable": False,
+                "required": True,
+            },
+            "date_order": {"type": "string", "nullable": True, "required": True},
+            "date_planned": {"type": "string", "nullable": True, "required": True},
+        }
+
+    def inventory(self):
+        return {
+            "id": {"required": True, "type": "integer"},
+            "name": {"required": True, "type": "string"},
+            "date": {"required": True, "type": "string"},
+            "locations": self._schema_list_of(self.location()),
+            "products": self._schema_list_of(self.product()),
+        }
