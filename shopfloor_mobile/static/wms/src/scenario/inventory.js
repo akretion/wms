@@ -8,11 +8,11 @@ const Inventory = {
             <template v-slot:header>
                 <state-display-info :info="state.display_info" v-if="state.display_info"/>
             </template>
-            <searchbar
-                v-if="state.on_scan"
-                v-on:found="on_scan"
-                :input_placeholder="search_input_placeholder"
-                :refocusInput="true"
+                <choosing-inventory
+                    v-if="state_is('start')"
+                    @select-inventory="state.onSelectInventory"
+                    :inventories="state.data.inventories"
+                    :fields="state.fields"
                 />
         </Screen>
     `,
@@ -26,11 +26,11 @@ const Inventory = {
         return {
             usage: "inventory",
             initial_state_key: "start",
-            scan_destination_qty: 0,
             currentLocation: null,
             lastPickedLine: null,
             states: {
                 start: {
+                    on_scan: () => {},
                     onSelectInventory: inventory_id => {
                         this.wait_call(this.odoo.call("select_inventory"), {
                             inventory_id,
@@ -41,6 +41,8 @@ const Inventory = {
                             this.wait_call(this.odoo.call("list_inventory"));
                         }
                     },
+                    fields: [
+                    ],
                 },
             },
         };
