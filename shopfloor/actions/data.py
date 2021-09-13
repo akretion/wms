@@ -242,7 +242,11 @@ class DataAction(Component):
         ]
 
     def _product_barcode_list(self, rec):
-        return self._jsonify(rec, self._simple_record_parser(), multi=True,)
+        return self._jsonify(
+            rec,
+            self._simple_record_parser(),
+            multi=True,
+        )
 
     def _product_packaging(self, rec, field):
         return self._jsonify(
