@@ -131,6 +131,11 @@
                 t-attf-src="/shopfloor_mobile/static/wms/src/components/forms/form_edit_stock_picking.js?v=#{mod_version}"
                 type="module"
             />
+            <script
+                id="script_component_scan_products"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/products/scan_products.js?v=#{mod_version}"
+                type="module"
+            />
             <!-- Scenario -->
             <script
                 id="script_scenario_stock_batch_transfer"
@@ -155,6 +160,11 @@
             <script
                 id="script_scenario_checkout"
                 t-attf-src="/shopfloor_mobile/static/wms/src/scenario/checkout.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_checkout_scan_and_pack"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/checkout_scan_and_pack.js?v=#{mod_version}"
                 type="module"
             />
             <script
