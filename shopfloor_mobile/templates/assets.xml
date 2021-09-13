@@ -111,6 +111,11 @@
                 t-attf-src="/shopfloor_mobile/static/wms/src/components/forms/form_edit_stock_picking.js?v=#{mod_version}"
                 type="module"
             />
+            <script
+                id="script_component_inventory_by_dest"
+                t-attf-src="/shopfloor_mobile/static/wms/src/components/inventory/line_by_dest.js?v=#{mod_version}"
+                type="module"
+            />
             <!-- Scenario -->
             <script
                 id="script_scenario_single_pack_transfer"
