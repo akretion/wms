@@ -26,9 +26,10 @@ Vue.component("detail-simple-product", {
         :options="{fields: fields}"
         :card_color="line_color(product)"
         :outlined="selected"
+        :small="product.done"
     >
         <template v-slot:after_details>
-            <v-container>
+            <v-container v-if="!product.done">
                 <slot name="actions">
                 </slot>
             </v-container>
