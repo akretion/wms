@@ -24,6 +24,7 @@ class DataDetailAction(Component):
     def _location_detail_parser(self):
         return self._location_parser + [
             "complete_name",
+            ("location_id:location", self._location_parser),
             (
                 "reserved_move_line_ids:reserved_move_lines",
                 lambda record, fname: self.move_lines(record[fname]),
@@ -145,4 +146,21 @@ class DataDetailAction(Component):
             ("name", lambda rec, fname: rec.name.name),
             "product_name",
             "product_code",
+        ]
+
+    @ensure_model("stock.inventory.line")
+    def inventory_line(self, record, **kw):
+        return self._jsonify(record, self._inventory_line_parser, **kw)
+
+    def inventory_lines(self, record, **kw):
+        return self.inventory_line(record, multi=True)
+
+    @property
+    def _inventory_line_parser(self):
+        return [
+            "id",
+            "product_qty",
+            "theoretical_qty",
+            ("product_id:product", self._product_parser),
+            ("location_id:location", self._location_detail_parser),
         ]

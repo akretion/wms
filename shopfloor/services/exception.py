@@ -109,6 +109,22 @@ class ProductNotInOrder(MessageBasedError):
         }
         super().__init__(state, data, message)
 
+class InventoryNotFound(MessageBasedError):
+    def __init__(self, state, data):
+        message = {
+            "message_type": "error",
+            "body": _("No inventory found with this id"),
+        }
+        super().__init__(state, data, message)
+
+class ProductNotInInventory(MessageBasedError):
+    def __init__(self, state, data):
+        message = {
+            "message_type": "error",
+            "body": _("Product is not in inventory"),
+        }
+        super().__init__(state, data, message)
+
 
 def response_decorator(called_func):
     @wraps(called_func)

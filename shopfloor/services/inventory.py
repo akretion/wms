@@ -7,6 +7,8 @@ from odoo.addons.component.core import Component
 
 from .exception import (
     LocationNotFound,
+    InventoryNotFound,
+    ProductNotInInventory,
     response_decorator,
 )
 
@@ -35,18 +37,44 @@ class Inventory(Component):
         self,
         inventory_id,
         location_barcode=None,
+        location_id=None,
+        product_barcode=None,
+        product_scanned_list_id=[],
     ):
         search = self._actions_for("search")
         location = None
+        product = None
+        product_scanned_list = None
 
         if location_barcode:
             location = search.location_from_scan(location_barcode)
+
+        if location_id:
+            location = self.env["stock.location"].browse(location_id)
+
+        product_lines = self.env["stock.inventory.line"].search([
+            ("inventory_id.id", "=", inventory_id),
+            ("location_id.id", "=", location_id),
+        ])
+
+        if product_barcode:
+            product = next((p for p in product_lines if (product_barcode in [barcode.name for barcode in p.product_id.mapped("barcode_ids")])), None)
+            product_scanned_list_id.append(product.id)
+
+        product_scanned_list_search = list(set(product_scanned_list_id))
+        product_scanned_list = self.env["stock.inventory.line"].search([
+            ("inventory_id.id", "=", inventory_id),
+            ("location_id.id", "=", location_id),
+            ("id", "in", product_scanned_list_search),
+        ])
 
         return (
             self.env["stock.inventory.line"].search(
                 [("inventory_id", "=", inventory_id)],
             ),
             location,
+            product,
+            [p.id for p in product_scanned_list],
         )
 
     def _create_data_for_scan_products(
@@ -54,21 +82,39 @@ class Inventory(Component):
         inventory_id,
         inventory_lines,
         selected_location_id=None,
+        product_scanned_list=[]
     ):
         return {
             "inventory_id": inventory_id,
-            "inventory_lines": self.data.inventory_lines(inventory_lines),
+            "inventory_lines": self.data_detail.inventory_lines(inventory_lines),
             "selected_location": selected_location_id,
+            "product_scanned_list": product_scanned_list,
         }
 
 
     def _create_response_for_scan_products(
         self,
+        inventory_id,
+        inventory_lines,
+        selected_location_id=None,
+        product_scanned_list=[],
+        message=None,
     ):
-        pass
+        data = self._create_data_for_scan_products(
+            inventory_id,
+            inventory_lines,
+            selected_location_id,
+            product_scanned_list,
+        )
 
-    @response_decorator
-    def list_inventory(self):
+        print(data)
+        return self._response(
+            next_state="scan_product", data=data, message=message,
+        )
+
+    def _create_data_for_start(
+        self,
+    ):
         inventories = self.env["stock.inventory"].search(
             [("state", "=", "confirm")],
             order="date asc",
@@ -76,25 +122,35 @@ class Inventory(Component):
 
         inventories_data = self.data.inventories(inventories)
 
+        return {"inventories": inventories_data}
+
+
+    @response_decorator
+    def list_inventory(self):
+        data = self._create_data_for_start()
+
         return self._response(
-            next_state="start", data={"inventories": inventories_data},
-        );
+            next_state="start", data=data
+        )
 
     @response_decorator
     def select_inventory(self, inventory_id):
-        inventory_lines, _ = self._get_data_for_scan_products(inventory_id)
+        inventory_lines, _, _, _ = self._get_data_for_scan_products(inventory_id)
 
-        data = self._create_data_for_scan_products(
+        if len(inventory_lines) == 0:
+            data = self._create_data_for_start()
+            raise InventoryNotFound(
+                state="start", data=data
+            )
+
+        return self._create_response_for_scan_products(
             inventory_id,
             inventory_lines,
-        )
-        return self._response(
-            next_state="scan_product", data=data,
         )
 
     @response_decorator
     def select_location(self, inventory_id, location_barcode):
-        inventory_lines, location = self._get_data_for_scan_products(inventory_id, location_barcode)
+        inventory_lines, location, _, _ = self._get_data_for_scan_products(inventory_id, location_barcode)
 
         if not location:
             data = self._create_data_for_scan_products(
@@ -103,20 +159,48 @@ class Inventory(Component):
             )
             raise LocationNotFound(state="scan_product", data=data)
 
-        data = self._create_data_for_scan_products(
+        return self._create_response_for_scan_products(
             inventory_id,
             inventory_lines,
             location.id,
-        )
-
-        return self._response(
-            next_state="scan_product",
-            data=data,
+            message={
+                "message_type": "success",
+                "body": "Selected location {}".format(location.name),
+            }
         )
 
     @response_decorator
-    def scan_product(self):
-        pass
+    def scan_product(self, inventory_id, location_id, barcode, product_scanned_list_id):
+        inventory_lines, location, product, product_scanned_list = self._get_data_for_scan_products(
+            inventory_id,
+            location_id=location_id,
+            product_barcode=barcode,
+            product_scanned_list_id=product_scanned_list_id,
+        )
+
+        if not location:
+            data = self._create_data_for_scan_products(
+                inventory_id,
+                inventory_lines,
+            )
+            raise LocationNotFound(state="scan_product", data=data)
+
+        if not product:
+            data = self._create_data_for_scan_products(
+                inventory_id,
+                inventory_lines,
+                location.id,
+            )
+            raise ProductNotInInventory(state="scan_product", data=data)
+
+        product.product_qty += 1
+
+        return self._create_response_for_scan_products(
+            inventory_id,
+            inventory_lines,
+            location.id,
+            product_scanned_list,
+        )
 
 class ShopfloorStockBatchTransferValidator(Component):
     """Validators for the Delivery endpoints"""
@@ -141,7 +225,10 @@ class ShopfloorStockBatchTransferValidator(Component):
 
     def scan_product(self):
         return {
+            "inventory_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "location_id": {"coerce": to_int, "required": True, "type": "integer"},
             "barcode": {"required": True, "type": "string"},
+            "product_scanned_list_id": {"required": True, "type": "list", "schema":{"type": "integer"}},
         }
 
 class ShopfloorStockBatchTransferValidatorResponse(Component):
@@ -176,10 +263,11 @@ class ShopfloorStockBatchTransferValidatorResponse(Component):
     def _schema_line_inventory(self):
         return {
             "inventory_lines": self.schemas._schema_list_of(
-                self.schemas.inventory_line()
+                self.schemas_detail.inventory_line()
             ),
             "inventory_id": {"type": "integer", "required": True},
-            "selected_location": {"type": "integer", "required": False},
+            "selected_location": {"type": "integer", "required": False, "nullable": True},
+            "product_scanned_list": {"type": "list", "schema": {"type": "integer", "required": True}, "required": True},
         }
 
     def list_inventory(self):
