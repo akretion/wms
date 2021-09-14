@@ -88,24 +88,31 @@ const Inventory = {
                             }));
                         }
                         else {
-                            this.wait_call(this.odoo.call("scan_product",
-                                {
+                            if (this.state.data.inventory_lines.find(line =>
+                                line.product.barcode === text || line.product.barcodes.includes(text)
+                            )) {
+                                this.wait_call(this.odoo.call("scan_product",
+                                    {
+                                        inventory_id: this.state.data.inventory_id,
+                                        location_id: this.currentDestLocation,
+                                        barcode: text,
+                                        product_scanned_list_id: this.productScanned,
+                                    }
+                                ));
+                            }
+                            else {
+                                this.wait_call(this.odoo.call("select_location", {
                                     inventory_id: this.state.data.inventory_id,
-                                    location_id: this.currentDestLocation,
-                                    barcode: text,
-                                    product_scanned_list_id: this.productScanned,
-                                }
-                            ));
+                                    location_barcode: text,
+                                }))
+                            }
                         }
                     },
                     fields: [
                         {
-                            label: "Location",
-                            path: "location.name",
-                        },
-                        {
                             label: "Counted",
                             path: "qty",
+                            klass: "title",
                         },
                     ],
                 },
