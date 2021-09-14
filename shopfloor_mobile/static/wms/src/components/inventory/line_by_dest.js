@@ -10,6 +10,7 @@ Vue.component("inventory-by-dest", {
         "fields",
         "lastScanned",
         "currentLocation",
+        "productScanned",
     ],
     methods: {
         isLastScanned(product) {
@@ -75,7 +76,7 @@ Vue.component("inventory-by-dest", {
                     :card_color="utils.colors.color_for(currentLocation === location.location.id ? 'detail_main_card_selected' : 'detail_main_card')"
                     />
                 <detail-simple-product
-                    v-if="currentLocation === product.location.id"
+                    v-if="productScanned.includes(product.id)"
                     v-for="product in location.lines"
                     :product="product"
                     :fields="fields"

@@ -26,6 +26,7 @@ const Inventory = {
                     :fields="state.fields"
                     :currentLocation="state.data.selected_location"
                     :lastScanned="lastScanned"
+                    :productScanned="productScanned"
                 />
         </Screen>
     `,
@@ -34,11 +35,18 @@ const Inventory = {
             return "Scan stuffs";
         },
     },
+    computed: {
+        currentDestLocation: function() {
+            return this.state.data.selected_location;
+        },
+        productScanned: function() {
+            return this.state.data.product_scanned_list;
+        },
+    },
     data: function() {
         return {
             usage: "inventory",
             initial_state_key: "start",
-            currentLocation: null,
             lastScanned: null,
             states: {
                 start: {
@@ -73,10 +81,22 @@ const Inventory = {
                 },
                 scan_product: {
                     on_scan: ({text}) => {
-                        this.wait_call(this.odoo.call("select_location", {
-                            inventory_id: this.state.data.inventory_id,
-                            location_barcode: text,
-                        }));
+                        if (!this.currentDestLocation) {
+                            this.wait_call(this.odoo.call("select_location", {
+                                inventory_id: this.state.data.inventory_id,
+                                location_barcode: text,
+                            }));
+                        }
+                        else {
+                            this.wait_call(this.odoo.call("scan_product",
+                                {
+                                    inventory_id: this.state.data.inventory_id,
+                                    location_id: this.currentDestLocation,
+                                    barcode: text,
+                                    product_scanned_list_id: this.productScanned,
+                                }
+                            ));
+                        }
                     },
                     fields: [
                         {
