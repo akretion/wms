@@ -59,7 +59,8 @@ class Inventory(Component):
 
         if product_barcode:
             product = next((p for p in product_lines if (product_barcode in [barcode.name for barcode in p.product_id.mapped("barcode_ids")])), None)
-            product_scanned_list_id.append(product.id)
+            if product:
+                product_scanned_list_id.append(product.id)
 
         product_scanned_list_search = list(set(product_scanned_list_id))
         product_scanned_list = self.env["stock.inventory.line"].search([
