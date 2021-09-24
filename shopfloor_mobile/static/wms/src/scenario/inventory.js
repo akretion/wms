@@ -89,8 +89,14 @@ const Inventory = {
                         }
                         else {
                             if (this.state.data.inventory_lines.find(line =>
-                                line.product.barcode === text || line.product.barcodes.includes(text)
+                                line.location.barcode === text
                             )) {
+                                this.wait_call(this.odoo.call("select_location", {
+                                    inventory_id: this.state.data.inventory_id,
+                                    location_barcode: text,
+                                }))
+                            }
+                            else {
                                 this.wait_call(this.odoo.call("scan_product",
                                     {
                                         inventory_id: this.state.data.inventory_id,
@@ -99,12 +105,6 @@ const Inventory = {
                                         product_scanned_list_id: this.productScanned,
                                     }
                                 ));
-                            }
-                            else {
-                                this.wait_call(this.odoo.call("select_location", {
-                                    inventory_id: this.state.data.inventory_id,
-                                    location_barcode: text,
-                                }))
                             }
                         }
                     },
