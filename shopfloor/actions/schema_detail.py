@@ -105,6 +105,7 @@ class ShopfloorSchemaDetailAction(Component):
             "id": {"required": True, "type": "integer"},
             "product_qty": {"required": True, "type": "float"},
             "theoretical_qty": {"required": True, "type": "float"},
+            "created_from_shopfloor": {"required": True, "type": "boolean"},
             "product": self._schema_dict_of(self.product()),
             "location": self._schema_dict_of(self.location_detail()),
         }

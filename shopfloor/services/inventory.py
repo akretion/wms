@@ -37,7 +37,7 @@ class Inventory(Component):
         self,
         inventory_id,
         location_barcode=None,
-        location_id=None,
+        location_id_prout_prout=None,
         product_barcode=None,
         product_scanned_list_id=[],
     ):
@@ -45,16 +45,17 @@ class Inventory(Component):
         location = None
         product = None
         product_scanned_list = None
+        new_product = None
 
         if location_barcode:
             location = search.location_from_scan(location_barcode)
 
-        if location_id:
-            location = self.env["stock.location"].browse(location_id)
+        if location_id_prout_prout:
+            location = self.env["stock.location"].browse(location_id_prout_prout)
 
         product_lines = self.env["stock.inventory.line"].search([
             ("inventory_id.id", "=", inventory_id),
-            ("location_id.id", "=", location_id),
+            ("location_id.id", "=", location_id_prout_prout),
         ])
 
         if product_barcode:
@@ -62,10 +63,13 @@ class Inventory(Component):
             if product:
                 product_scanned_list_id.append(product.id)
 
+        if product_barcode and not product:
+            new_product = search.product_from_scan(product_barcode)
+
         product_scanned_list_search = list(set(product_scanned_list_id))
         product_scanned_list = self.env["stock.inventory.line"].search([
             ("inventory_id.id", "=", inventory_id),
-            ("location_id.id", "=", location_id),
+            ("location_id.id", "=", location_id_prout_prout),
             ("id", "in", product_scanned_list_search),
         ])
 
@@ -76,6 +80,7 @@ class Inventory(Component):
             location,
             product,
             [p.id for p in product_scanned_list],
+            new_product,
         )
 
     def _create_data_for_scan_products(
@@ -108,7 +113,6 @@ class Inventory(Component):
             product_scanned_list,
         )
 
-        print(data)
         return self._response(
             next_state="scan_product", data=data, message=message,
         )
@@ -136,7 +140,7 @@ class Inventory(Component):
 
     @response_decorator
     def select_inventory(self, inventory_id):
-        inventory_lines, _, _, _ = self._get_data_for_scan_products(inventory_id)
+        inventory_lines, _, _, _, _ = self._get_data_for_scan_products(inventory_id)
 
         if len(inventory_lines) == 0:
             data = self._create_data_for_start()
@@ -151,7 +155,7 @@ class Inventory(Component):
 
     @response_decorator
     def select_location(self, inventory_id, location_barcode):
-        inventory_lines, location, _, _ = self._get_data_for_scan_products(inventory_id, location_barcode)
+        inventory_lines, location, _, _, _ = self._get_data_for_scan_products(inventory_id, location_barcode)
 
         if not location:
             data = self._create_data_for_scan_products(
@@ -172,9 +176,9 @@ class Inventory(Component):
 
     @response_decorator
     def scan_product(self, inventory_id, location_id, barcode, product_scanned_list_id):
-        inventory_lines, location, product, product_scanned_list = self._get_data_for_scan_products(
+        inventory_lines, location, product, product_scanned_list, new_product = self._get_data_for_scan_products(
             inventory_id,
-            location_id=location_id,
+            location_id_prout_prout=location_id,
             product_barcode=barcode,
             product_scanned_list_id=product_scanned_list_id,
         )
@@ -186,7 +190,7 @@ class Inventory(Component):
             )
             raise LocationNotFound(state="scan_product", data=data)
 
-        if not product:
+        if not product and not new_product:
             data = self._create_data_for_scan_products(
                 inventory_id,
                 inventory_lines,
@@ -194,7 +198,21 @@ class Inventory(Component):
             )
             raise ProductNotInInventory(state="scan_product", data=data)
 
-        product.product_qty += 1
+        if product:
+            product.product_qty += 1
+
+        if new_product:
+            inventory = self._actions_for("inventory")
+            line = inventory.create_inventory_line(
+                inventory_id,
+                location.id,
+                new_product.id,
+                1
+            )
+            inventory_lines = self.env["stock.inventory.line"].search(
+                [("inventory_id", "=", inventory_id)],
+            )
+            product_scanned_list.append(line.id)
 
         return self._create_response_for_scan_products(
             inventory_id,

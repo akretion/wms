@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="stock_inventory_line_tree" model="ir.ui.view">
+        <field name="name">Shopfloor stock.inventory.line.tree</field>
+        <field name="model">stock.inventory.line</field>
+        <field name="inherit_id" ref="stock.stock_inventory_line_tree" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_qty']" position="after">
+                <field name="created_from_shopfloor" string="From shopfloor" width="0.1" />
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,6 +1,6 @@
 # Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
-from odoo import models
+from odoo import models, fields
 
 
 class StockInventory(models.Model):
@@ -17,3 +17,10 @@ class StockInventory(models.Model):
             if "stock.group_stock_manager" in allow_groups and self.env.su:
                 return True
         return super().user_has_groups(groups)
+
+class StockInventoryLine(models.Model):
+    _inherit = "stock.inventory.line"
+
+    created_from_shopfloor = fields.Boolean('Line is created by shopfloor_mobile',
+        help="Indicates that the lines was created by the shopfloor mobile app and "
+        "can be deleted by the shopfloor mobile app")

@@ -194,12 +194,3 @@ class ShopfloorSchemaAction(Component):
             "locations": self._schema_list_of(self.location()),
             "products": self._schema_list_of(self.product()),
         }
-
-    def inventory_line(self):
-        return {
-            "id": {"required": True, "type": "integer"},
-            "product_qty": {"required": True, "type": "float"},
-            "theoretical_qty": {"required": True, "type": "float"},
-            "product": self._schema_dict_of(self.product()),
-            "location": self._schema_dict_of(self.location()),
-        }
