@@ -191,6 +191,8 @@ class Inventory(Component):
             data = self._create_data_for_scan_products(
                 inventory_id,
                 inventory_lines,
+                None,
+                product_scanned_list,
             )
             raise LocationNotFound(state="scan_product", data=data)
 
@@ -199,6 +201,7 @@ class Inventory(Component):
                 inventory_id,
                 inventory_lines,
                 location.id,
+                product_scanned_list,
             )
             raise ProductNotInInventory(state="scan_product", data=data)
 
