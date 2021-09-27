@@ -29,7 +29,7 @@ Vue.component("inventory-by-dest", {
                         name: line.product.display_name,
                         id: line.id,
                         location: line.location,
-                        barcodes: line.product.barcodes,
+                        barcodes: line.product.barcodes.map(b => b.name),
                         qty: line.product_qty,
                     };
                 })

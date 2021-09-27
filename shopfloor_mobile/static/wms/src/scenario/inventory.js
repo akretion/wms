@@ -34,6 +34,14 @@ const Inventory = {
         screen_title: function() {
             return "Scan stuffs";
         },
+        getLastScannedLine: function() {
+            return this.state.data.inventory_lines.find(line =>
+                line.product.barcode == this.lastScanned ||
+                line.product.barcodes.map(b => b.name).includes(
+                    this.lastScanned
+                ));
+
+        }
     },
     computed: {
         currentDestLocation: function() {
@@ -81,6 +89,10 @@ const Inventory = {
                 },
                 scan_product: {
                     on_scan: ({text}) => {
+                        const intInText =
+                            "" + text == parseInt(text, 10) &&
+                            parseInt(text, 10);
+
                         if (!this.currentDestLocation) {
                             this.wait_call(this.odoo.call("select_location", {
                                 inventory_id: this.state.data.inventory_id,
@@ -97,14 +109,32 @@ const Inventory = {
                                 }))
                             }
                             else {
-                                this.wait_call(this.odoo.call("scan_product",
-                                    {
-                                        inventory_id: this.state.data.inventory_id,
-                                        location_id: this.currentDestLocation,
-                                        barcode: text,
-                                        product_scanned_list_id: this.productScanned,
-                                    }
-                                ));
+                                if (this.lastScanned && !isNaN(intInText) && intInText >= 0 &&
+                                    this.getLastScannedLine()
+                                    ) {
+                                    const line = this.getLastScannedLine();
+                                    this.wait_call(this.odoo.call("set_quantity",
+                                        {
+                                            inventory_id: this.state.data.inventory_id,
+                                            location_id: this.currentDestLocation,
+                                            product_id: line.product.id,
+                                            qty: intInText,
+                                            product_scanned_list_id: this.productScanned,
+                                        }
+                                    ));
+                                    this.lastScanned = text;
+                                }
+                                else {
+                                    this.wait_call(this.odoo.call("scan_product",
+                                        {
+                                            inventory_id: this.state.data.inventory_id,
+                                            location_id: this.currentDestLocation,
+                                            barcode: text,
+                                            product_scanned_list_id: this.productScanned,
+                                        }
+                                    ));
+                                    this.lastScanned = text;
+                                }
                             }
                         }
                     },
