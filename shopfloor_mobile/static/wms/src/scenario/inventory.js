@@ -122,7 +122,6 @@ const Inventory = {
                                             product_scanned_list_id: this.productScanned,
                                         }
                                     ));
-                                    this.lastScanned = text;
                                 }
                                 else {
                                     this.wait_call(this.odoo.call("scan_product",
