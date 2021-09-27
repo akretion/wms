@@ -39,6 +39,7 @@ class Inventory(Component):
         location_barcode=None,
         location_id_prout_prout=None,
         product_barcode=None,
+        product_id=None,
         product_scanned_list_id=[],
     ):
         search = self._actions_for("search")
@@ -62,6 +63,9 @@ class Inventory(Component):
             product = next((p for p in product_lines if (product_barcode in [barcode.name for barcode in p.product_id.mapped("barcode_ids")])), None)
             if product:
                 product_scanned_list_id.append(product.id)
+
+        if product_id:
+            product = next((p for p in product_lines if p.product_id.id == product_id), None)
 
         if product_barcode and not product:
             new_product = search.product_from_scan(product_barcode)
@@ -221,6 +225,47 @@ class Inventory(Component):
             product_scanned_list,
         )
 
+    @response_decorator
+    def set_quantity(self, inventory_id, location_id, product_id, product_scanned_list_id, qty):
+        inventory_lines, location, inventory_line, product_scanned_list, _ = self._get_data_for_scan_products(
+            inventory_id,
+            location_id_prout_prout=location_id,
+            product_id=product_id,
+            product_scanned_list_id=product_scanned_list_id,
+        )
+
+        if not location:
+            data = self._create_data_for_scan_products(
+                inventory_id,
+                inventory_lines,
+            )
+            raise LocationNotFound(state="scan_product", data=data)
+
+        if not inventory_line:
+            data = self._create_data_for_scan_products(
+                inventory_id,
+                inventory_lines,
+                location.id,
+            )
+            raise ProductNotInInventory(state="scan_product", data=data)
+
+        if inventory_line:
+            inventory_line.product_qty = qty
+
+        if qty == 0 and inventory_line.created_from_shopfloor:
+            inventory_line.sudo().unlink()
+            inventory_lines = self.env["stock.inventory.line"].search(
+                [("inventory_id", "=", inventory_id)],
+            )
+            product_scanned_list.remove(inventory_line.id)
+
+        return self._create_response_for_scan_products(
+            inventory_id,
+            inventory_lines,
+            location.id,
+            product_scanned_list,
+        )
+
 class ShopfloorStockBatchTransferValidator(Component):
     """Validators for the Delivery endpoints"""
 
@@ -248,6 +293,15 @@ class ShopfloorStockBatchTransferValidator(Component):
             "location_id": {"coerce": to_int, "required": True, "type": "integer"},
             "barcode": {"required": True, "type": "string"},
             "product_scanned_list_id": {"required": True, "type": "list", "schema":{"type": "integer"}},
+        }
+
+    def set_quantity(self):
+        return {
+            "inventory_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "location_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "product_id": {"coerce": to_int, "required": True, "type": "integer"},
+            "product_scanned_list_id": {"required": True, "type": "list", "schema":{"type": "integer"}},
+            "qty": {"coerce": to_int, "required": True, "type": "integer"},
         }
 
 class ShopfloorStockBatchTransferValidatorResponse(Component):
@@ -298,3 +352,8 @@ class ShopfloorStockBatchTransferValidatorResponse(Component):
     def select_location(self):
         return self._response_schema(next_states={"scan_product"},)
 
+    def scan_product(self):
+        return self._response_schema(next_states={"scan_product"},)
+
+    def set_quantity(self):
+        return self._response_schema(next_states={"scan_product"},)
