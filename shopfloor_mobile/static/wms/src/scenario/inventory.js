@@ -16,7 +16,7 @@ const Inventory = {
                 />
                 <searchbar
                     v-if="state_is('scan_product')"
-                    :input_placeholder="scan_placeholder"
+                    :input_placeholder="search_input_placeholder"
                     :refocusInput="true"
                     v-on:found="on_scan"
                 />
@@ -32,7 +32,7 @@ const Inventory = {
     `,
     methods: {
         screen_title: function() {
-            return "Scan stuffs";
+            return "Inventory";
         },
         getLastScannedLine: function() {
             return this.state.data.inventory_lines.find(line =>
@@ -58,7 +58,9 @@ const Inventory = {
             lastScanned: null,
             states: {
                 start: {
-                    on_scan: () => {},
+                    display_info: {
+                        title: "Inventory - Choosing and inventory"
+                    },
                     onSelectInventory: inventory_id => {
                         this.wait_call(this.odoo.call("select_inventory", {
                             inventory_id,
@@ -88,6 +90,11 @@ const Inventory = {
                     ],
                 },
                 scan_product: {
+                    display_info: {
+                        title: "Inventory - Scanning product",
+                        scan_placeholder: () =>
+                        `Scan a location${this.currentDestLocation && this.lastScanned ? ", quantity or barcode" : ""}${this.currentDestLocation && !this.lastScanned ? " or barcode" : ""}`
+                    },
                     on_scan: ({text}) => {
                         const intInText =
                             "" + text == parseInt(text, 10) &&
@@ -109,7 +116,7 @@ const Inventory = {
                                 }))
                             }
                             else {
-                                if (this.lastScanned && !isNaN(intInText) && intInText >= 0 &&
+                                if (this.lastScanned && intInText && !isNaN(intInText) && intInText >= 0 &&
                                     this.getLastScannedLine()
                                     ) {
                                     const line = this.getLastScannedLine();
