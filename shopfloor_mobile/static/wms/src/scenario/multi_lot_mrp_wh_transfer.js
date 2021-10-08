@@ -9,15 +9,15 @@
 import {ScenarioBaseMixin} from "/shopfloor_mobile_base/static/wms/src/scenario/mixins.js";
 import {process_registry} from "/shopfloor_mobile_base/static/wms/src/services/process_registry.js";
 
-export var SinglePackStatesMixin = {
+export var MultiLotMrpWhStatesMixin = {
     data: function () {
         return {
             states: {
-                // Generic state for when to start w/ scanning a pack or loc
+                // Generic state for when to start w/ scanning a lot
                 start: {
                     display_info: {
-                        title: "Commencer par scanner un colis",
-                        scan_placeholder: "Scanner colis",
+                        title: "Commencer par scanner un lot",
+                        scan_placeholder: "Scanner lot",
                     },
                     on_scan: (scanned) => {
                         const data = this.state.data;
@@ -31,16 +31,16 @@ export var SinglePackStatesMixin = {
                 },
                 scan_location: {
                     display_info: {
-                        title: "Définir l'emplacement",
-                        scan_placeholder: "Scanner emplacement",
+                        title: "Scanner un autre lot ou définir l'emplacement",
+                        scan_placeholder: "Scanner lot ou emplacement",
                         show_cancel_button: true,
                     },
                     on_scan: (scanned, confirmation = false) => {
-                        this.state_set_data({location_barcode: scanned.text});
+                        this.state_set_data({barcode: scanned.text});
                         this.wait_call(
-                            this.odoo.call("validate", {
-                                package_id: this.state.data.id,
-                                location_barcode: scanned.text,
+                            this.odoo.call("validate_transfer", {
+                                lot_ids: this.state.data.ids,
+                                barcode: scanned.text,
                                 confirmation: confirmation,
                             })
                         );
@@ -48,7 +48,7 @@ export var SinglePackStatesMixin = {
                     on_cancel: () => {
                         this.wait_call(
                             this.odoo.call("cancel", {
-                                package_id: this.state.data.id,
+                                lot_ids: this.state.data.ids,
                             })
                         );
                     },
@@ -58,8 +58,8 @@ export var SinglePackStatesMixin = {
     },
 };
 
-const SinglePackReceipt = {
-    mixins: [ScenarioBaseMixin, SinglePackStatesMixin],
+const MultiLotMrpWhTransfer = {
+    mixins: [ScenarioBaseMixin, MultiLotMrpWhStatesMixin],
     template: `
         <Screen :screen_info="screen_info">
             <template v-slot:header>
@@ -87,7 +87,7 @@ const SinglePackReceipt = {
     `,
     data: function () {
         return {
-            usage: "single_pack_receipt",
+            usage: "multi_lot_mrp_wh_transfer",
             show_reset_button: true,
             initial_state_key: "start",
             states: {
@@ -101,6 +101,6 @@ const SinglePackReceipt = {
         };
     },
 };
-process_registry.add("single_pack_receipt", SinglePackReceipt);
+process_registry.add("multi_lot_mrp_wh_transfer", MultiLotMrpWhTransfer);
 
-export default SinglePackReceipt;
+export default MultiLotMrpWhTransfer;
