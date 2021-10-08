@@ -129,27 +129,47 @@
             />
             <script
                 id="script_scenario_single_pack_receipt"
-                t-attf-src="/shopfloor_mobile/assets/src/scenario/single_pack_receipt.js?v=#{app_version}"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/single_pack_receipt.js?v=#{mod_version}"
                 type="module"
             />
             <script
                 id="script_scenario_single_lot_transfer"
-                t-attf-src="/shopfloor_mobile/assets/src/scenario/single_lot_transfer.js?v=#{app_version}"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/single_lot_transfer.js?v=#{mod_version}"
                 type="module"
             />
             <script
                 id="script_scenario_single_lot_mrp_transfer"
-                t-attf-src="/shopfloor_mobile/assets/src/scenario/single_lot_mrp_transfer.js?v=#{app_version}"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/single_lot_mrp_transfer.js?v=#{mod_version}"
                 type="module"
             />
             <script
                 id="script_scenario_single_lot_mrp_wh_transfer"
-                t-attf-src="/shopfloor_mobile/assets/src/scenario/single_lot_mrp_wh_transfer.js?v=#{app_version}"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/single_lot_mrp_wh_transfer.js?v=#{mod_version}"
                 type="module"
             />
             <script
                 id="script_scenario_single_product_prepare"
-                t-attf-src="/shopfloor_mobile/assets/src/scenario/single_product_prepare.js?v=#{app_version}"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/single_product_prepare.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_multi_lot_transfer"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/multi_lot_transfer.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_multi_lot_mrp_transfer"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/multi_lot_mrp_transfer.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_multi_product_prepare"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/multi_product_prepare.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_scenario_multi_lot_mrp_wh_transfer"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/multi_lot_mrp_wh_transfer.js?v=#{mod_version}"
                 type="module"
             />
         </script>

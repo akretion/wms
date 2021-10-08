@@ -9,15 +9,15 @@
 import {ScenarioBaseMixin} from "/shopfloor_mobile_base/static/wms/src/scenario/mixins.js";
 import {process_registry} from "/shopfloor_mobile_base/static/wms/src/services/process_registry.js";
 
-export var SinglePackStatesMixin = {
+export var MultiLotMrpStatesMixin = {
     data: function () {
         return {
             states: {
-                // Generic state for when to start w/ scanning a pack or loc
+                // Generic state for when to start w/ scanning a lot
                 start: {
                     display_info: {
-                        title: "Commencer par scanner un colis",
-                        scan_placeholder: "Scanner colis",
+                        title: "Commencer par scanner un numéro de fabrication",
+                        scan_placeholder: "Scanner numéro",
                     },
                     on_scan: (scanned) => {
                         const data = this.state.data;
@@ -31,16 +31,18 @@ export var SinglePackStatesMixin = {
                 },
                 scan_location: {
                     display_info: {
-                        title: "Définir l'emplacement",
-                        scan_placeholder: "Scanner emplacement",
+                        title:
+                            "Scanner un autre numéro de fabrication ou définir l'emplacement",
+                        scan_placeholder:
+                            "Scanner numéro de fabrication ou emplacement",
                         show_cancel_button: true,
                     },
                     on_scan: (scanned, confirmation = false) => {
-                        this.state_set_data({location_barcode: scanned.text});
+                        this.state_set_data({barcode: scanned.text});
                         this.wait_call(
                             this.odoo.call("validate", {
-                                package_id: this.state.data.id,
-                                location_barcode: scanned.text,
+                                production_ids: this.state.data.ids,
+                                barcode: scanned.text,
                                 confirmation: confirmation,
                             })
                         );
@@ -48,7 +50,7 @@ export var SinglePackStatesMixin = {
                     on_cancel: () => {
                         this.wait_call(
                             this.odoo.call("cancel", {
-                                package_id: this.state.data.id,
+                                production_ids: this.state.data.ids,
                             })
                         );
                     },
@@ -58,8 +60,8 @@ export var SinglePackStatesMixin = {
     },
 };
 
-const SinglePackReceipt = {
-    mixins: [ScenarioBaseMixin, SinglePackStatesMixin],
+const MultiLotMrpTransfer = {
+    mixins: [ScenarioBaseMixin, MultiLotMrpStatesMixin],
     template: `
         <Screen :screen_info="screen_info">
             <template v-slot:header>
@@ -67,18 +69,18 @@ const SinglePackReceipt = {
             </template>
             <searchbar v-if="state_is(initial_state_key)" v-on:found="on_scan" :input_placeholder="search_input_placeholder"></searchbar>
             <searchbar v-if="state_is('scan_location')" v-on:found="on_scan" :input_placeholder="search_input_placeholder" :input_data_type="'location'"></searchbar>
-            <div v-if="state.key != 'show_completion_info' && _.result(state, 'data.picking')">
+            <div v-if="state.key != 'show_completion_info' && _.result(state, 'data.product')">
                 <item-detail-card
-                    :key="make_state_component_key(['product', state.data.id])"
+                    :key="make_state_component_key(['name', state.data.ids])"
                     :record="state.data"
-                    :options="utils.wms.move_line_product_detail_options()"
+                    :options="{main: true, key_title: 'name', title_action_field:  {}}"
                     :card_color="utils.colors.color_for('screen_step_done')"
                     />
                 <item-detail-card
-                    :key="make_state_component_key(['destination', state.data.id])"
+                    :key="make_state_component_key(['product', state.data.ids])"
                     :record="state.data"
-                    :options="{main: true, key_title: 'location_dest.name', title_action_field:  {action_val_path: 'location_dest.barcode'}}"
-                    :card_color="utils.colors.color_for('screen_step_todo')"
+                    :options="utils.wms.move_line_product_detail_options()"
+                    :card_color="utils.colors.color_for('screen_step_done')"
                     />
             </div>
             <last-operation v-if="state_is('show_completion_info')" v-on:confirm="state.on_confirm"></last-operation>
@@ -87,7 +89,7 @@ const SinglePackReceipt = {
     `,
     data: function () {
         return {
-            usage: "single_pack_receipt",
+            usage: "multi_lot_mrp_transfer",
             show_reset_button: true,
             initial_state_key: "start",
             states: {
@@ -101,6 +103,6 @@ const SinglePackReceipt = {
         };
     },
 };
-process_registry.add("single_pack_receipt", SinglePackReceipt);
+process_registry.add("multi_lot_mrp_transfer", MultiLotMrpTransfer);
 
-export default SinglePackReceipt;
+export default MultiLotMrpTransfer;

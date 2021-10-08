@@ -9,15 +9,15 @@
 import {ScenarioBaseMixin} from "/shopfloor_mobile_base/static/wms/src/scenario/mixins.js";
 import {process_registry} from "/shopfloor_mobile_base/static/wms/src/services/process_registry.js";
 
-export var SinglePackStatesMixin = {
+export var MultiProductPrepareStatesMixin = {
     data: function () {
         return {
             states: {
-                // Generic state for when to start w/ scanning a pack or loc
+                // Generic state for when to start w/ scanning a lot
                 start: {
                     display_info: {
-                        title: "Commencer par scanner un colis",
-                        scan_placeholder: "Scanner colis",
+                        title: "Commencer par scanner un numéro de ligne",
+                        scan_placeholder: "Scanner numéro",
                     },
                     on_scan: (scanned) => {
                         const data = this.state.data;
@@ -31,16 +31,18 @@ export var SinglePackStatesMixin = {
                 },
                 scan_location: {
                     display_info: {
-                        title: "Définir l'emplacement",
-                        scan_placeholder: "Scanner emplacement",
+                        title:
+                            "Scanner un autre numéro de ligne ou définir l'emplacement",
+                        scan_placeholder:
+                            "Scanner autre numéro de ligne ou emplacement",
                         show_cancel_button: true,
                     },
                     on_scan: (scanned, confirmation = false) => {
-                        this.state_set_data({location_barcode: scanned.text});
+                        this.state_set_data({barcode: scanned.text});
                         this.wait_call(
                             this.odoo.call("validate", {
-                                package_id: this.state.data.id,
-                                location_barcode: scanned.text,
+                                sol_ids: this.state.data.ids,
+                                barcode: scanned.text,
                                 confirmation: confirmation,
                             })
                         );
@@ -48,7 +50,7 @@ export var SinglePackStatesMixin = {
                     on_cancel: () => {
                         this.wait_call(
                             this.odoo.call("cancel", {
-                                package_id: this.state.data.id,
+                                sol_ids: this.state.data.ids,
                             })
                         );
                     },
@@ -58,8 +60,8 @@ export var SinglePackStatesMixin = {
     },
 };
 
-const SinglePackReceipt = {
-    mixins: [ScenarioBaseMixin, SinglePackStatesMixin],
+const MultiProductPrepare = {
+    mixins: [ScenarioBaseMixin, MultiProductPrepareStatesMixin],
     template: `
         <Screen :screen_info="screen_info">
             <template v-slot:header>
@@ -77,7 +79,7 @@ const SinglePackReceipt = {
                 <item-detail-card
                     :key="make_state_component_key(['destination', state.data.id])"
                     :record="state.data"
-                    :options="{main: true, key_title: 'location_dest.name', title_action_field:  {action_val_path: 'location_dest.barcode'}}"
+                    :options="{main: true, key_title: 'location_src.name', title_action_field:  {action_val_path: 'location_src.barcode'}}"
                     :card_color="utils.colors.color_for('screen_step_todo')"
                     />
             </div>
@@ -87,7 +89,7 @@ const SinglePackReceipt = {
     `,
     data: function () {
         return {
-            usage: "single_pack_receipt",
+            usage: "multi_product_prepare",
             show_reset_button: true,
             initial_state_key: "start",
             states: {
@@ -101,6 +103,6 @@ const SinglePackReceipt = {
         };
     },
 };
-process_registry.add("single_pack_receipt", SinglePackReceipt);
+process_registry.add("multi_product_prepare", MultiProductPrepare);
 
-export default SinglePackReceipt;
+export default MultiProductPrepare;

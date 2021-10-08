@@ -9,15 +9,15 @@
 import {ScenarioBaseMixin} from "/shopfloor_mobile_base/static/wms/src/scenario/mixins.js";
 import {process_registry} from "/shopfloor_mobile_base/static/wms/src/services/process_registry.js";
 
-export var SinglePackStatesMixin = {
+export var MultiLotStatesMixin = {
     data: function () {
         return {
             states: {
-                // Generic state for when to start w/ scanning a pack or loc
+                // Generic state for when to start w/ scanning a lot or loc
                 start: {
                     display_info: {
-                        title: "Commencer par scanner un colis",
-                        scan_placeholder: "Scanner colis",
+                        title: "Commencer par scanner un lot",
+                        scan_placeholder: "Scanner lot",
                     },
                     on_scan: (scanned) => {
                         const data = this.state.data;
@@ -31,16 +31,17 @@ export var SinglePackStatesMixin = {
                 },
                 scan_location: {
                     display_info: {
-                        title: "Définir l'emplacement",
-                        scan_placeholder: "Scanner emplacement",
+                        title:
+                            "Scanner un autre lot ou définir l'emplacement pour terminer",
+                        scan_placeholder: "Scanner lot ou emplacement",
                         show_cancel_button: true,
                     },
                     on_scan: (scanned, confirmation = false) => {
-                        this.state_set_data({location_barcode: scanned.text});
+                        this.state_set_data({barcode: scanned.text});
                         this.wait_call(
                             this.odoo.call("validate", {
-                                package_id: this.state.data.id,
-                                location_barcode: scanned.text,
+                                lot_ids: this.state.data.ids,
+                                barcode: scanned.text,
                                 confirmation: confirmation,
                             })
                         );
@@ -48,7 +49,7 @@ export var SinglePackStatesMixin = {
                     on_cancel: () => {
                         this.wait_call(
                             this.odoo.call("cancel", {
-                                package_id: this.state.data.id,
+                                lot_ids: this.state.data.ids,
                             })
                         );
                     },
@@ -58,8 +59,8 @@ export var SinglePackStatesMixin = {
     },
 };
 
-const SinglePackReceipt = {
-    mixins: [ScenarioBaseMixin, SinglePackStatesMixin],
+const MultiLotTransfer = {
+    mixins: [ScenarioBaseMixin, MultiLotStatesMixin],
     template: `
         <Screen :screen_info="screen_info">
             <template v-slot:header>
@@ -74,12 +75,6 @@ const SinglePackReceipt = {
                     :options="utils.wms.move_line_product_detail_options()"
                     :card_color="utils.colors.color_for('screen_step_done')"
                     />
-                <item-detail-card
-                    :key="make_state_component_key(['destination', state.data.id])"
-                    :record="state.data"
-                    :options="{main: true, key_title: 'location_dest.name', title_action_field:  {action_val_path: 'location_dest.barcode'}}"
-                    :card_color="utils.colors.color_for('screen_step_todo')"
-                    />
             </div>
             <last-operation v-if="state_is('show_completion_info')" v-on:confirm="state.on_confirm"></last-operation>
             <cancel-button v-on:cancel="on_cancel" v-if="show_cancel_button"></cancel-button>
@@ -87,7 +82,7 @@ const SinglePackReceipt = {
     `,
     data: function () {
         return {
-            usage: "single_pack_receipt",
+            usage: "multi_lot_transfer",
             show_reset_button: true,
             initial_state_key: "start",
             states: {
@@ -101,6 +96,6 @@ const SinglePackReceipt = {
         };
     },
 };
-process_registry.add("single_pack_receipt", SinglePackReceipt);
+process_registry.add("multi_lot_transfer", MultiLotTransfer);
 
-export default SinglePackReceipt;
+export default MultiLotTransfer;
