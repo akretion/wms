@@ -73,7 +73,7 @@ const MultiLotMrpTransfer = {
                 <item-detail-card
                     :key="make_state_component_key(['name', state.data.ids])"
                     :record="state.data"
-                    :options="{main: true, key_title: 'name', title_action_field:  {}}"
+                    :options="{main: true, key_title: 'name'}"
                     :card_color="utils.colors.color_for('screen_step_done')"
                     />
                 <item-detail-card
@@ -81,6 +81,18 @@ const MultiLotMrpTransfer = {
                     :record="state.data"
                     :options="utils.wms.move_line_product_detail_options()"
                     :card_color="utils.colors.color_for('screen_step_done')"
+                    />
+                <item-detail-card
+                    :key="make_state_component_key(['product_qty', state.data.product_qty])"
+                    :record="state.data"
+                    :options="{main: true, key_title: 'product_qty'}"
+                    :card_color="utils.colors.color_for('screen_step_done')"
+                    />
+                <item-detail-card
+                    :key="make_state_component_key(['destination', state.data.ids])"
+                    :record="state.data"
+                    :options="{main: true, key_title: 'location_dest.name', title_action_field:  {action_val_path: 'location_dest.barcode'}}"
+                    :card_color="utils.colors.color_for('screen_step_todo')"
                     />
             </div>
             <last-operation v-if="state_is('show_completion_info')" v-on:confirm="state.on_confirm"></last-operation>
