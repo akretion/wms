@@ -116,15 +116,6 @@ class StockBatchTransfer(Component):
 
         return data
 
-    def _process_pickings(self, all_move_lines):
-        picking_ids = {line.picking_id for line in all_move_lines}
-
-        for picking in picking_ids:
-            move_lines = picking.mapped("move_line_ids")
-
-            if all([line.shopfloor_checkout_done for line in move_lines]):
-                picking._action_done()
-
     def _create_response_for_scan_products(
         self,
         all_move_lines,
@@ -144,8 +135,7 @@ class StockBatchTransfer(Component):
 
         if all([line.shopfloor_checkout_done for line in all_move_lines]):
             try:
-                self._process_pickings(all_move_lines)
-
+                all_move_lines.move_id._action_done()
                 domain = self._location_search_domain()
                 records = self.env["stock.location"].search(domain)
                 data = self.data_detail.locations_detail(records)
