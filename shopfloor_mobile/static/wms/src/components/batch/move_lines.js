@@ -61,7 +61,7 @@ Vue.component("batch-move-line", {
                 });
 
             const sourceWithLines = sources
-                .map(source => {
+                .slice(0).map(source => {
                     var source_lines = lines.filter(line => line.source.id === source.id);
                     var selected_index = source_lines.findIndex(line => line.selected === true);
                     if ( selected_index >= 0 ) {
@@ -74,8 +74,7 @@ Vue.component("batch-move-line", {
                         lines: source_lines
                     };
                 })
-                .filter(source => source.lines.length > 0)
-                .sort((a, b) => (a.name < b.name ? 1 : -1));
+                .filter(source => source.lines.length > 0);
 
             const pivotIndex = sourceWithLines.findIndex(
                 source => source.source.id === this.currentLocation
