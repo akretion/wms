@@ -481,7 +481,9 @@ class Reception(Component):
         stock = self._actions_for("stock")
         stock.validate_moves(product_move_lines.picking_id.move_lines)
 
-        for line in product_move_lines:
+        # In case that you have move with 0 as qty the previous line
+        # have deleted them so we have to process only existing move
+        for line in product_move_lines.exists():
             picking = line.picking_id
 
             if picking.state == "done":
