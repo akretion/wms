@@ -1095,9 +1095,10 @@ class SinglePackTransferSpecialCase(SinglePackTransferCommonBase):
 
         barcode = self.shelf1.barcode
         params = {"barcode": barcode}
-        response = self.service.dispatch("start", params=params)
-        self.assert_response(
-            response,
+        with self.assertRaises(ShopfloorDispatchError) as error:
+            self.service.dispatch("start", params=params)
+        self.assert_exception_response(
+            error,
             next_state="start",
             message=self.service.msg_store.package_already_picked_by(package, picking),
         )
@@ -1135,9 +1136,10 @@ class SinglePackTransferSpecialCase(SinglePackTransferCommonBase):
         picking.action_assign()
         barcode = self.shelf1.barcode
         params = {"barcode": barcode}
-        response = self.service.dispatch("start", params=params)
-        self.assert_response(
-            response,
+        with self.assertRaises(ShopfloorDispatchError) as error:
+            self.service.dispatch("start", params=params)
+        self.assert_exception_response(
+            error,
             next_state="start",
             message=self.service.msg_store.package_already_picked_by(package, picking),
         )
@@ -1168,12 +1170,13 @@ class SinglePackTransferSpecialCase(SinglePackTransferCommonBase):
         self.assertEqual(picking.state, "assigned")
         barcode = self.shelf1.barcode
         params = {"barcode": barcode}
-        response = self.service.dispatch("start", params=params)
-        self.assert_response(
-            response,
+        with self.assertRaises(ShopfloorDispatchError) as error:
+            self.service.dispatch("start", params=params)
+
+        self.assert_exception_response(
+            error,
             next_state="start",
             message=self.service.msg_store.no_pending_operation_for_pack(package),
         )
         # no change in the picking
         self.assertEqual(picking.state, "assigned")
-        self.assertRecordValues(picking.package_level_ids, [{"package_id": package.id}])
