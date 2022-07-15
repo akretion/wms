@@ -993,3 +993,9 @@ class MessageAction(Component):
             "message_type": "error",
             "body": body,
         }
+
+    def location_already_inventoried(self, barcode):
+        return {
+            "message_type": "error",
+            "body": _("This location has already been inventoried."),
+        }
