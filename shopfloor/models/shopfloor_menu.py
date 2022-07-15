@@ -150,6 +150,14 @@ class ShopfloorMenu(models.Model):
     allow_force_reservation_is_possible = fields.Boolean(
         compute="_compute_allow_force_reservation_is_possible"
     )
+    use_existing_inventory = fields.Boolean(
+        string="Use only existing inventories",
+        default=False,
+    )
+    allow_inventory_add_product = fields.Boolean(
+        string="Add product option",
+        default=False,
+    )
 
     allow_get_work = fields.Boolean(
         string="Show Get Work on start",

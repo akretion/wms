@@ -996,3 +996,9 @@ class MessageAction(Component):
 
     def quantity_must_be_positive(self):
         return {"message_type": "error", "body": _("Quantity must be positive.")}
+
+    def location_already_inventoried(self, barcode):
+        return {
+            "message_type": "error",
+            "body": _("This location has already been inventoried."),
+        }
