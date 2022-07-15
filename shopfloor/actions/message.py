@@ -758,3 +758,9 @@ class MessageAction(Component):
             )
             % dict(name=packaging_type.name),
         }
+
+    def location_already_inventoried(self, barcode):
+        return {
+            "message_type": "error",
+            "body": _("This location has already been inventoried."),
+        }
