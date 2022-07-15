@@ -369,3 +369,20 @@ class DataAction(Component):
             "done": operations_done,
             "to_do": operations_to_do,
         }
+
+    @ensure_model("stock.inventory")
+    def inventory(self, record, **kw):
+        return self._jsonify(record, self._inventory_parser, **kw)
+
+    def inventories(self, record, **kw):
+        return self.inventory(record, multi=True)
+
+    @property
+    def _inventory_parser(self):
+        return [
+            "id",
+            "name",
+            "date",
+            ("location_ids:locations", self._location_parser),
+            ("product_ids:products", self._product_parser),
+        ]
