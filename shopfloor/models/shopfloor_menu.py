@@ -140,9 +140,22 @@ class ShopfloorMenu(models.Model):
         string="Use only existing inventories",
         default=False,
     )
-    allow_inventory_add_product = fields.Boolean(
+    use_existing_inventory_is_possible = fields.Boolean(
+        compute="_compute_use_existing_inventory_is_possible"
+    )
+    inventory_zero_counted_quantity = fields.Boolean(
+        string="Counted quantities",
+        default=True,
+    )
+    inventory_zero_counted_quantity_is_possible = fields.Boolean(
+        compute="_compute_inventory_zero_counted_quantity_is_possible"
+    )
+    force_inventory_add_product = fields.Boolean(
         string="Add product option",
         default=False,
+    )
+    force_inventory_add_product_is_possible = fields.Boolean(
+        compute="_compute_force_inventory_add_product_is_possible"
     )
 
     allow_get_work = fields.Boolean(
@@ -427,8 +440,30 @@ class ShopfloorMenu(models.Model):
                 "auto_post_line"
             )
 
+    @api.depends("scenario_id")
     def _compute_allow_alternative_destination_is_possible(self):
         for menu in self:
             menu.allow_alternative_destination_is_possible = (
                 menu.scenario_id.has_option("allow_alternative_destination")
+            )
+
+    @api.depends("scenario_id")
+    def _compute_use_existing_inventory_is_possible(self):
+        for menu in self:
+            menu.use_existing_inventory_is_possible = menu.scenario_id.has_option(
+                "use_existing_inventory"
+            )
+
+    @api.depends("scenario_id")
+    def _compute_inventory_zero_counted_quantity_is_possible(self):
+        for menu in self:
+            menu.inventory_zero_counted_quantity_is_possible = (
+                menu.scenario_id.has_option("inventory_zero_counted_quantity")
+            )
+
+    @api.depends("scenario_id")
+    def _compute_force_inventory_add_product_is_possible(self):
+        for menu in self:
+            menu.force_inventory_add_product_is_possible = menu.scenario_id.has_option(
+                "force_inventory_add_product"
             )
