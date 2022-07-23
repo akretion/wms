@@ -55,6 +55,7 @@
         "views/stock_picking_type.xml",
         "views/stock_location.xml",
         "views/stock_move_line.xml",
+        "views/stock_inventory.xml",
     ],
     "demo": [
         "demo/stock_picking_type_demo.xml",
