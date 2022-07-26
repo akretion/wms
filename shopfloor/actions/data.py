@@ -400,5 +400,6 @@ class DataAction(Component):
             "name",
             "date",
             "location_count",
+            "remaining_location_count",
             "inventory_line_count",
         ]
