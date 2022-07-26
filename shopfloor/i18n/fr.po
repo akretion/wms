@@ -376,14 +376,11 @@ msgstr "Problème de contrôle de stock dans l'emplacement {} pour {}"
 #, python-format
 msgid "Create new PACK {}? Scan it again to confirm."
 msgstr "Créer un nouveau COLIS {} ? Scannez-le à nouveau pour confirmer."
-=======
-msgstr ""
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__inventory_zero_counted_quantity
 msgid "Counted quantities"
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/models/shopfloor_menu.py:0
@@ -465,13 +462,11 @@ msgstr ""
 "Pour les scénarios Shopfloor l'utilisant (Transfert cluster, Transfert par "
 "zone, Transfert d'ordre discret), l'étape de contrôle du zéro sera activée "
 "lorsqu'un emplacement devient vide après un mouvement."
-=======
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__force_inventory_add_product_is_possible
 msgid "Force Inventory Add Product Is Possible"
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_force_reservation
@@ -521,8 +516,6 @@ msgstr ""
 "Si vous cochez cette case, le transfert est réservé uniquement si le "
 "rangement peut trouver un sous-emplacement (lorsque la destination de "
 "rangement est différente de la destination du type d'opération)."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__allow_unreserve_other_moves
@@ -533,8 +526,6 @@ msgstr ""
 "Si vous cochez cette case, ce scénario permettra à l'opérateur de déplacer "
 "des marchandises même si une réservation est faite par un type d'opération "
 "différent."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__ignore_no_putaway_available_is_possible
@@ -556,8 +547,6 @@ msgstr "Ignorer le rangement non trouvé n'est pas autorisé pour le menu {}."
 #: model:ir.model,name:shopfloor.model_stock_inventory
 msgid "Inventory"
 msgstr "Inventaire"
-=======
-msgstr ""
 
 #. module: shopfloor
 #: model:ir.model,name:shopfloor.model_stock_inventory
@@ -569,7 +558,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:shopfloor.field_stock_inventory__inventory_line_count
 msgid "Inventory Line Count"
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model,name:shopfloor.model_stock_location
@@ -580,14 +568,11 @@ msgstr "Emplacements d'inventaire"
 #: model:ir.model.fields,field_description:shopfloor.field_stock_picking__is_shopfloor_created
 msgid "Is Shopfloor Created"
 msgstr "Est créé par Shopfloor"
-=======
-msgstr ""
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__inventory_zero_counted_quantity_is_possible
 msgid "Inventory Zero Counted Quantity Is Possible"
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_app____last_update
@@ -614,8 +599,6 @@ msgid ""
 msgstr ""
 "Dernière opération du transfert {}. L'opération suivante ({}) est prête à "
 "être effectuée."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/checkout.py:0
@@ -640,14 +623,11 @@ msgstr "L'emplacement %s ne contient aucun colis."
 #: model:stock.picking.type,name:shopfloor.picking_type_location_content_transfer_demo
 msgid "Location Content Transfer"
 msgstr "Transfert de contenu d'emplacement"
-=======
-msgstr ""
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_stock_inventory__location_count
 msgid "Location Count"
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:shopfloor.scenario,name:shopfloor.scenario_location_content_transfer
@@ -665,15 +645,12 @@ msgstr "Emplacement vide. Essayez de scanner un colis"
 #, python-format
 msgid "Location not allowed here."
 msgstr "Emplacement non autorisé ici."
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
 msgid "Location {0.name} successfully inventoried."
 msgstr "Emplacement {0.name} inventorié avec succès."
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -696,15 +673,12 @@ msgid ""
 msgstr ""
 "Lot {lot} pour le produit {product} trouvé dans plusieurs emplacements. "
 "Scannez d'abord votre emplacement."
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/checkout.py:0
 #, python-format
 msgid "Lot is not in the current transfer."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/delivery.py:0
@@ -781,8 +755,6 @@ msgstr "Mouvement déjà traité."
 msgid "Move lines processed have to share the same source location."
 msgstr ""
 "Les lignes de mouvement traitées doivent partager le même emplacement source."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__multiple_move_single_pack_is_possible
@@ -812,8 +784,6 @@ msgstr "Ne pas pré-remplir la quantité est possible"
 #, python-format
 msgid "No available work could be found."
 msgstr "Aucun travail disponible trouvé."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -832,15 +802,12 @@ msgstr "Aucune ligne à empaqueter trouvée."
 #, python-format
 msgid "No lines to process, set quantities on some"
 msgstr "Aucune ligne à traiter, définissez des quantités sur certaines"
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/inventory.py:0
 #, python-format
 msgid "No inventory line found, please us button 'Add product'"
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -853,15 +820,12 @@ msgstr "Aucune ligne à traiter."
 #, python-format
 msgid "No location found for this barcode."
 msgstr "Aucun emplacement trouvé pour ce code-barres."
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
 msgid "No lot found among current transfers."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -880,15 +844,12 @@ msgstr "Plus de travail à faire, veuillez créer un nouveau transfert par lots"
 #, python-format
 msgid "No operation found for this menu and profile."
 msgstr "Aucune opération trouvée pour ce menu et profil."
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/inventory.py:0
 #, python-format
 msgid "No more work to do, please create a new inventory"
-msgstr ""
->>>>>>> dd95c74d (add missing files)
+msgstr "Plus d'inventaire à traiter, veuillez créer un nouvel inventaire."
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -913,15 +874,12 @@ msgstr "Aucun colis ou lot trouvé pour le code-barres {}."
 #, python-format
 msgid "No pending operation for package %s."
 msgstr "Aucune opération en attente pour le colis %s."
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
 msgid "No product found among current transfers."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1004,7 +962,6 @@ msgid ""
 msgstr ""
 "Toutes les lignes n'ont pas été traitées avec la quantité complète. "
 "Confirmez-vous l'opération partielle ?"
-=======
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1019,7 +976,6 @@ msgid ""
 "Not allowed to pack more than the quantity, the value has been changed to "
 "the maximum."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__picking_type_ids
@@ -1114,8 +1070,6 @@ msgid ""
 msgstr ""
 "Le colis {} ne contient pas le produit disponible {}, impossible de "
 "remplacer le colis."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1170,15 +1124,12 @@ msgstr "Colis {} non trouvé dans l'emplacement {}"
 #, python-format
 msgid "Package {} not found in transfer {}"
 msgstr "Colis {} non trouvé dans le transfert {}"
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/checkout.py:0
 #, python-format
 msgid "Package {} is not in the current transfer."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1225,8 +1176,6 @@ msgstr ""
 "Mode Collecter + Empaqueter ACTIVÉ : le transfert {0.name} n'a pas de "
 "transporteur défini. Le système n'a pas pu empaqueter les marchandises "
 "automatiquement."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__pick_pack_same_time_is_possible
@@ -1266,8 +1215,6 @@ msgid "Picking has already been started in this location in transfer(s): {}"
 msgstr ""
 "Le transfert a déjà commencé dans cet emplacement dans le(s) transfert(s) : "
 "{}"
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1328,15 +1275,11 @@ msgstr ""
 #, python-format
 msgid "Product %s is not in the current transfer."
 msgstr "Le produit %s n'est pas dans le transfert actuel."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model,name:shopfloor.model_stock_move_line
 msgid "Product Moves (Stock Move Line)"
 msgstr "Mouvement Produits (Stock Move Line)"
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/checkout.py:0
@@ -1349,7 +1292,6 @@ msgstr ""
 #, python-format
 msgid "Product or lot is mandatory."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1382,15 +1324,12 @@ msgstr "Produit {} non trouvé dans l'emplacement {} ou le transfert {}."
 #, python-format
 msgid "Product(s) processed as raw product(s)"
 msgstr "Produit(s) traité(s) comme produit(s) brut(s)"
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
 msgid "Products not inventoried, are you sure you want to change location ?"
 msgstr "Des produits de cet emplacement n'ont pas été comptés, êtes vous sûr de vouloir changer d'emplacement ?"
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model,name:shopfloor.model_stock_quant
@@ -1500,8 +1439,6 @@ msgstr ""
 "Ce(s) type(s) ne satisfont pas cette contrainte : \n"
 "{}.\n"
 "Veuillez ajuster votre configuration."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_stock_move_line__date_planned
@@ -1509,14 +1446,12 @@ msgid "Scheduled date until move is done, then date of actual move processing"
 msgstr ""
 "Date planifiée jusqu'à ce que le mouvement soit fait, puis date du "
 "traitement réel du mouvement"
-=======
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/inventory.py:0
 #, python-format
 msgid "Several lot found"
-msgstr ""
->>>>>>> dd95c74d (add missing files)
+msgstr "Plusieurs lots trouvés"
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1587,8 +1522,6 @@ msgid "Several transfers found, please select a transfer manually."
 msgstr ""
 "Plusieurs transferts trouvés, veuillez sélectionner manuellement un "
 "transfert."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model_terms:ir.ui.view,arch_db:shopfloor.view_location_form
@@ -1688,8 +1621,6 @@ msgstr ""
 #, python-format
 msgid "Someone is already working on these transfers"
 msgstr "Quelqu'un travaille déjà sur ces transferts"
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_stock_location__source_move_line_ids
@@ -1721,7 +1652,6 @@ msgid ""
 msgstr ""
 "Champ technique. Indique si l'opération a été reportée dans un scénario à "
 "code-barres."
-=======
 
 #. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_stock_inventory__inventory_line_count
@@ -1732,7 +1662,6 @@ msgstr ""
 #: model:ir.model.fields,help:shopfloor.field_stock_inventory__location_count
 msgid "Technical field. Indicates number of locations included."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_stock_picking__move_line_count
@@ -1746,8 +1675,6 @@ msgid ""
 "Technical field. Indicates number of move lines without package included."
 msgstr ""
 "Champ technique. Indique le nombre de lignes de mouvement sans colis inclus."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_stock_picking__package_level_count
@@ -1783,8 +1710,6 @@ msgid "Technical field. Overrides operation priority in barcode scenario."
 msgstr ""
 "Champ technique. Remplace la priorité de l'opération dans un scénario à code-"
 "barres."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/models/stock_picking.py:0
@@ -1795,8 +1720,6 @@ msgid ""
 msgstr ""
 "Le reliquat <a href=\"#\" data-oe-model=\"stock.picking\" data-oe-id=\"%d\">"
 "%s</a> a été créé."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1876,8 +1799,6 @@ msgid ""
 msgstr ""
 "La quantité scannée pour une ou plusieurs lignes ne peut pas être supérieure "
 "au maximum autorisé."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1901,15 +1822,12 @@ msgstr "L'opération de stock où l'empaquetage a été fait"
 #, python-format
 msgid "This batch cannot be selected."
 msgstr "Ce lot ne peut pas être sélectionné."
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/inventory.py:0
 #, python-format
 msgid "This inventory cannot be selected."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1948,8 +1866,6 @@ msgid "This location requires packages. Please scan a destination package."
 msgstr ""
 "Cet emplacement nécessite des colis. Veuillez scanner un colis de "
 "destination."
-=======
-msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1964,7 +1880,6 @@ msgid ""
 "This location has on-going operations. Please inventory another location and"
 " come back."
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1980,8 +1895,6 @@ msgid ""
 msgstr ""
 "Ce lot fait partie d'un colis avec d'autres produits, veuillez scanner un "
 "colis."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -2022,8 +1935,6 @@ msgstr ""
 #, python-format
 msgid "This product is part of a package, please scan a package."
 msgstr "Ce produit fait partie d'un colis, veuillez scanner un colis."
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -2138,8 +2049,6 @@ msgstr "WH livraison"
 #: model:shopfloor.profile,name:shopfloor.profile_demo_1
 msgid "WH worker"
 msgstr "WH ouvrier"
-=======
-msgstr ""
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__use_existing_inventory_is_possible
@@ -2150,7 +2059,6 @@ msgstr ""
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__use_existing_inventory
 msgid "Use only existing inventories"
 msgstr ""
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: model:ir.model.fields.selection,name:shopfloor.selection__shopfloor_app__category__wms
@@ -2227,8 +2135,6 @@ msgstr ""
 #, python-format
 msgid "Working location changed to {}"
 msgstr "Emplacement de travail changé vers {}"
-=======
->>>>>>> dd95c74d (add missing files)
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/cluster_picking.py:0
