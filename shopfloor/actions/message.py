@@ -619,6 +619,14 @@ class MessageAction(Component):
             "body": _("Location {0.name} successfully inventoried.").format(location),
         }
 
+    def no_location_state(self, location):
+        return {
+            "message_type": "error",
+            "body": _(
+                "Location {0.name} doesn't belong to the current inventory."
+            ).format(location),
+        }
+
     def location_not_done(self):
         return {
             "message_type": "warning",

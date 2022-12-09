@@ -168,6 +168,12 @@ class Inventory(Component):
         location_state = inventory.sub_location_ids.filtered(
             lambda l: l.location_id == location
         )
+        if not location_state:
+            raise ShopfloorError(
+                self.msg_store.no_location_state(location),
+                data=self.data.inventory(inventory, with_locations=True),
+                next_state="start_location",
+            )
         if location_state.state == "done":
             # TODO re-inventory or update location instead of raise
             raise ShopfloorError(
@@ -342,6 +348,12 @@ class Inventory(Component):
         location_state = inventory.sub_location_ids.filtered(
             lambda l: l.location_id == location
         )
+        if not location_state:
+            raise ShopfloorError(
+                self.msg_store.no_location_state(location),
+                data=self.data.inventory(inventory, with_locations=True),
+                next_state="start_location",
+            )
         location_state.action_done()
         if other_location:
             return self._response_for_scan_product(
