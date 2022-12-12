@@ -356,6 +356,7 @@ class Inventory(Component):
             )
         location_state.action_done()
         if other_location:
+            self._start_location_state(inventory, other_location)
             return self._response_for_scan_product(
                 inventory,
                 other_location,
