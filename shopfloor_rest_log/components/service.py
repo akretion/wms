@@ -3,6 +3,7 @@
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
 from odoo.addons.component.core import AbstractComponent
+from odoo.addons.shopfloor_base.exceptions import ShopfloorError
 
 
 class BaseRESTService(AbstractComponent):
@@ -22,3 +23,20 @@ class BaseRESTService(AbstractComponent):
             "app_version": headers.get("App-Version", "Unknown"),
         }
         return vals
+
+
+class ShopfloorRESTService(BaseRESTService):
+    _inherit = "base.rest.service"
+
+    def _dispatch_exception(
+        self, method_name, exception_klass, orig_exception, *args, params=None
+    ):
+        try:
+            super()._dispatch_exception(
+                method_name, exception_klass, orig_exception, *args, params=params
+            )
+        except Exception as e:
+            if isinstance(orig_exception, ShopfloorError):
+                raise orig_exception
+            else:
+                raise e
