@@ -187,6 +187,12 @@
                 t-attf-src="/shopfloor_mobile/static/wms/src/scenario/multi_lot_mrp_wh_transfer.js?v=#{mod_version}"
                 type="module"
             />
+            <script
+                id="script_scenario_move_to_production"
+                t-attf-src="/shopfloor_mobile/static/wms/src/scenario/move_to_production.js?v=#{mod_version}"
+                type="module"
+            />
+
         </script>
     </template>
     <template
