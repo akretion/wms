@@ -58,3 +58,11 @@ class MessageAction(Component):
             "message_type": "error",
             "body": _("The inventory {0.name} is already done.").format(inventory),
         }
+
+    def no_location_state(self, location):
+        return {
+            "message_type": "error",
+            "body": _(
+                "Location {0.name} doesn't belong to the current inventory."
+            ).format(location),
+        }
