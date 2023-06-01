@@ -1551,3 +1551,9 @@ msgstr ""
 #, python-format
 msgid "{} {} put in {}"
 msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Location {0.name} doesn't belong to the current inventory."
+msgstr "L'emplacement {0.name} n'appartient pas à cet inventaire."
