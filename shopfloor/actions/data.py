@@ -11,12 +11,36 @@ class DataAction(Component):
 
     @ensure_model("stock.location")
     def location(self, record, **kw):
-        return self._jsonify(
-            record.with_context(location=record.id), self._location_parser, **kw
-        )
+        parser = self._location_parser
+        data = self._jsonify(record.with_context(location=record.id), parser, **kw)
+        if "with_operation_progress" in kw:
+            operation_progress = self._get_location_operations_progress(record)
+            data.update({"operation_progress": operation_progress})
+        return data
 
     def locations(self, record, **kw):
         return self.location(record, multi=True)
+
+    def _get_location_operations_progress(self, location):
+        lines = self.env["stock.move.line"].search(
+            [
+                ("location_id", "=", location.id),
+                ("state", "in", ["partially_available", "assigned"]),
+                ("picking_id.state", "=", "assigned"),
+            ]
+        )
+        # operations_to_do = number of total operations that are pending for this location.
+        # operations_done = number of operations already done.
+        # A line with an assigned package counts as 1 operation.
+        operations_to_do = 0
+        operations_done = 0
+        for line in lines:
+            operations_done += line.qty_done if not line.package_id else 1
+            operations_to_do += line.product_uom_qty if not line.package_id else 1
+        return {
+            "done": operations_done,
+            "to_do": operations_to_do,
+        }
 
     @property
     def _location_parser(self):
@@ -29,13 +53,20 @@ class DataAction(Component):
 
     @ensure_model("stock.picking")
     def picking(self, record, **kw):
-        return self._jsonify(record, self._picking_parser, **kw)
+        parser = self._picking_parser
+        # progress is a heavy computed field,
+        # and it may reduce performance significatively
+        # when dealing with a large number of pickings.
+        # Thus, we make it optional.
+        if "with_progress" in kw:
+            parser.append("progress")
+        return self._jsonify(record, parser, **kw)
 
     def pickings(self, record, **kw):
         return self.picking(record, multi=True)
 
     @property
-    def _picking_parser(self):
+    def _picking_parser(self, **kw):
         return [
             "id",
             "name",
@@ -64,8 +95,10 @@ class DataAction(Component):
         data = self._jsonify(record, parser, **kw)
         # handle special cases
         if data and picking:
-            # TODO: exclude canceled and done?
-            lines = picking.move_line_ids.filtered(lambda l: l.package_id == record)
+            lines = picking.move_line_ids.filtered(
+                lambda l: l.result_package_id == record
+                and l.state in ["partially_available", "assigned", "done"]
+            )
             data.update({"move_line_count": len(lines)})
         return data
 
@@ -131,7 +164,7 @@ class DataAction(Component):
 
     @property
     def _lot_parser(self):
-        return self._simple_record_parser() + ["ref"]
+        return self._simple_record_parser() + ["ref", "expiration_date"]
 
     @ensure_model("stock.move.line")
     def move_line(self, record, with_picking=False, **kw):
@@ -176,6 +209,29 @@ class DataAction(Component):
                 "move_id:priority",
                 lambda rec, fname: rec.move_id.priority or "",
             ),
+            "progress",
+        ]
+
+    @ensure_model("stock.move")
+    def move(self, record, **kw):
+        record = record.with_context(location=record.location_id.id)
+        parser = self._move_parser
+        return self._jsonify(record, parser)
+
+    def moves(self, records, **kw):
+        return [self.move(rec, **kw) for rec in records]
+
+    @property
+    def _move_parser(self):
+        return [
+            "id",
+            "quantity_done",
+            "product_uom_qty:quantity",
+            ("product_id:product", self._product_parser),
+            ("location_id:location_src", self._location_parser),
+            ("location_dest_id:location_dest", self._location_parser),
+            "priority",
+            "progress",
         ]
 
     @ensure_model("stock.package_level")

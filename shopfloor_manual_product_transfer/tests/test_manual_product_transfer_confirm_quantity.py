@@ -146,12 +146,17 @@ class ManualProductTransferConfirmQuantity(ManualProductTransferCommonCase):
                 "confirm": True,
             },
         )
-        # we get an error message and the quantity to move is reset to 8
+        # we get:
+        #   - a warning saying that 2 reserved qties should not be taken
+        #   - an error message and the quantity to move is reset to 8
         self.assert_response_confirm_quantity(
             response,
             self.src_location,
             self.product_a,
-            8,
+            quantity=8,
+            warning=self.service.msg_store.qty_assigned_to_preserve(
+                self.product_a, 2.0
+            )["body"],
             message=self.service.msg_store.qty_exceeds_initial_qty(),
         )
         move_lines = self.service._find_user_move_lines(
@@ -198,6 +203,41 @@ class ManualProductTransferConfirmQuantity(ManualProductTransferCommonCase):
         )
         self.assert_response_scan_destination_location(
             response, move_lines.picking_id, move_lines
+        )
+
+    def test_confirm_quantity_with_unreservation_enabled_and_picking_started(self):
+        self.menu.sudo().allow_unreserve_other_moves = True
+        # initial qty is 10, but we reserve 2 qties (so 8 fully free)
+        picking = self._create_picking(
+            picking_type=self.env.ref("stock.picking_type_out"),
+            lines=[(self.product_a, 2)],
+            confirm=True,
+        )
+        picking.action_assign()
+        # another transfer with 2 qties reserved and some done (so 6 fully free)
+        picking2 = self._create_picking(
+            picking_type=self.env.ref("stock.picking_type_out"),
+            lines=[(self.product_a, 2)],
+            confirm=True,
+        )
+        picking2.action_assign()
+        picking2.move_line_ids.qty_done = 1
+
+        # confirm 7 qties to process (more than 6)
+        response = self.service.dispatch(
+            "confirm_quantity",
+            params={
+                "location_id": self.src_location.id,
+                "product_id": self.product_a.id,
+                "quantity": 9,
+                "confirm": True,
+            },
+        )
+        self.assert_response_start(
+            response,
+            message=self.service.msg_store.picking_already_started_in_location(
+                picking2
+            ),
         )
 
     def test_confirm_quantity_exceeds_initial_qty(self):

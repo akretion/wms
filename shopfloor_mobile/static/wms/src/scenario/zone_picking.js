@@ -31,6 +31,12 @@ const template_mobile = `
                         <btn-back :router_back="false"/>
                     </v-col>
                 </v-row>
+                <v-row align="center" v-if="! _.isEmpty(state.data.buffer)">
+                    <v-col class="text-center" cols="12">
+                        <btn-action @click="state.on_unload_at_destination()">Unload at destination</btn-action>
+                    </v-col>
+                </v-row>
+
             </div>
         </div>
         <div v-if="state_is('select_picking_type')">
@@ -50,11 +56,13 @@ const template_mobile = `
         </div>
 
         <div v-if="state_is('select_line')">
-            <manual-select
+            <item-detail-card
                 v-if="device_mode == 'mobile'"
-                :records="state.data.move_lines"
+                v-for="line in state.data.move_lines"
+                :key="make_state_component_key(['line', line.id])"
+                :record="line"
                 :options="select_line_move_line_detail_options()"
-                :key="make_state_component_key(['manual-select'])"
+                :card_color="utils.colors.color_for('screen_step_todo')"
                 />
 
             <v-data-table
@@ -67,7 +75,7 @@ const template_mobile = `
                 <template v-slot:item.quantity="{ item }">
                     <packaging-qty-picker-display
                         :key="make_state_component_key(['qty-picker-widget', item['_origin'].id])"
-                        :options="utils.wms.move_line_qty_picker_options(item['_origin'])"
+                        v-bind="utils.wms.move_line_qty_picker_props(item['_origin'], {'qtyInit': item.quantity})"
                         />
                 </template>
                 <template v-slot:item.priority="{ item }">
@@ -102,11 +110,6 @@ const template_mobile = `
             </div>
         </div>
 
-        <detail-picking
-            v-if="state_is('set_line_destination')"
-            :record="state.data.move_line.picking"
-            :card_color="utils.colors.color_for('screen_step_done')"
-            />
         <item-detail-card
             v-if="state_in(['set_line_destination', 'change_pack_lot'])"
             :key="make_state_component_key(['detail-move-line-loc', state.data.move_line.id])"
@@ -118,7 +121,7 @@ const template_mobile = `
             v-if="state_in(['set_line_destination', 'stock_issue', 'change_pack_lot'])"
             :key="make_state_component_key(['detail-move-line-product', state.data.move_line.id])"
             :record="state.data.move_line"
-            :options="utils.wms.move_line_product_detail_options(state.data.move_line, {fields: [{path: 'picking.name', label: 'Picking'}], fields_blacklist: ['quantity']})"
+            :options="utils.wms.move_line_product_detail_options(state.data.move_line, {fields_blacklist: ['quantity']})"
             :card_color="utils.colors.color_for(state_in(['set_line_destination']) ? 'screen_step_done': 'screen_step_todo')"
             />
         <item-detail-card
@@ -132,7 +135,7 @@ const template_mobile = `
                 class="pa-2" :color="utils.colors.color_for('screen_step_todo')">
             <packaging-qty-picker
                 :key="make_state_component_key(['packaging-qty-picker', state.data.move_line.id])"
-                :options="utils.wms.move_line_qty_picker_options(state.data.move_line)"
+                v-bind="utils.wms.move_line_qty_picker_props(state.data.move_line)"
                 />
         </v-card>
         <item-detail-card
@@ -263,15 +266,31 @@ const ZonePicking = {
             );
         },
         screen_title: function () {
-            const record = this.current_picking_type();
-            if (!record) return this.menu_item().name;
-            return record.name;
+            const picking = this.current_picking();
+            if (picking) {
+                return picking.name;
+            }
+            const picking_type = this.current_picking_type();
+            if (!_.isEmpty(picking_type)) {
+                return picking_type.name;
+            }
+            return this.menu_item().name;
         },
-        // TODO: if we have this working we can remove the picking detail?
+        current_picking: function () {
+            const states = ["set_line_destination", "stock_issue", "change_pack_lot"];
+            if (states.includes(this.current_state_key)) {
+                return this.state.data.move_line.picking;
+            }
+            return null;
+        },
         current_doc: function () {
-            const record = this.current_picking_type();
+            const picking = this.current_picking();
+            if (!picking) {
+                return {};
+            }
             return {
-                record: record,
+                record: picking,
+                identifier: picking.name,
             };
         },
         current_picking_type: function () {
@@ -284,7 +303,11 @@ const ZonePicking = {
             }
             const data = this.state_get_data("select_line");
             if (_.isEmpty(data) || _.isEmpty(data.picking_type)) {
-                return {};
+                const buffer = this.state_get_data("scan_location").buffer;
+                if (_.isEmpty(buffer)) {
+                    return {};
+                }
+                return buffer.picking_type;
             }
             return data.picking_type;
         },
@@ -294,7 +317,11 @@ const ZonePicking = {
             }
             const data = this.state_get_data("select_picking_type");
             if (_.isEmpty(data) || _.isEmpty(data.zone_location)) {
-                return {};
+                const buffer = this.state_get_data("scan_location").buffer;
+                if (_.isEmpty(buffer)) {
+                    return {};
+                }
+                return buffer.zone_location;
             }
             return data.zone_location;
         },
@@ -374,19 +401,9 @@ const ZonePicking = {
         select_line_move_line_detail_options: function () {
             const options = {
                 key_title: "location_src.name",
-                group_color: this.utils.colors.color_for("screen_step_todo"),
-                card_klass: "loud-labels",
+                loud_labels: true,
                 title_action_field: {action_val_path: "product.barcode"},
-                showActions: false,
-                list_item_options: {
-                    loud_title: true,
-                    fields: this.move_line_list_fields(),
-                    list_item_klass_maker: function (rec) {
-                        return rec.location_will_be_empty
-                            ? "location-will-be-empty"
-                            : "";
-                    },
-                },
+                fields: this.move_line_list_fields(),
             };
             return options;
         },
@@ -407,8 +424,10 @@ const ZonePicking = {
                     path: "quantity",
                     label: "Qty",
                     render_component: "packaging-qty-picker-display",
-                    render_options: function (record) {
-                        return self.utils.wms.move_line_qty_picker_options(record);
+                    render_props: function (record) {
+                        return self.utils.wms.move_line_qty_picker_props(record, {
+                            qtyInit: record.quantity,
+                        });
                     },
                 },
                 {path: "package_src.weight", label: "Weight"},
@@ -454,12 +473,17 @@ const ZonePicking = {
             return this.wait_call(this.odoo.call("list_move_lines", {}));
         },
         scan_source(barcode) {
-            return this.wait_call(
-                this.odoo.call("scan_source", {
-                    barcode: barcode,
-                    confirmation: this.state.data.confirmation_required,
-                })
-            );
+            let data = {
+                barcode: barcode,
+                confirmation: this.state.data.confirmation_required,
+            };
+            if (this.state_is("select_line") && this.state.data.product) {
+                data.product_id = this.state.data.product.id;
+            }
+            if (this.state_is("select_line") && this.state.data.sublocation) {
+                data.sublocation_id = this.state.data.sublocation.id;
+            }
+            return this.wait_call(this.odoo.call("scan_source", data));
         },
         picking_summary_records_grouped(move_lines) {
             return this.utils.wms.group_lines_by_location(move_lines, {
@@ -540,6 +564,21 @@ const ZonePicking = {
                             this.odoo.call("scan_location", {barcode: scanned.text})
                         );
                     },
+                    on_unload_at_destination: () => {
+                        const loaded_data = this.state.data.buffer;
+                        const odoo_params = this._get_odoo_params();
+                        // Zone and picking type are needed in the header
+                        // To call prepare_unload.
+                        _.defaults(
+                            odoo_params.headers,
+                            this._get_zone_picking_headers(
+                                loaded_data.zone_location.id,
+                                loaded_data.picking_type.id
+                            )
+                        );
+                        const odoo = this.$root.getOdoo(odoo_params);
+                        this.wait_call(odoo.call("prepare_unload", {}));
+                    },
                 },
                 select_picking_type: {
                     display_info: {
@@ -554,12 +593,34 @@ const ZonePicking = {
                     },
                     on_select: (selected) => {
                         this.list_move_lines(selected.id);
+                        this.force_lines_refresh = true;
                     },
                 },
                 select_line: {
+                    enter: () => {
+                        if (!this.force_lines_refresh) {
+                            // Ensure that the list of lines is always refreshed
+                            // when landing on this screen.
+                            // We don't need to call this method on enter
+                            // if we come from select_picking_type, as it takes care of that already.
+                            this.list_move_lines(this.state.data.picking_type.id);
+                        }
+                    },
                     display_info: {
                         title: "Select move",
-                        scan_placeholder: "Scan pack or location",
+                        scan_placeholder: () => {
+                            const sublocation = this.state.data.sublocation;
+                            if (
+                                this.state.data.scan_location_or_pack_first &&
+                                !sublocation
+                            ) {
+                                return "Scan location / pack";
+                            }
+                            if (sublocation) {
+                                return "Scan product / lot / package";
+                            }
+                            return "Scan location / pack / product / lot";
+                        },
                     },
                     events: {
                         select: "on_select",
@@ -737,6 +798,7 @@ const ZonePicking = {
                     },
                 },
             },
+            force_lines_refresh: false,
         };
     },
     // TODO: move this lovely feature to a mixin or provide it to all components.

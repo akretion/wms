@@ -144,7 +144,7 @@ class ClusterPickingScanDestinationPackCase(ClusterPickingCommonCase):
         self.assert_response(
             response,
             next_state="scan_destination",
-            data=self._line_data(line),
+            data=self._line_data(line, qty_done=10.0),
             message={
                 "message_type": "error",
                 "body": "The destination bin {} is not empty,"
@@ -201,10 +201,12 @@ class ClusterPickingScanDestinationPackCase(ClusterPickingCommonCase):
                 "quantity": line.product_uom_qty,
             },
         )
+        line_data = self._line_data(line)
+        line_data["qty_done"] = 10
         self.assert_response(
             response,
             next_state="scan_destination",
-            data=self._line_data(line),
+            data=line_data,
             message={
                 "message_type": "error",
                 "body": "Bin {} doesn't exist".format("⌿"),
@@ -226,7 +228,7 @@ class ClusterPickingScanDestinationPackCase(ClusterPickingCommonCase):
         self.assert_response(
             response,
             next_state="scan_destination",
-            data=self._line_data(line),
+            data=self._line_data(line, qty_done=11.0),
             message={
                 "message_type": "error",
                 "body": "You must not pick more than {} units.".format(

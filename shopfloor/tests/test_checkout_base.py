@@ -38,3 +38,13 @@ class CheckoutCommonCase(CommonCase):
 
     def _packaging_data(self, packaging):
         return self.data.packaging(packaging)
+
+    def _data_for_select_line(self, picking, **kw):
+        data = {
+            "picking": self._stock_picking_data(picking),
+            "group_lines_by_location": True,
+            "show_oneline_package_content": False,
+            "need_confirm_pack_all": False,
+        }
+        data.update(kw)
+        return data

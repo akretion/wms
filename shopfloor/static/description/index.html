@@ -381,6 +381,10 @@ ul.auto-toc {
 <p>This module provides REST APIs to support the scenarios. It needs a frontend
 to consume the backend APIs and provide screens for users on barcode devices.
 A default front-end application is provided by <tt class="docutils literal">shopfloor_mobile</tt>.</p>
+<div class="line-block">
+<div class="line">Note: if you want to enable a new scenario on an existing application, you must trigger the registry sync on the shopfloor.app in a post_init_hook or a post-migrate script.</div>
+<div class="line">See an example <a class="reference external" href="https://github.com/OCA/wms/pull/520/commits/bccdfd445a9bc943998c4848f183a076e8459a98">here</a>.</div>
+</div>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
@@ -455,6 +459,8 @@ If you spotted it first, help us smashing it by providing a detailed and welcome
 <li>Thierry Ducrest &lt;<a class="reference external" href="mailto:thierry.ducrest&#64;camptocamp.com">thierry.ducrest&#64;camptocamp.com</a>&gt;</li>
 <li>Raphaël Reverdy &lt;<a class="reference external" href="mailto:raphael.reverdy&#64;akretion.com">raphael.reverdy&#64;akretion.com</a>&gt;</li>
 <li>Jacques-Etienne Baudoux &lt;<a class="reference external" href="mailto:je&#64;bcim.be">je&#64;bcim.be</a>&gt;</li>
+<li>Juan Miguel Sánchez Arce &lt;<a class="reference external" href="mailto:juan.sanchez&#64;camptocamp.com">juan.sanchez&#64;camptocamp.com</a>&gt;</li>
+<li>Michael Tietz (MT Software) &lt;<a class="reference external" href="mailto:mtietz&#64;mt-software.de">mtietz&#64;mt-software.de</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="design">

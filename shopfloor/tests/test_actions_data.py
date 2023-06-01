@@ -40,6 +40,22 @@ class ActionsDataCase(ActionsDataCaseBase):
         }
         self.assertDictEqual(data, expected)
 
+    def test_data_location_with_operation_progress(self):
+        location = self.stock_location
+        location.sudo().barcode = None
+        data = self.data.location(location, with_operation_progress=True)
+        self.assert_schema(self.schema.location(), data)
+        expected = {
+            "id": location.id,
+            "name": location.name,
+            "barcode": location.name,
+            "operation_progress": {
+                "done": 18.0,
+                "to_do": 165.0,
+            },
+        }
+        self.assertDictEqual(data, expected)
+
     def test_data_lot(self):
         lot = self.env["stock.production.lot"].create(
             {
@@ -50,7 +66,12 @@ class ActionsDataCase(ActionsDataCaseBase):
         )
         data = self.data.lot(lot)
         self.assert_schema(self.schema.lot(), data)
-        expected = {"id": lot.id, "name": lot.name, "ref": "#FOO"}
+        expected = {
+            "id": lot.id,
+            "name": lot.name,
+            "ref": "#FOO",
+            "expiration_date": None,
+        }
         self.assertDictEqual(data, expected)
 
     def test_data_package(self):
@@ -114,6 +135,30 @@ class ActionsDataCase(ActionsDataCaseBase):
         self.assertEqual(data.pop("scheduled_date").split("T")[0], "2020-08-03")
         self.assertDictEqual(data, expected)
 
+    def test_data_picking_with_progress(self):
+        carrier = self.picking.carrier_id.search([], limit=1)
+        self.picking.write(
+            {"origin": "created by test", "note": "read me", "carrier_id": carrier.id}
+        )
+        data = self.data.picking(self.picking, with_progress=True)
+        self.assert_schema(self.schema.picking(), data)
+        expected = {
+            "id": self.picking.id,
+            "move_line_count": 4,
+            "package_level_count": 2,
+            "bulk_line_count": 2,
+            "name": self.picking.name,
+            "note": "read me",
+            "origin": "created by test",
+            "weight": 110.0,
+            "partner": {"id": self.customer.id, "name": self.customer.name},
+            "carrier": {"id": carrier.id, "name": carrier.name},
+            "ship_carrier": None,
+            "progress": 0.0,
+        }
+        self.assertEqual(data.pop("scheduled_date").split("T")[0], "2020-08-03")
+        self.assertDictEqual(data, expected)
+
     def test_data_product(self):
         (
             self.env["product.packaging"]
@@ -147,6 +192,7 @@ class ActionsDataCase(ActionsDataCaseBase):
         move_line.write({"qty_done": 3.0, "result_package_id": result_package.id})
         data = self.data.move_line(move_line)
         self.assert_schema(self.schema.move_line(), data)
+        self.assertIn(self.move_a.state, ["partially_available", "assigned", "done"])
         expected = {
             "id": move_line.id,
             "qty_done": 3.0,
@@ -156,20 +202,21 @@ class ActionsDataCase(ActionsDataCaseBase):
             "package_src": {
                 "id": move_line.package_id.id,
                 "name": move_line.package_id.name,
-                "move_line_count": 1,
+                "move_line_count": 0,
                 "weight": 20.0,
                 "storage_type": None,
             },
             "package_dest": {
                 "id": result_package.id,
                 "name": result_package.name,
-                "move_line_count": 0,
+                "move_line_count": 1,
                 "weight": 6.0,
                 "storage_type": None,
             },
             "location_src": self._expected_location(move_line.location_id),
             "location_dest": self._expected_location(move_line.location_dest_id),
             "priority": "1",
+            "progress": 30.0,
         }
         self.assertDictEqual(data, expected)
 
@@ -186,12 +233,14 @@ class ActionsDataCase(ActionsDataCaseBase):
                 "id": move_line.lot_id.id,
                 "name": move_line.lot_id.name,
                 "ref": None,
+                "expiration_date": None,
             },
             "package_src": None,
             "package_dest": None,
             "location_src": self._expected_location(move_line.location_id),
             "location_dest": self._expected_location(move_line.location_dest_id),
             "priority": "1",
+            "progress": 0.0,
         }
         self.assertDictEqual(data, expected)
 
@@ -199,6 +248,7 @@ class ActionsDataCase(ActionsDataCaseBase):
         move_line = self.move_c.move_line_ids
         data = self.data.move_line(move_line)
         self.assert_schema(self.schema.move_line(), data)
+        self.assertIn(self.move_a.state, ["partially_available", "assigned", "done"])
         expected = {
             "id": move_line.id,
             "qty_done": 0.0,
@@ -208,6 +258,7 @@ class ActionsDataCase(ActionsDataCaseBase):
                 "id": move_line.lot_id.id,
                 "name": move_line.lot_id.name,
                 "ref": None,
+                "expiration_date": None,
             },
             "package_src": {
                 "id": move_line.package_id.id,
@@ -226,6 +277,7 @@ class ActionsDataCase(ActionsDataCaseBase):
             "location_src": self._expected_location(move_line.location_id),
             "location_dest": self._expected_location(move_line.location_dest_id),
             "priority": "1",
+            "progress": 0.0,
         }
         self.assertDictEqual(data, expected)
 
@@ -244,6 +296,7 @@ class ActionsDataCase(ActionsDataCaseBase):
             "location_src": self._expected_location(move_line.location_id),
             "location_dest": self._expected_location(move_line.location_dest_id),
             "priority": "1",
+            "progress": 0.0,
         }
         self.assertDictEqual(data, expected)
 
@@ -263,6 +316,7 @@ class ActionsDataCase(ActionsDataCaseBase):
             "location_dest": self._expected_location(move_line.location_dest_id),
             "picking": self.data.picking(move_line.picking_id),
             "priority": "1",
+            "progress": 0.0,
         }
         self.assertDictEqual(data, expected)
 

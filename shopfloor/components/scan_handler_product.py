@@ -15,7 +15,8 @@ class ProductHandler(Component):
     record_type = "product"
 
     def search(self, identifier):
-        return self._search.product_from_scan(identifier)
+        res = self._search.find(identifier, types=("product", "packaging"))
+        return res.record if res.record else self.env["product.product"]
 
     @property
     def converter(self):

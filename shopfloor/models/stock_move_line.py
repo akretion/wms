@@ -166,19 +166,28 @@ class StockMoveLine(models.Model):
         elif qty_lesser:
             if not split_partial:
                 return (new_line, "lesser")
-            # split the move line which will be processed later (maybe the user
-            # has to pick some goods from another place because the location
-            # contained less items than expected)
-            remaining = self.product_uom_qty - qty_done
-            vals = {"product_uom_qty": remaining, "qty_done": 0}
-            vals.update(split_default_vals)
-            new_line = self.copy(vals)
-            # if we didn't bypass reservation update, the quant reservation
-            # would be reduced as much as the deduced quantity, which is wrong
-            # as we only moved the quantity to a new move line
-            self.with_context(bypass_reservation_update=True).product_uom_qty = qty_done
+            new_line = self._split_partial_quantity_to_be_done(
+                qty_done, split_default_vals
+            )
             return (new_line, "lesser")
         return (new_line, "full")
+
+    def _split_partial_quantity_to_be_done(self, quantity_done, split_default_vals):
+        """Create a new move line with the remaining quantity to process."""
+        # split the move line which will be processed later (maybe the user
+        # has to pick some goods from another place because the location
+        # contained less items than expected)
+        remaining = self.product_uom_qty - quantity_done
+        vals = {"product_uom_qty": remaining, "qty_done": 0}
+        vals.update(split_default_vals)
+        new_line = self.copy(vals)
+        # if we didn't bypass reservation update, the quant reservation
+        # would be reduced as much as the deduced quantity, which is wrong
+        # as we only moved the quantity to a new move line
+        self.with_context(
+            bypass_reservation_update=True
+        ).product_uom_qty = quantity_done
+        return new_line
 
     def replace_package(self, new_package):
         """Replace a package on an assigned move line"""
@@ -285,3 +294,11 @@ class StockMoveLine(models.Model):
         # triggered, force it
         to_assign_moves.move_line_ids.package_level_id.modified(["move_line_ids"])
         self.package_level_id.modified(["move_line_ids"])
+
+    def _filter_on_picking(self, picking=False):
+        """Filter a bunch of lines on a picking.
+
+        If no picking is provided the first one is taken.
+        """
+        picking = picking or fields.first(self.picking_id)
+        return self.filtered_domain([("picking_id", "=", picking.id)])

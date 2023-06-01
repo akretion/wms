@@ -3,6 +3,7 @@
  * @author Simone Orsi <simahawk@gmail.com>
  * License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
  */
+import event_hub from "../services/event_hub.js";
 
 /* eslint-disable strict */
 Vue.component("manual-select", {
@@ -45,6 +46,13 @@ Vue.component("manual-select", {
     mounted() {
         // Relies on properties
         this.selected = this._initSelected();
+
+        // Select item from outside this component.
+        event_hub.$on("manual_select:select_item", (data) => {
+            // TODO: We should consider using a 'ref' to hook to this
+            // in case there are many mounted manual_select components.
+            this._updateValue(data.rec_id, data.checked);
+        });
     },
     methods: {
         _initSelected() {
@@ -120,7 +128,7 @@ Vue.component("manual-select", {
             this._updateValue(val, elem.checked);
             $(elem)
                 .closest(".list-item-wrapper")
-                .toggleClass(this.selected_color_klass(), elem.checked);
+                .toggleClass(this.selected_color_klass(rec), elem.checked);
             if (!this.opts.showActions) {
                 this._emitSelected(this._getSelected());
             }
@@ -150,12 +158,9 @@ Vue.component("manual-select", {
                 this.is_selected(rec)
             );
         },
-        selected_color_klass(modifier) {
-            return (
-                "active " +
-                this.utils.colors.color_for("item_selected") +
-                (modifier ? " " + modifier : "")
-            );
+        selected_color_klass(rec, modifier) {
+            let color = this.utils.colors.color_for("item_selected");
+            return "active " + color + (modifier ? " " + modifier : "");
         },
     },
     computed: {
@@ -238,7 +243,7 @@ Vue.component("manual-select", {
             :key="make_component_key([$options._componentTag, 'group', gindex])">
             <v-card-title v-if="group.title">{{ group.title }}</v-card-title>
             <v-list v-if="has_records">
-                <div :class="['list-item-wrapper', is_selected(rec) ? selected_color_klass() : '']" v-for="(rec, index) in group.records"">
+                <div :class="['list-item-wrapper', is_selected(rec) ? selected_color_klass(rec) : '']" v-for="(rec, index) in group.records"">
                     <v-list-item :key="make_component_key(['group-rec', gindex, index, rec.id])"
                                 :class="list_item_options.list_item_klass_maker ? list_item_options.list_item_klass_maker(rec) : ''">
                         <v-list-item-content>
@@ -255,7 +260,7 @@ Vue.component("manual-select", {
                             <div class="action action-select">
                                 <v-btn icon x-large rounded>
                                     <input
-                                        :class="['sf-checkbox', is_selected(rec) ? selected_color_klass('darken-3') : '']"
+                                        :class="['sf-checkbox', is_selected(rec) ? selected_color_klass(rec, 'darken-3') : '']"
                                         type="checkbox"
                                         :input-value="rec.id"
                                         :true-value="rec.id"

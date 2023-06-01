@@ -306,13 +306,21 @@ class ZonePickingCommonCase(CommonCase):
         message=None,
         popup=None,
         confirmation_required=False,
+        product=None,
+        sublocation=None,
+        location_first=None,
     ):
         data = {
             "zone_location": self.data.location(zone_location),
             "picking_type": self.data.picking_type(picking_type),
             "move_lines": self.data.move_lines(move_lines, with_picking=True),
             "confirmation_required": confirmation_required,
+            "scan_location_or_pack_first": location_first,
         }
+        if product:
+            data["product"] = self.data.product(product)
+        if sublocation:
+            data["sublocation"] = self.data.location(sublocation)
         for data_move_line in data["move_lines"]:
             move_line = self.env["stock.move.line"].browse(data_move_line["id"])
             data_move_line[
@@ -335,6 +343,9 @@ class ZonePickingCommonCase(CommonCase):
         message=None,
         popup=None,
         confirmation_required=False,
+        product=None,
+        sublocation=None,
+        location_first=False,
     ):
         self._assert_response_select_line(
             "select_line",
@@ -345,6 +356,9 @@ class ZonePickingCommonCase(CommonCase):
             message=message,
             popup=popup,
             confirmation_required=confirmation_required,
+            product=product,
+            sublocation=sublocation,
+            location_first=location_first,
         )
 
     def _assert_response_set_line_destination(
@@ -356,14 +370,18 @@ class ZonePickingCommonCase(CommonCase):
         move_line,
         message=None,
         confirmation_required=False,
+        qty_done=None,
     ):
+        expected_move_line = self.data.move_line(move_line, with_picking=True)
+        if qty_done is not None:
+            expected_move_line["qty_done"] = qty_done
         self.assert_response(
             response,
             next_state=state,
             data={
                 "zone_location": self.data.location(zone_location),
                 "picking_type": self.data.picking_type(picking_type),
-                "move_line": self.data.move_line(move_line, with_picking=True),
+                "move_line": expected_move_line,
                 "confirmation_required": confirmation_required,
             },
             message=message,
@@ -377,6 +395,7 @@ class ZonePickingCommonCase(CommonCase):
         move_line,
         message=None,
         confirmation_required=False,
+        qty_done=None,
     ):
         self._assert_response_set_line_destination(
             "set_line_destination",
@@ -386,6 +405,7 @@ class ZonePickingCommonCase(CommonCase):
             move_line,
             message=message,
             confirmation_required=confirmation_required,
+            qty_done=qty_done,
         )
 
     def _assert_response_zero_check(
