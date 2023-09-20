@@ -25,6 +25,8 @@ class ShopfloorSchemaAction(Component):
             "carrier": self._schema_dict_of(self._simple_record(), required=False),
             "ship_carrier": self._schema_dict_of(self._simple_record(), required=False),
             "scheduled_date": {"type": "string", "nullable": False, "required": True},
+            "progress": {"type": "float", "nullable": True},
+            "location_dest": self._schema_dict_of(self.location(), required=False),
         }
 
     def move_line(self, with_packaging=False, with_picking=False):
@@ -48,6 +50,7 @@ class ShopfloorSchemaAction(Component):
             "location_src": self._schema_dict_of(self.location()),
             "location_dest": self._schema_dict_of(self.location()),
             "priority": {"type": "string", "nullable": True, "required": False},
+            "progress": {"type": "float", "nullable": True},
         }
         if with_picking:
             schema["picking"] = self._schema_dict_of(self.picking())
@@ -57,6 +60,12 @@ class ShopfloorSchemaAction(Component):
         return {
             "id": {"required": True, "type": "integer"},
             "priority": {"type": "string", "required": False, "nullable": True},
+            "quantity_done": {"type": "float", "required": True},
+            "quantity": {"type": "float", "required": True},
+            "product": self._schema_dict_of(self.product()),
+            "location_src": self._schema_dict_of(self.location()),
+            "location_dest": self._schema_dict_of(self.location()),
+            "progress": {"type": "float", "nullable": True},
         }
 
     def product(self):
@@ -83,6 +92,15 @@ class ShopfloorSchemaAction(Component):
             "weight": {"required": True, "nullable": True, "type": "float"},
             "move_line_count": {"required": False, "nullable": True, "type": "integer"},
             "storage_type": self._schema_dict_of(self._simple_record()),
+            "operation_progress": {
+                "type": "dict",
+                "required": False,
+                "schema": {
+                    "done": {"type": "float", "required": False},
+                    "to_do": {"type": "float", "required": False},
+                },
+            },
+            "total_quantity": {"required": False, "type": "float"},
         }
         if with_packaging:
             schema["packaging"] = self._schema_dict_of(self.packaging())
@@ -93,6 +111,7 @@ class ShopfloorSchemaAction(Component):
             "id": {"required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
             "ref": {"type": "string", "nullable": True, "required": False},
+            "expiration_date": {"type": "string", "nullable": True, "required": False},
         }
 
     def location(self):
@@ -100,6 +119,14 @@ class ShopfloorSchemaAction(Component):
             "id": {"required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
             "barcode": {"type": "string", "nullable": True, "required": False},
+            "operation_progress": {
+                "type": "dict",
+                "required": False,
+                "schema": {
+                    "done": {"type": "float", "required": False},
+                    "to_do": {"type": "float", "required": False},
+                },
+            },
         }
 
     def packaging(self):

@@ -192,10 +192,10 @@ class CheckoutSetCustomQtyCase(CheckoutSetQtyCommonCase):
         self._assert_selected_qties(
             response,
             selected_lines,
-            {line1: line1.product_uom_qty, line2: line2.product_uom_qty},
+            {line1: line1.product_uom_qty + 1, line2: line2.product_uom_qty},
             message={
-                "body": "Not allowed to pack more than the quantity, "
-                "the value has been changed to the maximum.",
+                "body": "Please note that the scanned quantity "
+                "is higher than the maximum allowed.",
                 "message_type": "warning",
             },
         )
@@ -240,16 +240,16 @@ class CheckoutSetCustomQtyCase(CheckoutSetQtyCommonCase):
         )
         self.assertEqual(line_to_change.qty_done, new_qty)
         self.assertEqual(line_keep_qty.qty_done, line_keep_qty.product_uom_qty)
-        new_line = [
+        new_lines = [
             x for x in self.moves_pack1.move_line_ids if x not in selected_lines
-        ][0]
-        self.assertEqual(new_line.product_uom_qty, 1.0)
+        ]
+        # Lines are not being split anymore
+        self.assertFalse(new_lines)
         self._assert_selected_qties(
             response,
             self.moves_pack1.move_line_ids,
             {
                 line_to_change: new_qty,
                 line_keep_qty: line_keep_qty.product_uom_qty,
-                new_line: 0.0,
             },
         )

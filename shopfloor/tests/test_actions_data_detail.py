@@ -53,6 +53,7 @@ class TestActionsDataDetailCase(ActionsDataDetailCaseBase):
             "id": lot.id,
             "name": lot.name,
             "ref": "#FOO",
+            "expiration_date": "2020-05-31T00:00:00",
             "product": self._expected_product_detail(self.product_b, full=True),
         }
         # ignore time and TZ, we don't care here
@@ -79,7 +80,6 @@ class TestActionsDataDetailCase(ActionsDataDetailCaseBase):
                 "name": package.location_id.display_name,
             },
             "name": package.name,
-            "move_line_count": 1,
             "packaging": self.data_detail.packaging(package.packaging_id),
             "weight": 20.0,
             "pickings": self.data_detail.pickings(pickings),
@@ -88,7 +88,13 @@ class TestActionsDataDetailCase(ActionsDataDetailCaseBase):
                 "id": self.storage_type_pallet.id,
                 "name": self.storage_type_pallet.name,
             },
+            "total_quantity": sum(package.quant_ids.mapped("quantity")),
         }
+        self.assertDictEqual(data, expected)
+        data = self.data_detail.package_detail(
+            package, picking=self.picking, with_package_move_line_count=True
+        )
+        expected.update({"move_line_count": 2})
         self.assertDictEqual(data, expected)
 
     def test_data_picking(self):
@@ -128,6 +134,44 @@ class TestActionsDataDetailCase(ActionsDataDetailCaseBase):
         self.assertEqual(data.pop("scheduled_date").split("T")[0], "2020-05-13")
         self.assertDictEqual(data, expected)
 
+    def test_data_picking_with_progress(self):
+        picking = self.picking
+        carrier = picking.carrier_id.search([], limit=1)
+        picking.write(
+            {
+                "origin": "created by test",
+                "note": "read me",
+                "priority": "1",
+                "carrier_id": carrier.id,
+            }
+        )
+        picking.move_lines.write({"date": "2020-05-13"})
+        data = self.data_detail.picking_detail(picking, with_progress=True)
+        self.assert_schema(self.schema_detail.picking_detail(), data)
+        expected = {
+            "id": picking.id,
+            "move_line_count": 4,
+            "package_level_count": 2,
+            "bulk_line_count": 2,
+            "name": picking.name,
+            "note": "read me",
+            "origin": "created by test",
+            "ship_carrier": None,
+            "weight": 110.0,
+            "partner": {"id": self.customer.id, "name": self.customer.name},
+            "carrier": {"id": picking.carrier_id.id, "name": picking.carrier_id.name},
+            "priority": "Urgent",
+            "operation_type": {
+                "id": picking.picking_type_id.id,
+                "name": picking.picking_type_id.name,
+            },
+            "move_lines": self.data_detail.move_lines(picking.move_line_ids),
+            "picking_type_code": "outgoing",
+            "progress": 0.0,
+        }
+        self.assertEqual(data.pop("scheduled_date").split("T")[0], "2020-05-13")
+        self.assertDictEqual(data, expected)
+
     def test_data_move_line_package(self):
         move_line = self.move_a.move_line_ids
         result_package = self.env["stock.quant.package"].create(
@@ -146,21 +190,30 @@ class TestActionsDataDetailCase(ActionsDataDetailCaseBase):
             "package_src": {
                 "id": move_line.package_id.id,
                 "name": move_line.package_id.name,
-                "move_line_count": 1,
                 "weight": 20.0,
                 "storage_type": None,
+                "total_quantity": sum(
+                    move_line.package_id.quant_ids.mapped("quantity")
+                ),
             },
             "package_dest": {
                 "id": result_package.id,
                 "name": result_package.name,
-                "move_line_count": 0,
                 "weight": 6.0,
                 "storage_type": None,
+                "total_quantity": sum(
+                    move_line.result_package_id.quant_ids.mapped("quantity")
+                ),
             },
             "location_src": self._expected_location(move_line.location_id),
             "location_dest": self._expected_location(move_line.location_dest_id),
             "priority": "1",
+            "progress": 30.0,
         }
+        self.assertDictEqual(data, expected)
+        data = self.data_detail.move_line(move_line, with_package_move_line_count=True)
+        expected["package_src"]["move_line_count"] = 1
+        expected["package_dest"]["move_line_count"] = 1
         self.assertDictEqual(data, expected)
 
     def test_data_move_line_lot(self):
@@ -177,12 +230,14 @@ class TestActionsDataDetailCase(ActionsDataDetailCaseBase):
                 "id": move_line.lot_id.id,
                 "name": move_line.lot_id.name,
                 "ref": None,
+                "expiration_date": None,
             },
             "package_src": None,
             "package_dest": None,
             "location_src": self._expected_location(move_line.location_id),
             "location_dest": self._expected_location(move_line.location_dest_id),
             "priority": "1",
+            "progress": 0.0,
         }
         self.assertDictEqual(data, expected)
 
@@ -200,25 +255,35 @@ class TestActionsDataDetailCase(ActionsDataDetailCaseBase):
                 "id": move_line.lot_id.id,
                 "name": move_line.lot_id.name,
                 "ref": None,
+                "expiration_date": None,
             },
             "package_src": {
                 "id": move_line.package_id.id,
                 "name": move_line.package_id.name,
-                "move_line_count": 1,
                 "weight": 30.0,
                 "storage_type": None,
+                "total_quantity": sum(
+                    move_line.package_id.quant_ids.mapped("quantity")
+                ),
             },
             "package_dest": {
                 "id": move_line.result_package_id.id,
                 "name": move_line.result_package_id.name,
-                "move_line_count": 1,
                 "weight": 0.0,
                 "storage_type": None,
+                "total_quantity": sum(
+                    move_line.result_package_id.quant_ids.mapped("quantity")
+                ),
             },
             "location_src": self._expected_location(move_line.location_id),
             "location_dest": self._expected_location(move_line.location_dest_id),
             "priority": "1",
+            "progress": 0.0,
         }
+        self.assertDictEqual(data, expected)
+        data = self.data_detail.move_line(move_line, with_package_move_line_count=True)
+        expected["package_src"]["move_line_count"] = 2
+        expected["package_dest"]["move_line_count"] = 2
         self.assertDictEqual(data, expected)
 
     def test_data_move_line_raw(self):
@@ -237,6 +302,7 @@ class TestActionsDataDetailCase(ActionsDataDetailCaseBase):
             "location_src": self._expected_location(move_line.location_id),
             "location_dest": self._expected_location(move_line.location_dest_id),
             "priority": "1",
+            "progress": 0.0,
         }
         self.assertDictEqual(data, expected)
 

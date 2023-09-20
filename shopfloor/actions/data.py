@@ -11,12 +11,25 @@ class DataAction(Component):
 
     @ensure_model("stock.location")
     def location(self, record, **kw):
-        return self._jsonify(
-            record.with_context(location=record.id), self._location_parser, **kw
-        )
+        parser = self._location_parser
+        data = self._jsonify(record.with_context(location=record.id), parser, **kw)
+        if "with_operation_progress" in kw:
+            lines_blacklist = (
+                kw.get("progress_lines_blacklist")
+                or self.env["stock.move.line"].browse()
+            )
+            domain = [
+                ("location_id", "=", record.id),
+                ("state", "in", ["partially_available", "assigned"]),
+                ("picking_id.state", "=", "assigned"),
+                ("id", "not in", lines_blacklist.ids),
+            ]
+            operation_progress = self._get_operation_progress(domain)
+            data.update({"operation_progress": operation_progress})
+        return data
 
-    def locations(self, record, **kw):
-        return self.location(record, multi=True)
+    def locations(self, records, **kw):
+        return [self.location(rec, **kw) for rec in records]
 
     @property
     def _location_parser(self):
@@ -27,15 +40,25 @@ class DataAction(Component):
             ("barcode", lambda rec, fname: rec[fname] if rec[fname] else rec.name),
         ]
 
+    def _get_picking_parser(self, record, **kw):
+        parser = self._picking_parser
+        # progress is a heavy computed field,
+        # and it may reduce performance significatively
+        # when dealing with a large number of pickings.
+        # Thus, we make it optional.
+        if "with_progress" in kw:
+            parser.append("progress")
+        return parser
+
     @ensure_model("stock.picking")
     def picking(self, record, **kw):
-        return self._jsonify(record, self._picking_parser, **kw)
+        return self._jsonify(record, self._get_picking_parser(record, **kw), **kw)
 
     def pickings(self, record, **kw):
         return self.picking(record, multi=True)
 
     @property
-    def _picking_parser(self):
+    def _picking_parser(self, **kw):
         return [
             "id",
             "name",
@@ -62,11 +85,37 @@ class DataAction(Component):
         if with_packaging:
             parser += self._package_packaging_parser
         data = self._jsonify(record, parser, **kw)
+        qty = len(record.quant_ids)
         # handle special cases
-        if data and picking:
-            # TODO: exclude canceled and done?
-            lines = picking.move_line_ids.filtered(lambda l: l.package_id == record)
-            data.update({"move_line_count": len(lines)})
+        progress_package_key = ""
+        if kw.get("with_operation_progress_src"):
+            progress_package_key = "package_id"
+        elif kw.get("with_operation_progress_dest"):
+            progress_package_key = "result_package_id"
+        if progress_package_key:
+            lines_blacklist = (
+                kw.get("progress_lines_blacklist")
+                or self.env["stock.move.line"].browse()
+            )
+            domain = [
+                (progress_package_key, "=", record.id),
+                ("state", "in", ["partially_available", "assigned"]),
+                ("picking_id.state", "=", "assigned"),
+                ("id", "not in", lines_blacklist.ids),
+            ]
+            operation_progress = self._get_operation_progress(domain)
+            data.update({"operation_progress": operation_progress})
+        if kw.get("with_package_move_line_count") and data and picking:
+            move_line_count = self.env["stock.move.line"].search_count(
+                [
+                    ("picking_id.picking_type_id", "=", picking.picking_type_id.id),
+                    ("result_package_id", "=", record.id),
+                    ("state", "in", ["partially_available", "assigned"]),
+                ]
+            )
+            qty += move_line_count
+            # TODO does this name really makes sense?
+            data.update({"move_line_count": qty})
         return data
 
     def packages(self, records, picking=None, **kw):
@@ -79,6 +128,10 @@ class DataAction(Component):
             "name",
             "shopfloor_weight:weight",
             ("package_storage_type_id:storage_type", ["id", "name"]),
+            (
+                "quant_ids:total_quantity",
+                lambda rec, fname: sum(rec.quant_ids.mapped("quantity")),
+            ),
         ]
 
     @property
@@ -131,7 +184,7 @@ class DataAction(Component):
 
     @property
     def _lot_parser(self):
-        return self._simple_record_parser() + ["ref"]
+        return self._simple_record_parser() + ["ref", "expiration_date"]
 
     @ensure_model("stock.move.line")
     def move_line(self, record, with_picking=False, **kw):
@@ -176,6 +229,29 @@ class DataAction(Component):
                 "move_id:priority",
                 lambda rec, fname: rec.move_id.priority or "",
             ),
+            "progress",
+        ]
+
+    @ensure_model("stock.move")
+    def move(self, record, **kw):
+        record = record.with_context(location=record.location_id.id)
+        parser = self._move_parser
+        return self._jsonify(record, parser)
+
+    def moves(self, records, **kw):
+        return [self.move(rec, **kw) for rec in records]
+
+    @property
+    def _move_parser(self):
+        return [
+            "id",
+            "quantity_done",
+            "product_uom_qty:quantity",
+            ("product_id:product", self._product_parser),
+            ("location_id:location_src", self._location_parser),
+            ("location_dest_id:location_dest", self._location_parser),
+            "priority",
+            "progress",
         ]
 
     @ensure_model("stock.package_level")
@@ -275,35 +351,21 @@ class DataAction(Component):
             "name",
         ]
 
-    @ensure_model("stock.inventory.location")
-    def inventory_location(self, record, **kw):
-        return self._jsonify(record, self._inventory_location_parser, **kw)
-
-    def inventory_locations(self, record, **kw):
-        return self.inventory(record, multi=True)
-
-    @property
-    def _inventory_location_parser(self):
-        return [("location_id:location", self._location_parser), "state"]
-
-    @ensure_model("stock.inventory")
-    def inventory(self, record, with_locations=False, **kw):
-        parser = self._inventory_parser
-        if with_locations:
-            parser.append(
-                ("sub_location_ids:locations", self._inventory_location_parser)
+    def _get_operation_progress(self, domain):
+        lines = self.env["stock.move.line"].search(domain)
+        # operations_to_do = number of total operations that are pending for this location.
+        # operations_done = number of operations already done.
+        # A line with an assigned package counts as 1 operation.
+        operations_to_do = 0
+        operations_done = 0
+        for line in lines:
+            is_done = line.qty_done == line.product_uom_qty
+            package_qty_done = 1 if is_done else 0
+            operations_done += (
+                line.qty_done if not line.package_id else package_qty_done
             )
-        return self._jsonify(record, parser, **kw)
-
-    def inventories(self, record, with_locations=False, **kw):
-        return self.inventory(record, with_locations=with_locations, multi=True)
-
-    @property
-    def _inventory_parser(self):
-        return [
-            "id",
-            "name",
-            "date",
-            "location_count",
-            "inventory_line_count",
-        ]
+            operations_to_do += line.product_uom_qty if not line.package_id else 1
+        return {
+            "done": operations_done,
+            "to_do": operations_to_do,
+        }

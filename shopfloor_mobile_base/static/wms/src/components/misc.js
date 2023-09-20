@@ -383,10 +383,15 @@ Vue.component("user-session-detail", {
             type: Boolean,
             default: true,
         },
+        show_report_issue_action: {
+            type: Boolean,
+            default: true,
+        },
     },
     template: `
   <div :class="$options._componentTag" data-ref="user-session-detail">
     <v-list>
+        <report-issue-action v-if="show_report_issue_action" />
         <v-list-item v-if="show_env"
                 data-ref="session-detail-env"
                 :data-id="$root.app_info.running_env"
@@ -430,4 +435,44 @@ Vue.component("user-session-detail", {
     </v-list>
   </div>
   `,
+});
+
+Vue.component("linear-progress", {
+    props: {
+        done_qty: {
+            type: Number,
+            default: 0,
+        },
+        todo_qty: {
+            type: Number,
+            default: 0,
+        },
+        options: Object,
+    },
+    methods: {
+        calculate_progress: function () {
+            return (this.done_qty / this.todo_qty) * 100;
+        },
+    },
+    computed: {
+        opts() {
+            const opts = _.defaults({}, this.$props.options, {
+                done_label: "Done",
+                todo_label: "Todo",
+                color: "primary",
+                klass: "linear-progress",
+                height: 20,
+            });
+            return opts;
+        },
+    },
+    template: `
+        <div style="padding:5px 10px">
+            <v-progress-linear :height="opts.height" :color="opts.color" :value="calculate_progress()" :class="opts.klass">
+                <span>{{ opts.done_label }}: {{ done_qty}} </span>
+                <span>&nbsp/&nbsp</span>
+                <span>{{ opts.todo_label }}: {{ todo_qty }} </span>
+            </v-progress-linear>
+        </div>
+    `,
 });

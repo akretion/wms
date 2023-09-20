@@ -26,6 +26,33 @@ When picking a move,
 allow to set a destination package that was already used for the other lines.
 """
 
+NO_PREFILL_QTY_HELP = """
+We assume the picker will take the suggested quantities.
+With this option, the operator will have to enter the quantity manually or
+by scanning a product or product packaging EAN to increase the quantity
+(i.e. +1 Unit or +1 Box)
+"""
+
+AUTO_POST_LINE_HELP = """
+When setting result pack & destination,
+automatically post the corresponding line
+if this option is checked.
+"""
+
+RETURN_HELP = """
+When enabled, you can receive unplanned products that are returned
+from an existing delivery matched on the origin (SO name).
+A new move will be added as a return of the delivery,
+decreasing the delivered quantity of the related SO line.
+"""
+
+ALLOW_ALTERNATIVE_DESTINATION_PACKAGE_HELP = """
+When moving a whole package, the user normally scans
+a destination location.
+If enabled, they will also be allowed
+to scan a destination package.
+"""
+
 
 class ShopfloorMenu(models.Model):
     _inherit = "shopfloor.menu"
@@ -106,6 +133,16 @@ class ShopfloorMenu(models.Model):
         help=UNLOAD_PACK_AT_DEST_HELP,
     )
 
+    disable_full_bin_action_is_possible = fields.Boolean(
+        compute="_compute_disable_full_bin_action_is_possible"
+    )
+    disable_full_bin_action = fields.Boolean(
+        string="Disable full bin action",
+        default=False,
+        # TODO: improve this desc w/ usecases.
+        help=("When picking, prevent unloading the whole bin when full."),
+    )
+
     allow_force_reservation = fields.Boolean(
         string="Force stock reservation",
         default=False,
@@ -135,16 +172,88 @@ class ShopfloorMenu(models.Model):
         compute="_compute_force_inventory_add_product_is_possible"
     )
 
+    allow_get_work = fields.Boolean(
+        string="Show Get Work on start",
+        default=False,
+        help=(
+            "When enabled the user will have the option to ask "
+            "for a task to work on."
+        ),
+    )
+    allow_get_work_is_possible = fields.Boolean(
+        compute="_compute_allow_get_work_is_possible"
+    )
+    no_prefill_qty = fields.Boolean(
+        string="Do not pre-fill quantity to pick",
+        help=NO_PREFILL_QTY_HELP,
+        default=False,
+    )
+    no_prefill_qty_is_possible = fields.Boolean(
+        compute="_compute_no_prefill_qty_is_possible"
+    )
+    show_oneline_package_content = fields.Boolean(
+        string="Show one-line package content",
+        help="Display the content of package if it contains 1 line only",
+        default=False,
+    )
+    show_oneline_package_content_is_possible = fields.Boolean(
+        compute="_compute_show_oneline_package_content_is_possible"
+    )
+    # TODO this field could be renamed
+    scan_location_or_pack_first = fields.Boolean(
+        string="Restrict scannable barcode at work selection",
+        help=(
+            "When checked, the user will be restricted by the type of object barcode "
+            " that he can scan to select the document/transfer/move line to work on."
+        ),
+    )
+    scan_location_or_pack_first_is_possible = fields.Boolean(
+        compute="_compute_scan_location_or_pack_first_is_possible"
+    )
+    allow_alternative_destination = fields.Boolean(
+        string="Allow to scan alternative destination locations",
+        help=(
+            "When enabled the user will have the option to scan "
+            "destination locations other than the expected ones "
+            "(ask for confirmation)."
+        ),
+        default=False,
+    )
+    allow_alternative_destination_is_possible = fields.Boolean(
+        compute="_compute_allow_alternative_destination_is_possible"
+    )
+    allow_return_is_possible = fields.Boolean(
+        compute="_compute_allow_return_is_possible"
+    )
+    allow_return = fields.Boolean(
+        string="Allow create returns",
+        default=False,
+        help=RETURN_HELP,
+    )
+
+    auto_post_line = fields.Boolean(
+        string="Automatically post line",
+        default=False,
+        help=AUTO_POST_LINE_HELP,
+    )
+    auto_post_line_is_possible = fields.Boolean(
+        compute="_compute_auto_post_line_is_possible"
+    )
+    allow_alternative_destination_package = fields.Boolean(
+        string="Allow to change the destination package",
+        default=False,
+        help=ALLOW_ALTERNATIVE_DESTINATION_PACKAGE_HELP,
+    )
+    allow_alternative_destination_package_is_possible = fields.Boolean(
+        compute="_compute_allow_alternative_destination_package_is_possible"
+    )
+
     @api.onchange("unload_package_at_destination")
     def _onchange_unload_package_at_destination(self):
         # Uncheck pick_pack_same_time when unload_package_at_destination is set to True
-        # Ensure that multiple_move_single_pack is False when
-        # unload_package_at_destination is checked out
         for record in self:
             if record.unload_package_at_destination:
                 record.pick_pack_same_time = False
-            else:
-                record.multiple_move_single_pack = False
 
     @api.onchange("pick_pack_same_time")
     def _onchange_pick_pack_same_time(self):
@@ -158,10 +267,8 @@ class ShopfloorMenu(models.Model):
     @api.onchange("multiple_move_single_pack")
     def _onchange_multiple_move_single_pack(self):
         # multiple_move_single_pack is incompatible with pick_pack_same_time,
-        # and requires unload_package_at_destination to be set
         for record in self:
             if record.multiple_move_single_pack:
-                record.unload_package_at_destination = True
                 record.pick_pack_same_time = False
 
     @api.constrains(
@@ -182,13 +289,6 @@ class ShopfloorMenu(models.Model):
                 _(
                     "'Pick and pack at the same time' is incompatible with "
                     "'Multiple moves same destination package'."
-                )
-            )
-        elif self.multiple_move_single_pack and not self.unload_package_at_destination:
-            raise exceptions.UserError(
-                _(
-                    "'Multiple moves same destination package' is mandatory when "
-                    "'Pick and pack at the same time' is set."
                 )
             )
 
@@ -243,6 +343,13 @@ class ShopfloorMenu(models.Model):
     @api.onchange("unreserve_other_moves_is_possible")
     def onchange_unreserve_other_moves_is_possible(self):
         self.allow_unreserve_other_moves = self.unreserve_other_moves_is_possible
+
+    @api.depends("scenario_id")
+    def _compute_disable_full_bin_action_is_possible(self):
+        for menu in self:
+            menu.disable_full_bin_action_is_possible = menu.scenario_id.has_option(
+                "disable_full_bin_action"
+            )
 
     @api.depends("scenario_id")
     def _compute_ignore_no_putaway_available_is_possible(self):
@@ -317,22 +424,55 @@ class ShopfloorMenu(models.Model):
             )
 
     @api.depends("scenario_id")
-    def _compute_use_existing_inventory_is_possible(self):
+    def _compute_allow_get_work_is_possible(self):
         for menu in self:
-            menu.use_existing_inventory_is_possible = menu.scenario_id.has_option(
-                "use_existing_inventory"
+            menu.allow_get_work_is_possible = menu.scenario_id.has_option(
+                "allow_get_work"
             )
 
     @api.depends("scenario_id")
-    def _compute_inventory_zero_counted_quantity_is_possible(self):
+    def _compute_no_prefill_qty_is_possible(self):
         for menu in self:
-            menu.inventory_zero_counted_quantity_is_possible = (
-                menu.scenario_id.has_option("inventory_zero_counted_quantity")
+            menu.no_prefill_qty_is_possible = menu.scenario_id.has_option(
+                "no_prefill_qty"
             )
 
     @api.depends("scenario_id")
-    def _compute_force_inventory_add_product_is_possible(self):
+    def _compute_show_oneline_package_content_is_possible(self):
         for menu in self:
-            menu.force_inventory_add_product_is_possible = menu.scenario_id.has_option(
-                "force_inventory_add_product"
+            menu.show_oneline_package_content_is_possible = menu.scenario_id.has_option(
+                "show_oneline_package_content"
+            )
+
+    @api.depends("scenario_id")
+    def _compute_scan_location_or_pack_first_is_possible(self):
+        for menu in self:
+            menu.scan_location_or_pack_first_is_possible = menu.scenario_id.has_option(
+                "scan_location_or_pack_first"
+            )
+
+    @api.depends("scenario_id")
+    def _compute_auto_post_line_is_possible(self):
+        for menu in self:
+            menu.auto_post_line_is_possible = menu.scenario_id.has_option(
+                "auto_post_line"
+            )
+
+    @api.depends("scenario_id")
+    def _compute_allow_alternative_destination_is_possible(self):
+        for menu in self:
+            menu.allow_alternative_destination_is_possible = (
+                menu.scenario_id.has_option("allow_alternative_destination")
+            )
+
+    @api.depends("scenario_id")
+    def _compute_allow_return_is_possible(self):
+        for menu in self:
+            menu.allow_return_is_possible = menu.scenario_id.has_option("allow_return")
+
+    @api.depends("scenario_id")
+    def _compute_allow_alternative_destination_package_is_possible(self):
+        for menu in self:
+            menu.allow_alternative_destination_package_is_possible = (
+                menu.scenario_id.has_option("allow_alternative_destination_package")
             )

@@ -86,6 +86,44 @@ export class WMSUtils {
         return res;
     }
 
+    group_lines_by_product(lines, options) {
+        const self = this;
+        // {'key': 'no-group', 'title': '', 'records': []}
+        options = _.defaults(options || {}, {
+            group_no_title: false,
+            prepare_records: function (recs) {
+                return recs;
+            },
+            group_color_maker: function (recs) {
+                return "";
+            },
+        });
+        const res = [];
+        const products = _.uniqBy(
+            _.map(lines, function (x) {
+                return x["product"];
+            }),
+            "id"
+        );
+        const grouped = _.groupBy(lines, "product.id");
+        _.forEach(grouped, function (value, prod_id) {
+            const product = _.first(_.filter(products, {id: parseInt(prod_id, 10)}));
+            const title = options.group_no_title
+                ? ""
+                : options.name_prefix
+                ? options.name_prefix + ": " + product.name
+                : product.name;
+            res.push({
+                _is_group: true,
+                key: prod_id,
+                title: title,
+                group_color: options.group_color_maker(value),
+                records: options.prepare_records.call(self, value),
+            });
+        });
+        return res;
+    }
+
     group_by_pack(lines, package_key = "package_dest") {
         const self = this;
         const res = [];
@@ -138,20 +176,38 @@ export class WMSUtils {
         });
         return res;
     }
-
+    /**
+     * Get only the 1st line for each package.
+     *
+     * @param {*} lines: list of move lines
+     * @returns 1 line per package.
+     *
+     * Other lines in the same package are attached to the single line
+     * with special attribute `_pack_lines`.
+     */
+    /**
+     * TODO: this func is used only in `checkout.select_line`
+     * to display only one line list item
+     * when you have multiple lines in the same pack.
+     * It's a bit of an hack and it works because
+     * the checkout endpoints will take care of selecting all the lines
+     * when you scan or tap on the line.
+     * We should probably consider to adopt the same approach of `checkout.summary`
+     * where the lines are explicitly grouped by package and show a dropdown.
+     * The dropdown could be optional.
+     */
     only_one_package(lines) {
+        const grouped = this.group_by_pack(lines);
         const res = [];
-        const pkg_seen = [];
-        lines.forEach(function (line) {
-            if (line.package_dest) {
-                if (!pkg_seen.includes(line.package_dest.id)) {
-                    // Got a pack
-                    res.push(line);
-                    pkg_seen.push(line.package_dest.id);
-                }
+        grouped.forEach(function (group) {
+            if (group.pack) {
+                let single_line = group.records[0];
+                single_line._grouped_by_pack = true;
+                single_line._pack_lines = group.records;
+                res.push(single_line);
             } else {
                 // No pack
-                res.push(line);
+                res.push(...group.records);
             }
         });
         return res;
@@ -197,6 +253,27 @@ export class WMSUtils {
         }
         return "move-line-" + klass;
     }
+
+    list_item_klass_maker_by_progress(rec) {
+        const records = _.result(rec, "records", undefined);
+        if (!records) {
+            return;
+        }
+        let avg_progress =
+            records.reduce((acc, next) => {
+                return next.progress + acc;
+            }, 0) / records.length;
+        let klass = "";
+        if (avg_progress === 100) {
+            klass = "done screen_step_done lighten-1";
+        } else if (avg_progress === 0) {
+            klass = "not-done screen_step_todo lighten-1";
+        } else {
+            klass = "partial screen_step_todo lighten-2";
+        }
+        return "move-line-" + klass;
+    }
+
     /**
      * Provide display options for rendering move line product's info.
      *
@@ -216,8 +293,10 @@ export class WMSUtils {
                 path: "quantity",
                 label: "Qty",
                 render_component: "packaging-qty-picker-display",
-                render_options: function (record) {
-                    return self.move_line_qty_picker_options(record);
+                render_props: function (record) {
+                    return self.move_line_qty_picker_props(record, {
+                        qtyInit: record.quantity,
+                    });
                 },
             },
             {path: "product.qty_available", label: "Qty on hand"},
@@ -238,8 +317,47 @@ export class WMSUtils {
         return options;
     }
     move_line_qty_picker_options(line, override = {}) {
+        // DEPRECATED - To drop in next versions
+        // Use v-bind="utils.wms.move_line_qty_picker_props(...)" instead
+        console.log("wms_utils.move_line_qty_picker_options is deprecated.");
+    }
+    move_line_qty_picker_props(line, override = {}) {
+        const props = {
+            qtyTodo: parseInt(line.quantity, 10),
+            qtyInit: line.qty_done,
+            availablePackaging: line.product.packaging,
+            uom: line.product.uom,
+            nonZeroOnly: true,
+        };
+        return _.extend(props, override || {});
+    }
+    inventory_line_product_detail_options(line, options = {}) {
+        const self = this;
+        const default_fields = [
+            {path: "product.supplier_code", label: "Vendor code", klass: "loud"},
+            //            {path: "package_src.name", label: "Pack"},
+            {path: "lot.name", label: "Lot"},
+            {path: "product.barcode", label: "Code barre"},
+        ];
+        options = _.defaults({}, options, {
+            main: true,
+            key_title: "product.display_name",
+            title_action_field: {action_val_path: "product.barcode"},
+            fields_blacklist: [],
+            fields_extend_default: true,
+        });
+        options.fields = options.fields_extend_default
+            ? default_fields.concat(options.fields || [])
+            : options.fields || [];
+        options.fields = _.filter(options.fields, function (field) {
+            return !options.fields_blacklist.includes(field.path);
+        });
+        return options;
+    }
+    inventory_line_qty_picker_options(line, override = {}) {
         const opts = {
-            init_value: line.quantity,
+            init_value: line.theoretical_qty,
+            counted_value: line.product_qty,
             available_packaging: line.product.packaging,
             uom: line.product.uom,
             non_zero_only: true,

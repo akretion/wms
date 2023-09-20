@@ -6,6 +6,8 @@
 
 import {ScenarioBaseMixin} from "/shopfloor_mobile_base/static/wms/src/scenario/mixins.js";
 import {process_registry} from "/shopfloor_mobile_base/static/wms/src/services/process_registry.js";
+import {checkout_states} from "./checkout_states.js";
+import event_hub from "/shopfloor_mobile_base/static/wms/src/services/event_hub.js";
 
 const Checkout = {
     mixins: [ScenarioBaseMixin],
@@ -25,7 +27,7 @@ const Checkout = {
                 <state-display-info :info="state.display_info" v-if="state.display_info"/>
             </template>
             <searchbar
-                v-if="state.on_scan"
+                v-show="state.on_scan"
                 v-on:found="on_scan"
                 :input_placeholder="search_input_placeholder"
                 />
@@ -61,10 +63,7 @@ const Checkout = {
                     :options="{main: true, key_title: 'name', title_icon: 'mdi-truck-outline'}"
                     />
                 <detail-picking-select
-                    :record="state.data.picking"
-                    :select_records="state.data.picking.move_lines"
-                    :select_records_grouped="utils.wms.group_lines_by_location(state.data.picking.move_lines, {'prepare_records': utils.wms.only_one_package})"
-                    :select_options="select_line_manual_select_opts()"
+                    v-bind="select_line_detail_picking_select_props()"
                     :key="make_state_component_key(['detail-picking-select'])"
                     />
                 <div class="button-list button-vertical-list full">
@@ -105,7 +104,7 @@ const Checkout = {
                         <v-col class="text-center" cols="12">
                             <btn-action
                                    @click="state.on_new_pack"
-                                   :disabled="_.isEmpty(selected_lines()) || _.isEmpty(state.data.picking.carrier)"
+                                   :disabled="_.isEmpty(selected_lines())"
                                    >New pack</btn-action>
                         </v-col>
                     </v-row>
@@ -168,7 +167,7 @@ const Checkout = {
                 <v-card class="pa-2" :color="utils.colors.color_for('screen_step_todo')">
                     <packaging-qty-picker
                         :key="make_state_component_key(['packaging-qty-picker', state.data.line.id])"
-                        :options="utils.wms.move_line_qty_picker_options(state.data.line)"
+                        v-bind="utils.wms.move_line_qty_picker_props(state.data.line)"
                         />
                 </v-card>
                 <div class="button-list button-vertical-list full">
@@ -235,6 +234,21 @@ const Checkout = {
                     </v-row>
                 </div>
             </div>
+            <div v-if="state_is('select_child_location')">
+                <item-detail-card
+                    :key="make_state_component_key(['picking'])"
+                    :record="state.data.picking"
+                    :options="{key_title: 'location_dest.name'}"
+                    :card_color="utils.colors.color_for('screen_step_todo')"
+                />
+                <div class="button-list button-vertical-list full">
+                    <v-row align="center">
+                        <v-col class="text-center" cols="12">
+                            <btn-back />
+                        </v-col>
+                    </v-row>
+                </div>
+            </div>
         </Screen>
         `,
     computed: {
@@ -283,19 +297,70 @@ const Checkout = {
                 },
             };
         },
+        handle_manual_select_highlight_on_scan: function (res) {
+            // We need to ensure that the highlights of the detail-picking-select
+            // are updated correctly on scan.
+            const move_lines_data = this.get_move_lines_data(res);
+            move_lines_data.forEach((line) => {
+                let checked = false;
+                if (line.qty_done > 0) {
+                    checked = true;
+                }
+                event_hub.$emit("manual_select:select_item", {
+                    rec_id: line.id,
+                    checked,
+                });
+            });
+        },
+        get_move_lines_data: function (res) {
+            // We need to access the data object to find the move lines,
+            // and this path will vary depending on the current screen.
+            const data = res.data;
+            const state_key = res.next_state;
+            const path = this.get_move_lines_path(state_key);
+            return _.result(data, path, []);
+        },
+        get_move_lines_path: function (key) {
+            const possible_paths = {
+                summary: "picking.move_lines",
+                select_line: "picking.move_lines",
+                select_package: "selected_move_lines",
+                select_dest_package: "selected_move_lines",
+            };
+            return key + "." + possible_paths[key];
+        },
         select_delivery_packaging_manual_select_options: function () {
             return {
                 showActions: false,
-                list_item_options: {
-                    loud_title: true,
-                    fields: [{path: "packaging_type"}],
-                },
             };
+        },
+        select_line_detail_picking_select_props: function () {
+            const picking = this.state.data.picking;
+            const lines = picking.move_lines;
+            let grouped_lines = undefined;
+            if (this.state.data.group_lines_by_location) {
+                grouped_lines = this.select_line_manual_select_group_lines(lines);
+            }
+            return {
+                record: picking,
+                select_records: lines,
+                select_records_grouped: grouped_lines,
+                select_options: this.select_line_manual_select_opts(),
+            };
+        },
+        select_line_manual_select_group_lines: function (lines) {
+            return this.utils.wms.group_lines_by_location(lines, {
+                prepare_records: this.utils.wms.only_one_package,
+            });
         },
         select_line_manual_select_opts: function () {
             return {
                 group_color: this.utils.colors.color_for("screen_step_todo"),
                 card_klass: "loud-labels",
+                list_item_options: {
+                    show_oneline_package_content: this.state.data
+                        .show_oneline_package_content,
+                },
             };
         },
         select_package_manual_select_opts: function () {
@@ -322,376 +387,15 @@ const Checkout = {
         selected_line_ids: function () {
             return this.selected_lines().map(_.property("id"));
         },
+        _get_states: function () {
+            return checkout_states(this);
+        },
     },
     data: function () {
         return {
             usage: "checkout",
             initial_state_key: "select_document",
-            states: {
-                select_document: {
-                    display_info: {
-                        title: "Choose an order to pack",
-                        scan_placeholder: "Scan pack / product / picking / location",
-                    },
-                    on_scan: (scanned) => {
-                        this.wait_call(
-                            this.odoo.call("scan_document", {barcode: scanned.text})
-                        );
-                    },
-                    on_manual_selection: (evt) => {
-                        this.wait_call(this.odoo.call("list_stock_picking"));
-                    },
-                },
-                manual_selection: {
-                    display_info: {
-                        title: "Select a picking and start",
-                    },
-                    events: {
-                        select: "on_select",
-                        go_back: "on_back",
-                    },
-                    on_back: () => {
-                        this.state_to("init");
-                        this.reset_notification();
-                    },
-                    on_select: (selected) => {
-                        this.wait_call(
-                            this.odoo.call("select", {
-                                picking_id: selected.id,
-                            })
-                        );
-                    },
-                },
-                select_line: {
-                    display_info: {
-                        title: "Pick the product by scanning something",
-                        scan_placeholder: "Scan pack / product / lot",
-                    },
-                    events: {
-                        summary: "on_summary",
-                        select: "on_select",
-                        back: "on_back",
-                    },
-                    on_scan: (scanned) => {
-                        this.wait_call(
-                            this.odoo.call("scan_line", {
-                                picking_id: this.state.data.picking.id,
-                                barcode: scanned.text,
-                            })
-                        );
-                    },
-                    on_select: (selected) => {
-                        if (!selected) {
-                            return;
-                        }
-                        this.wait_call(
-                            this.odoo.call("select_line", {
-                                picking_id: this.state.data.picking.id,
-                                move_line_id: selected.id,
-                                package_id: _.result(
-                                    selected,
-                                    "package_dest.id",
-                                    false
-                                ),
-                            })
-                        );
-                    },
-                    on_back: () => {
-                        this.state_to("start");
-                        this.reset_notification();
-                    },
-                    on_summary: () => {
-                        this.wait_call(
-                            this.odoo.call("summary", {
-                                picking_id: this.state.data.picking.id,
-                            })
-                        );
-                    },
-                    // FIXME: is not to change qty
-                    on_edit_package: (pkg) => {
-                        this.state_set_data({package: pkg}, "change_quantity");
-                        this.state_to("change_quantity");
-                    },
-                },
-                select_package: {
-                    // TODO: /set_line_qty is not handled yet
-                    // because is not clear how to handle line selection
-                    // and qty set.
-                    // ATM given that manual-select uses v-list-item-group
-                    // when you touch a line you select/unselect it
-                    // which means we cannot rely on this to go to edit.
-                    // If we need it, we have to change manual-select
-                    // to use pure list + checkboxes.
-                    display_info: {
-                        title: "Select package",
-                        scan_placeholder: "Scan existing package / package type",
-                    },
-                    events: {
-                        qty_edit: "on_qty_edit",
-                        select: "on_select",
-                        back: "on_back",
-                    },
-                    on_scan: (scanned) => {
-                        this.wait_call(
-                            this.odoo.call("scan_package_action", {
-                                picking_id: this.state.data.picking.id,
-                                selected_line_ids: this.selectable_line_ids(),
-                                barcode: scanned.text,
-                            })
-                        );
-                    },
-                    on_select: (selected) => {
-                        if (!selected) {
-                            return;
-                        }
-                        const orig_selected = this.selected_line_ids();
-                        const selected_ids = selected.map(_.property("id"));
-                        const to_select = _.head(
-                            this.selectable_lines().filter(function (x) {
-                                return (
-                                    selected_ids.includes(x.id) &&
-                                    !orig_selected.includes(x.id)
-                                );
-                            })
-                        );
-                        const to_unselect = _.head(
-                            this.selectable_lines().filter(function (x) {
-                                return (
-                                    !selected_ids.includes(x.id) &&
-                                    orig_selected.includes(x.id)
-                                );
-                            })
-                        );
-                        let endpoint, move_line;
-                        if (to_unselect) {
-                            endpoint = "reset_line_qty";
-                            move_line = to_unselect;
-                        } else if (to_select) {
-                            endpoint = "set_line_qty";
-                            move_line = to_select;
-                        }
-                        this.wait_call(
-                            this.odoo.call(endpoint, {
-                                picking_id: this.state.data.picking.id,
-                                selected_line_ids: this.selectable_line_ids(),
-                                move_line_id: move_line.id,
-                            })
-                        );
-                    },
-                    on_qty_edit: (record) => {
-                        this.state_set_data(
-                            {
-                                picking: this.state.data.picking,
-                                line: record,
-                                selected_line_ids: this.selectable_line_ids(),
-                            },
-                            "change_quantity"
-                        );
-                        this.state_to("change_quantity");
-                    },
-                    on_new_pack: () => {
-                        this.wait_call(
-                            this.odoo.call("list_delivery_packaging", {
-                                picking_id: this.state.data.picking.id,
-                                selected_line_ids: this.selectable_line_ids(),
-                            })
-                        );
-                    },
-                    on_existing_pack: () => {
-                        this.wait_call(
-                            this.odoo.call("list_dest_package", {
-                                picking_id: this.state.data.picking.id,
-                                selected_line_ids: this.selectable_line_ids(),
-                            })
-                        );
-                    },
-                    on_without_pack: () => {
-                        this.wait_call(
-                            this.odoo.call("no_package", {
-                                picking_id: this.state.data.picking.id,
-                                selected_line_ids: this.selectable_line_ids(),
-                            })
-                        );
-                    },
-                    on_back: () => {
-                        this.state_to("select_line");
-                        this.reset_notification();
-                    },
-                },
-                select_delivery_packaging: {
-                    display_info: {
-                        title: "Select delivery packaging",
-                        scan_placeholder: "Scan package type",
-                    },
-                    events: {
-                        select: "on_select",
-                        back: "on_back",
-                    },
-                    on_select: (selected) => {
-                        this.state.on_scan({text: selected.barcode});
-                    },
-                    on_scan: (scanned) => {
-                        const picking = this.current_doc().record;
-                        this.wait_call(
-                            this.odoo.call("scan_package_action", {
-                                picking_id: picking.id,
-                                selected_line_ids: this.selected_line_ids(),
-                                barcode: scanned.text,
-                            })
-                        );
-                    },
-                },
-                change_quantity: {
-                    display_info: {
-                        title: "Change quantity",
-                    },
-                    events: {
-                        qty_change_confirm: "on_confirm",
-                        qty_edit: "on_qty_update",
-                    },
-                    on_back: () => {
-                        this.state_to("select_package");
-                        this.reset_notification();
-                    },
-                    on_qty_update: (qty) => {
-                        console.log(qty);
-                        this.state.data.qty = qty;
-                    },
-                    on_confirm: () => {
-                        this.wait_call(
-                            this.odoo.call("set_custom_qty", {
-                                picking_id: this.state.data.picking.id,
-                                selected_line_ids: this.selected_line_ids(),
-                                move_line_id: this.state.data.line.id,
-                                qty_done: this.state.data.qty,
-                            })
-                        );
-                    },
-                },
-                select_dest_package: {
-                    display_info: {
-                        title: "Select destination package",
-                    },
-                    events: {
-                        select: "on_select",
-                        back: "on_back",
-                    },
-                    on_scan: (scanned) => {
-                        this.wait_call(
-                            this.odoo.call("scan_dest_package", {
-                                picking_id: this.state.data.picking.id,
-                                selected_line_ids: this.selected_line_ids(),
-                                barcode: scanned.text,
-                            })
-                        );
-                    },
-                    on_select: (selected) => {
-                        if (!selected) {
-                            return;
-                        }
-                        this.wait_call(
-                            this.odoo.call("set_dest_package", {
-                                picking_id: this.state.data.picking.id,
-                                selected_line_ids: this.selected_line_ids(),
-                                package_id: selected.id,
-                            })
-                        );
-                    },
-                    on_back: () => {
-                        this.state_to("select_package");
-                        this.reset_notification();
-                    },
-                },
-                summary: {
-                    display_info: {
-                        title: "Summary",
-                    },
-                    events: {
-                        select: "on_select",
-                        back: "on_back",
-                        cancel_picking_line: "on_cancel",
-                        pkg_change_type: "on_pkg_change_type",
-                        mark_as_done: "on_mark_as_done",
-                        continue: "on_continue",
-                    },
-                    on_back: () => {
-                        this.state_to("start");
-                        this.reset_notification();
-                    },
-                    on_pkg_change_type: (pkg) => {
-                        this.wait_call(
-                            this.odoo.call("list_packaging", {
-                                picking_id: this.state.data.picking.id,
-                                package_id: pkg.id,
-                            })
-                        );
-                    },
-                    on_cancel: (data) => {
-                        this.wait_call(
-                            this.odoo.call("cancel_line", {
-                                picking_id: this.state.data.picking.id,
-                                // We get either line_id or package_id
-                                package_id: data.package_id,
-                                line_id: data.line_id,
-                            })
-                        );
-                    },
-                    on_mark_as_done: () => {
-                        this.wait_call(
-                            this.odoo.call("done", {
-                                picking_id: this.state.data.picking.id,
-                            })
-                        );
-                    },
-                    on_continue: () => {
-                        this.wait_call(
-                            this.odoo.call("select", {
-                                picking_id: this.state.data.picking.id,
-                            })
-                        );
-                    },
-                },
-                change_packaging: {
-                    display_info: {
-                        title: "Change packaging",
-                    },
-                    events: {
-                        select: "on_select",
-                    },
-                    on_select: (selected) => {
-                        if (!selected) {
-                            return;
-                        }
-                        this.wait_call(
-                            this.odoo.call("set_packaging", {
-                                picking_id: this.state.data.picking.id,
-                                package_id: this.state.data.package.id,
-                                packaging_id: selected.id,
-                            })
-                        );
-                    },
-                },
-                confirm_done: {
-                    display_info: {
-                        title: "Confirm done",
-                    },
-                    events: {
-                        go_back: "on_back",
-                    },
-                    on_confirm: () => {
-                        this.wait_call(
-                            this.odoo.call("done", {
-                                picking_id: this.state.data.picking.id,
-                                confirmation: true,
-                            })
-                        );
-                    },
-                    on_back: () => {
-                        this.state_to("summary");
-                        this.reset_notification();
-                    },
-                },
-            },
+            states: this._get_states(),
         };
     },
 };

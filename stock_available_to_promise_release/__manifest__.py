@@ -3,9 +3,9 @@
 
 {
     "name": "Stock Available to Promise Release",
-    "version": "14.0.1.1.3",
+    "version": "14.0.2.1.2",
     "summary": "Release Operations based on available to promise",
-    "author": "Camptocamp,Odoo Community Association (OCA)",
+    "author": "Camptocamp, BCIM, Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/wms",
     "category": "Stock Management",
     "depends": ["stock"],
@@ -18,6 +18,7 @@
         "views/stock_location_route_views.xml",
         "views/res_config_settings.xml",
         "wizards/stock_release_views.xml",
+        "wizards/stock_unrelease_views.xml",
     ],
     "installable": True,
     "license": "LGPL-3",

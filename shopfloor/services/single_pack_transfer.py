@@ -24,16 +24,19 @@ class SinglePackTransfer(Component):
     _description = __doc__
 
     def _data_after_package_scanned(self, package_level):
-        move_line = package_level.move_line_ids[0]
+        move_lines = package_level.move_line_ids
         package = package_level.package_id
         # TODO use data.package_level (but the "name" moves in "package.name")
         return {
             "id": package_level.id,
             "name": package.name,
-            "location_src": self.data.location(move_line.location_id),
+            "weight_uom": package.weight_uom_id.name,
+            "weight": package.pack_weight,
+            "estimated_weight_kg": package.estimated_pack_weight_kg,
+            "location_src": self.data.location(package.location_id),
             "location_dest": self.data.location(package_level.location_dest_id),
-            "product": self.data.product(move_line.product_id),
-            "picking": self.data.picking(move_line.picking_id),
+            "products": self.data.products(move_lines.product_id),
+            "picking": self.data.picking(move_lines.picking_id),
         }
 
     def _response_for_start(self, message=None, popup=None):
@@ -193,9 +196,13 @@ class SinglePackTransfer(Component):
                 "company_id": self.env.company.id,
             }
         )
-        package_level._generate_moves()
         picking.action_confirm()
         picking.action_assign()
+        # For packages that contain several products (so linked to several
+        # moves), the putaway destination computation of the strategy
+        # triggered by `action_assign()` above won't work, so we trigger
+        # the computation manually here at the package level.
+        package_level.recompute_pack_putaway()
         return package_level
 
     def _is_move_state_valid(self, moves):
@@ -278,9 +285,9 @@ class SinglePackTransfer(Component):
                 self.msg_store.operation_not_found(), next_state="start"
             )
         # package.move_ids may be empty, it seems
-        move = package_level.move_line_ids.move_id
-        if move.state == "done":
-            return self._response_for_start(message=self.msg_store.already_done())
+        moves = package_level.move_ids | package_level.move_line_ids.move_id
+        if "done" in moves.mapped("state"):
+            raise AlreadyDone(next_state="start")
 
         package_level.is_done = False
         return self._response_for_start(
@@ -350,9 +357,19 @@ class SinglePackTransferValidatorResponse(Component):
         return {
             "id": {"required": required, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": required},
+            "weight_uom": {"type": "string", "nullable": False, "required": required},
+            "weight": {"type": "float", "nullable": False, "required": required},
+            "estimated_weight_kg": {
+                "type": "float",
+                "nullable": False,
+                "required": required,
+            },
             "location_src": {"type": "dict", "schema": self.schemas.location()},
             "location_dest": {"type": "dict", "schema": self.schemas.location()},
-            "product": {"type": "dict", "schema": self.schemas.product()},
+            "products": {
+                "type": "list",
+                "schema": {"type": "dict", "schema": self.schemas.product()},
+            },
             "picking": {"type": "dict", "schema": self.schemas.picking()},
         }
 

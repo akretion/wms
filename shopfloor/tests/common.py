@@ -66,6 +66,7 @@ class CommonCase(BaseCommonCase):
                     "name": "Box",
                     "product_id": cls.product_a.id,
                     "barcode": "ProductABox",
+                    "qty": 3.0,
                 }
             )
         )
@@ -114,6 +115,7 @@ class CommonCase(BaseCommonCase):
                     "name": "Box",
                     "product_id": cls.product_c.id,
                     "barcode": "ProductCBox",
+                    "qty": 3,
                 }
             )
         )
@@ -143,7 +145,7 @@ class CommonCase(BaseCommonCase):
         )
 
     @classmethod
-    def _create_picking(cls, picking_type=None, lines=None, confirm=True):
+    def _create_picking(cls, picking_type=None, lines=None, confirm=True, **kw):
         picking_form = Form(cls.env["stock.picking"])
         picking_form.picking_type_id = picking_type or cls.picking_type
         picking_form.partner_id = cls.customer
@@ -153,6 +155,8 @@ class CommonCase(BaseCommonCase):
             with picking_form.move_ids_without_package.new() as move:
                 move.product_id = product
                 move.product_uom_qty = qty
+        for k, v in kw.items():
+            setattr(picking_form, k, v)
         picking = picking_form.save()
         if confirm:
             picking.action_confirm()

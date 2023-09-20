@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 13.0\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2022-06-11 23:05+0000\n"
+"PO-Revision-Date: 2023-03-12 20:14+0000\n"
 "Last-Translator: Ignacio Buioli <ibuioli@gmail.com>\n"
 "Language-Team: none\n"
 "Language: es_AR\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.3.2\n"
+"X-Generator: Weblate 4.14.1\n"
 
 #. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__pick_pack_same_time
@@ -38,6 +38,41 @@ msgstr ""
 "\",\n"
 
 #. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__no_prefill_qty
+msgid ""
+"\n"
+"We assume the picker will take the suggested quantities.\n"
+"With this option, the operator will have to enter the quantity manually or\n"
+"by scanning a product or product packaging EAN to increase the quantity\n"
+"(i.e. +1 Unit or +1 Box)\n"
+msgstr ""
+"\n"
+"Asumimos que el recolector tomará las cantidades sugeridas.\n"
+"Con esta opción, el operador deberá ingresar la cantidad manualmente o\n"
+"escaneando un producto o embalaje de producto EAN para aumentar la cantidad\n"
+"(es decir, +1 Unidad o +1 Caja)\n"
+
+#. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__allow_return
+msgid ""
+"\n"
+"When enabled, you can receive unplanned products that are returned\n"
+"from an existing delivery matched on the origin (SO name).\n"
+"A new move will be added as a return of the delivery,\n"
+"decreasing the delivered quantity of the related SO line.\n"
+msgstr ""
+
+#. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__allow_alternative_destination_package
+msgid ""
+"\n"
+"When moving a whole package, the user normally scans\n"
+"a destination location.\n"
+"If enabled, they will also be allowed\n"
+"to scan a destination package.\n"
+msgstr ""
+
+#. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__multiple_move_single_pack
 msgid ""
 "\n"
@@ -49,6 +84,15 @@ msgstr ""
 "Al elegir un movimiento,\n"
 "permite establecer un paquete de destino que ya se utilizó para las otras "
 "líneas.\n"
+
+#. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__auto_post_line
+msgid ""
+"\n"
+"When setting result pack & destination,\n"
+"automatically post the corresponding line\n"
+"if this option is checked.\n"
+msgstr ""
 
 #. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__unload_package_at_destination
@@ -74,16 +118,6 @@ msgstr ""
 "si desea proporcionar productos a granel a la siguiente operación.\n"
 "\n"
 "Incompatible con: \"Recoger y empaquetar al mismo tiempo\"\n"
-
-#. module: shopfloor
-#: code:addons/shopfloor/models/shopfloor_menu.py:0
-#, python-format
-msgid ""
-"'Multiple moves same destination package' is mandatory when 'Pick and pack "
-"at the same time' is set."
-msgstr ""
-"'Múltiples movimientos en el mismo paquete de destino' es obligatorio cuando "
-"'Recoger y empaquetar al mismo tiempo' está configurado."
 
 #. module: shopfloor
 #: code:addons/shopfloor/models/shopfloor_menu.py:0
@@ -139,9 +173,24 @@ msgid "All packages processed."
 msgstr "Todos los paquetes procesados."
 
 #. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_alternative_destination_is_possible
+msgid "Allow Alternative Destination Is Possible"
+msgstr ""
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_alternative_destination_package_is_possible
+msgid "Allow Alternative Destination Package Is Possible"
+msgstr ""
+
+#. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_force_reservation_is_possible
 msgid "Allow Force Reservation Is Possible"
 msgstr "Permitir Forzar Reserva es Posible"
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_get_work_is_possible
+msgid "Allow Get Work Is Possible"
+msgstr "Permitir Conseguir Trabajo Es Posible"
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_move_create
@@ -149,15 +198,45 @@ msgid "Allow Move Creation"
 msgstr "Permitir Creación de Movimiento"
 
 #. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_return_is_possible
+msgid "Allow Return Is Possible"
+msgstr ""
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_return
+msgid "Allow create returns"
+msgstr ""
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_alternative_destination_package
+msgid "Allow to change the destination package"
+msgstr ""
+
+#. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_unreserve_other_moves
 msgid "Allow to process reserved quantities"
 msgstr "Permitir procesar cantidades reservadas"
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_alternative_destination
+msgid "Allow to scan alternative destination locations"
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
 msgid "Are you sure?"
 msgstr "¿Está seguro?"
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__auto_post_line_is_possible
+msgid "Auto Post Line Is Possible"
+msgstr ""
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__auto_post_line
+msgid "Automatically post line"
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -260,6 +339,12 @@ msgid "Control stock issue in location {} for {}"
 msgstr "Error en control de inventario en ubicación {} para {}"
 
 #. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Create new PACK {}? Scan it again to confirm."
+msgstr "Crear un nuevo PAQUETE {}? Escanee nuevamente para confirmar."
+
+#. module: shopfloor
 #: code:addons/shopfloor/models/shopfloor_menu.py:0
 #, python-format
 msgid "Creation of moves is not allowed for menu {}."
@@ -278,6 +363,26 @@ msgid "Delivery"
 msgstr "Entrega"
 
 #. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid ""
+"Delivery package type scanned: %(name)s. Scan again to place all goods in "
+"the same package."
+msgstr ""
+"Tipo de paquete de entrega escaneado: %(name)s. Escanee nuevamente para "
+"colocar todos los productos en el mismo paquete."
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__disable_full_bin_action_is_possible
+msgid "Disable Full Bin Action Is Possible"
+msgstr "Es Posible Deshabilitar la Acción de Contenedor Lleno"
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__disable_full_bin_action
+msgid "Disable full bin action"
+msgstr "Deshabilitar Acción de Contenedor Lleno"
+
+#. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_app__display_name
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__display_name
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_priority_postpone_mixin__display_name
@@ -293,6 +398,16 @@ msgstr "Entrega"
 #: model:ir.model.fields,field_description:shopfloor.field_stock_quant_package__display_name
 msgid "Display Name"
 msgstr "Mostrar Nombre"
+
+#. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__show_oneline_package_content
+msgid "Display the content of package if it contains 1 line only"
+msgstr "Mostrar el contenido del paquete si contiene solo 1 línea"
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__no_prefill_qty
+msgid "Do not pre-fill quantity to pick"
+msgstr "No pre-rellenar la cantidad a recoger"
 
 #. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_stock_picking_type__shopfloor_zero_check
@@ -441,6 +556,12 @@ msgstr "Transferencia de contenido de ubicación"
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
+msgid "Location empty. Try scanning a package"
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
 msgid "Location not allowed here."
 msgstr "La Ubicación no está permitida aquí."
 
@@ -457,6 +578,16 @@ msgid "Lot is not in the current transfer."
 msgstr "El Lote no está en la transferencia actual."
 
 #. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid ""
+"Lot {lot} for product {product} found in multiple locations. Scan your "
+"location first."
+msgstr ""
+"El Lote {lot} para el producto {product} no se encontrado en múltiples "
+"ubicaciones. Escanée su ubicación primero."
+
+#. module: shopfloor
 #: code:addons/shopfloor/services/delivery.py:0
 #, python-format
 msgid "Lot {} belongs to a picking without a valid state."
@@ -467,6 +598,18 @@ msgstr "El Lote {} pertenece a un picking sin estado válido."
 #, python-format
 msgid "Lot {} is for another product."
 msgstr "El Lote {} es para otro producto."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Lot {} not found in location {}"
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Lot {} not found in transfer {}"
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -486,6 +629,12 @@ msgid "Menu displayed in the scanner application"
 msgstr "Menú mostrado en la aplicación de escaner"
 
 #. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Missing expiration date."
+msgstr "Falta la fecha de vencimiento."
+
+#. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__move_create_is_possible
 msgid "Move Create Is Possible"
 msgstr "Crear Movimiento es Posible"
@@ -500,6 +649,12 @@ msgstr "Línea de Movimiento"
 #: model:ir.model.fields,field_description:shopfloor.field_stock_picking_batch__move_line_count
 msgid "Move Line Count"
 msgstr "Cuenta de Línea de Movimiento"
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Move already processed."
+msgstr "El Movimiento ya ha sido procesado."
 
 #. module: shopfloor
 #: code:addons/shopfloor/models/stock_move_line.py:0
@@ -526,10 +681,27 @@ msgid "New move lines cannot be assigned: canceled."
 msgstr "Los nuevos movimientos de líneas no puede ser asignados: cancelados."
 
 #. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__no_prefill_qty_is_possible
+msgid "No Prefill Qty Is Possible"
+msgstr "No Prerellenar la Cantidad Es Posible"
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "No available work could be found."
+msgstr "Ningún trabajo disponible ha sido encontrado."
+
+#. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
 msgid "No delivery package type available."
 msgstr "No hay un tipo de paquete de entrega disponible."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "No line to pack found."
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -546,12 +718,6 @@ msgstr "No se encontró ubicación para este código de barras."
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
-msgid "No lot found among current transfers."
-msgstr "No se encontró lote perteneciente a transferencias actuales."
-
-#. module: shopfloor
-#: code:addons/shopfloor/actions/message.py:0
-#, python-format
 msgid "No lot found for {}"
 msgstr "No se encontró lote para {}"
 
@@ -560,6 +726,12 @@ msgstr "No se encontró lote para {}"
 #, python-format
 msgid "No more work to do, please create a new batch transfer"
 msgstr "No más trabajo por hacer, cree una nueva transferencia por lotes"
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "No operation found for this menu and profile."
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -584,13 +756,6 @@ msgstr "No hay paquete o lote encontrado para el código de barras {}."
 #, python-format
 msgid "No pending operation for package %s."
 msgstr "No hay operación pendiente para el paquete %s."
-
-#. module: shopfloor
-#: code:addons/shopfloor/actions/message.py:0
-#, python-format
-msgid "No product found among current transfers."
-msgstr ""
-"No se ha encontrado ningún producto perteneciente a la transferencia actual."
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -621,6 +786,30 @@ msgstr ""
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
+msgid "No transfer found for the scanned lot."
+msgstr "No se encontraron transferencias para el lote escaneado."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "No transfer found for the scanned packaging."
+msgstr "No se ha encontrado ninguna transferencia para el paquete escaneado."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "No transfer found for this lot."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "No transfer found for this product."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
 msgid "No valid package to select."
 msgstr "No hay paquete válido para seleccionar."
 
@@ -641,15 +830,6 @@ msgstr ""
 "operación parcial?"
 
 #. module: shopfloor
-#: code:addons/shopfloor/services/checkout.py:0
-#, python-format
-msgid ""
-"Not allowed to pack more than the quantity, the value has been changed to "
-"the maximum."
-msgstr ""
-"No se permite empacar más de la cantidad, el valor se ha cambiado al máximo."
-
-#. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__picking_type_ids
 msgid "Operation Types"
 msgstr "Tipos de Operación"
@@ -659,6 +839,14 @@ msgstr "Tipos de Operación"
 #, python-format
 msgid "Operation already processed."
 msgstr "Operación ya procesada."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid ""
+"Operation types for this menu are missing default source and destination "
+"locations."
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -721,6 +909,12 @@ msgid "Package {} cannot be used: {} "
 msgstr "El Paquete {} no puede ser usado: {} "
 
 #. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Package {} contains already lines from a different operation type {}"
+msgstr ""
+
+#. module: shopfloor
 #: code:addons/shopfloor/models/stock_move_line.py:0
 #, python-format
 msgid ""
@@ -768,6 +962,18 @@ msgstr "El Paquete {} no está en la transferencia actual."
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
+msgid "Package {} not found in location {}"
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Package {} not found in transfer {}"
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
 msgid "Package {} replaced by package {}."
 msgstr "El Paquete {} está reemplazado por el paquete {}."
 
@@ -787,6 +993,12 @@ msgstr "El Paquete '{}' no está permitido para el transportista {}."
 #, python-format
 msgid "Packaging changed on package {}"
 msgstr "El Empaquetado cambió en el paquete {}"
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Packaging not found in the current transfer."
+msgstr "Paquete no encontrado en la transferencia actual."
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -844,9 +1056,34 @@ msgid "Picking type {} complete."
 msgstr "Tipo de Entrega {} completo."
 
 #. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Place it in {}?"
+msgstr "¿Colocarlo en {}?"
+
+#. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_stock_quant_package__planned_move_line_ids
 msgid "Planned Move Line"
 msgstr "Línea de Movimiento Planificada"
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid ""
+"Please note that the scanned quantity is higher than the maximum allowed."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Please scan the location first."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Please scan the package."
+msgstr ""
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__prepackaged_product_is_possible
@@ -870,7 +1107,7 @@ msgid "Product Moves (Stock Move Line)"
 msgstr "Movimientos de Producto (Stock Move Line)"
 
 #. module: shopfloor
-#: code:addons/shopfloor/services/checkout.py:0
+#: code:addons/shopfloor/actions/message.py:0
 #, python-format
 msgid "Product is not in the current transfer."
 msgstr "El Producto no está en la transferencia actual."
@@ -886,6 +1123,20 @@ msgstr "Producto rastreado por lote, por favor escanée uno."
 #, python-format
 msgid "Product {} belongs to a picking without a valid state."
 msgstr "Producto {} pertenece a una entrega sin estado válido."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Product {} found in multiple locations. Scan your location first."
+msgstr ""
+"El Producto {} se ha encontrado en múltiples ubicaciones. Escanée su "
+"ubicación primero."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Product {} not found in location {} or transfer {}."
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/checkout.py:0
@@ -929,9 +1180,19 @@ msgid "Restart the operation, someone has canceled it."
 msgstr "Reinicie la operación, alguien la ha cancelado."
 
 #. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__scan_location_or_pack_first
+msgid "Restrict scannable barcode at work selection"
+msgstr ""
+
+#. module: shopfloor
 #: model_terms:ir.ui.view,arch_db:shopfloor.view_stock_move_line_detailed_operation_tree
 msgid "SF Priority"
 msgstr "Prioridad del Taller"
+
+#. module: shopfloor
+#: model_terms:ir.ui.view,arch_db:shopfloor.view_stock_move_line_detailed_operation_tree
+msgid "SF User"
+msgstr "Usuario SF"
 
 #. module: shopfloor
 #: model_terms:ir.ui.view,arch_db:shopfloor.view_stock_move_line_detailed_operation_tree
@@ -948,6 +1209,11 @@ msgstr "Taller Descargado"
 #, python-format
 msgid "Same package {} is already assigned."
 msgstr "El mismo paquete {} ya está asignado."
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__scan_location_or_pack_first_is_possible
+msgid "Scan Location Or Pack First Is Possible"
+msgstr "Escanear Ubicación O Paquete Primero es Posible"
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -991,6 +1257,28 @@ msgstr "Se han encontrado varios lotes en %s, escanee mucho."
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
+msgid "Several lots found in %s, please scan the lot."
+msgstr "Demasiados lotes encontrados en %s, escanée el lote."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Several moves found for different lots, please scan the lot."
+msgstr ""
+"Demasiados movimientos encontrados para diferentes lotes, escanée el lote."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid ""
+"Several moves found on different locations, please scan first the location."
+msgstr ""
+"Demasiados movimientos encontrados en difrentes ubicaciones, escanée la "
+"primer ubicación."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
 msgid "Several operation types found for this menu and profile."
 msgstr "Se han encontrado varios tipos de operaciones para este menú y perfil."
 
@@ -1007,6 +1295,12 @@ msgid "Several products found in %s, please scan a product."
 msgstr "Se han encontrado varios productos en %s, escanee un producto."
 
 #. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Several products found in %s, please scan the product."
+msgstr "Demasiados productos encontrados en %s, escanée el producto."
+
+#. module: shopfloor
 #: code:addons/shopfloor/services/checkout.py:0
 #, python-format
 msgid ""
@@ -1014,6 +1308,14 @@ msgid ""
 msgstr ""
 "Se han encontrado varias transferencias, escanee un paquete o seleccione una "
 "transferencia manualmente."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Several transfers found, please select a transfer manually."
+msgstr ""
+"Demasiadas transferencias encontradas, seleccione una transferencia "
+"manualmente."
 
 #. module: shopfloor
 #: model_terms:ir.ui.view,arch_db:shopfloor.view_location_form
@@ -1071,6 +1373,21 @@ msgid "Shopfloor weight (kg)"
 msgstr "Peso del taller (kg)"
 
 #. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__allow_get_work
+msgid "Show Get Work on start"
+msgstr "Mostrar Obtener Trabajo en el inicio"
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__show_oneline_package_content_is_possible
+msgid "Show Oneline Package Content Is Possible"
+msgstr "Mostrar Paquetes de Una Línea Es Posible"
+
+#. module: shopfloor
+#: model:ir.model.fields,field_description:shopfloor.field_shopfloor_menu__show_oneline_package_content
+msgid "Show one-line package content"
+msgstr "Mostrar contenido de paquete de una-línea"
+
+#. module: shopfloor
 #: model:shopfloor.scenario,name:shopfloor.scenario_single_pack_transfer
 msgid "Single Pack Transfer"
 msgstr "Transferencia de Paquete Individual"
@@ -1092,6 +1409,12 @@ msgstr ""
 "paquete cuando no existe ningún movimiento. Cualquier movimiento nuevo se "
 "crea en el tipo de operación seleccionado, por lo que solo puede estar "
 "activo cuando se selecciona un tipo."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/stock.py:0
+#, python-format
+msgid "Someone is already working on these transfers"
+msgstr ""
 
 #. module: shopfloor
 #: model:ir.model.fields,field_description:shopfloor.field_stock_location__source_move_line_ids
@@ -1189,6 +1512,12 @@ msgid "The content of {} cannot be transferred with this scenario."
 msgstr "El contenido de {} no se puede transferir con este escenario."
 
 #. module: shopfloor
+#: code:addons/shopfloor/models/stock_move_line.py:0
+#, python-format
+msgid "The demand cannot be negative"
+msgstr ""
+
+#. module: shopfloor
 #: code:addons/shopfloor/services/cluster_picking.py:0
 #, python-format
 msgid "The destination bin {} is not empty, please take another."
@@ -1219,6 +1548,12 @@ msgid "The package %s doesn't exist"
 msgstr "El paquete %s no existe"
 
 #. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "The picked quantity must be a value above zero."
+msgstr "La cantidad seleccionada debe ser un valor por encima de cero."
+
+#. module: shopfloor
 #: model:ir.model.fields,help:shopfloor.field_stock_location__shopfloor_picking_sequence
 msgid ""
 "The picking done in Shopfloor scenarios will respect this order. The "
@@ -1232,6 +1567,20 @@ msgstr ""
 "'corredor-rack-side-level'. Preste atención al relleno ('09' es antes de "
 "'19', '9' no). Se recomienda usar Exportar y luego Importar para completar "
 "este campo usando una hoja de cálculo."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "The product/packaging you selected has already been returned."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid ""
+"The quantity scanned for one or more lines cannot be higher than the maximum "
+"allowed."
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1277,8 +1626,20 @@ msgstr "El contenido de esta ubicación no se puede mover a la vez."
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
-msgid "This lot does not exist anymore."
-msgstr "Este lote ya no existe."
+msgid "This location does not exist."
+msgstr "Esta ubicación no existe."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "This location only contains packages, please scan one of them."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "This location requires packages. Please scan a destination package."
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1323,8 +1684,23 @@ msgstr ""
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
+msgid "This product is part of a package, please scan a package."
+msgstr "Este producto es parte de un paquete, escanée un paquete."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
 msgid "This product is part of multiple packages, please scan a package."
 msgstr "Este producto es parte de varios paquetes, escanee un paquete."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid ""
+"This source document is part of multiple transfers, please scan a package."
+msgstr ""
+"Este documento de origen es parte de múltiples transferencias, escanee un "
+"paquete."
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1365,6 +1741,14 @@ msgstr "Transferencia {} no está disponible."
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
+msgid ""
+"Transferring to a different package is not allowed, please scan a location "
+"instead."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
 msgid "Units replaced by package {}."
 msgstr "Unidades reemplazadas por paquete {}."
 
@@ -1390,6 +1774,16 @@ msgid "Unreserve Other Moves Is Possible"
 msgstr "Es posible Anular la Reserva de Otros Movimientos"
 
 #. module: shopfloor
+#: model:shopfloor.profile,name:shopfloor.profile_demo_2
+msgid "WH delivery"
+msgstr "Entrega WH"
+
+#. module: shopfloor
+#: model:shopfloor.profile,name:shopfloor.profile_demo_1
+msgid "WH worker"
+msgstr "Trabajador WH"
+
+#. module: shopfloor
 #: model:ir.model.fields.selection,name:shopfloor.selection__shopfloor_app__category__wms
 msgid "WMS"
 msgstr "WMS"
@@ -1409,6 +1803,52 @@ msgstr ""
 "Cuando está activo, lo que escanea (generalmente un EAN de empaque de "
 "producto) se enviará 'tal cual' y la operación se validará activando la "
 "creación de un pedido pendiente con las líneas restantes."
+
+#. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__scan_location_or_pack_first
+msgid ""
+"When checked, the user will be restricted by the type of object barcode  "
+"that he can scan to select the document/transfer/move line to work on."
+msgstr ""
+
+#. module: shopfloor
+#: model_terms:ir.ui.view,arch_db:shopfloor.shopfloor_menu_form_view
+msgid "When choosing an order to pack, do not allow to scan a product."
+msgstr ""
+
+#. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__allow_get_work
+msgid ""
+"When enabled the user will have the option to ask for a task to work on."
+msgstr ""
+"Cuando está habilitado el usuario tendrá la opción de solicitar una tarea "
+"para trabajar."
+
+#. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__allow_alternative_destination
+msgid ""
+"When enabled the user will have the option to scan destination locations "
+"other than the expected ones (ask for confirmation)."
+msgstr ""
+
+#. module: shopfloor
+#: model:ir.model.fields,help:shopfloor.field_shopfloor_menu__disable_full_bin_action
+msgid "When picking, prevent unloading the whole bin when full."
+msgstr ""
+"Al hacer el picking, evite descargar todo el contenedor cuando esté lleno."
+
+#. module: shopfloor
+#: model_terms:ir.ui.view,arch_db:shopfloor.shopfloor_menu_form_view
+msgid ""
+"When selecting a move line, force the user to first scan a package or a "
+"location and not a product or a lot."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "Working location changed to {}"
+msgstr "Ubicación de trabajo cambiada a {}"
 
 #. module: shopfloor
 #: code:addons/shopfloor/services/cluster_picking.py:0
@@ -1437,6 +1877,12 @@ msgstr "Paquete equivocado."
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
+msgid "Wrong packaging."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
 msgid "Wrong product."
 msgstr "Producto equivocado."
 
@@ -1457,6 +1903,18 @@ msgstr "No puede mover esto usando este menú."
 #, python-format
 msgid "You cannot place it here"
 msgstr "No puede colocarlo aquí"
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "You cannot process that much units."
+msgstr ""
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
+msgid "You cannot return more quantity than what was initially sent."
+msgstr ""
 
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
@@ -1518,8 +1976,72 @@ msgstr "{} no es un paquete de destino válido."
 #. module: shopfloor
 #: code:addons/shopfloor/actions/message.py:0
 #, python-format
+msgid "{} not found in the current transfer or already in a package."
+msgstr "{} no encontrado en la transferencia actual o ya está en un paquete."
+
+#. module: shopfloor
+#: code:addons/shopfloor/actions/message.py:0
+#, python-format
 msgid "{} {} put in {}"
 msgstr "{} {} poner en {}"
+
+#~ msgid "Scan first location or pack"
+#~ msgstr "Escanear ubicación o paquete primero"
+
+#~ msgid ""
+#~ "When selecting work, force the user to first scan a location or pack,then "
+#~ "the product or lot."
+#~ msgstr ""
+#~ "Cuando seleccione un trabajo, fuerza al usuario a escanear primero una "
+#~ "ubicación o paquete, después el producto o lote."
+
+#, python-format
+#~ msgid "No line to pack found"
+#~ msgstr "No se encontró ninguna línea para empaquetar"
+
+#, python-format
+#~ msgid ""
+#~ "'Multiple moves same destination package' is mandatory when 'Pick and "
+#~ "pack at the same time' is set."
+#~ msgstr ""
+#~ "'Múltiples movimientos en el mismo paquete de destino' es obligatorio "
+#~ "cuando 'Recoger y empaquetar al mismo tiempo' está configurado."
+
+#, python-format
+#~ msgid ""
+#~ "Not allowed to pack more than the quantity, the value has been changed to "
+#~ "the maximum."
+#~ msgstr ""
+#~ "No se permite empacar más de la cantidad, el valor se ha cambiado al "
+#~ "máximo."
+
+#, python-format
+#~ msgid "No lot found among current transfers."
+#~ msgstr "No se encontró lote perteneciente a transferencias actuales."
+
+#, python-format
+#~ msgid "No product found among current transfers."
+#~ msgstr ""
+#~ "No se ha encontrado ningún producto perteneciente a la transferencia "
+#~ "actual."
+
+#, python-format
+#~ msgid "Product not found in the current transfer."
+#~ msgstr "Producto no encontrado en la transferencia actual."
+
+#, python-format
+#~ msgid "This lot does not exist anymore."
+#~ msgstr "Este lote ya no existe."
+
+#, python-format
+#~ msgid "Packaging not found in the current transfer or already in a package."
+#~ msgstr ""
+#~ "Paquete no encontrado en la transferencia actual o ya en un paquete."
+
+#, python-format
+#~ msgid "Product not found in the current transfer or already in a package."
+#~ msgstr ""
+#~ "Producto no encontrado en la transferencia actual o ya en un paquete."
 
 #~ msgid ""
 #~ "Created from backorder <a href=# data-oe-model=stock.picking data-oe-id="
