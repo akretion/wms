@@ -32,8 +32,8 @@ export var inventory_line = Vue.component("inventory-line-detail", {
     />
 
   <v-card class="pa-2" :color="utils.colors.color_for('screen_step_todo')">
-    <packaging-qty-picker
-      :key="make_component_key(['packaging-qty-picker', line.id])"
+    <inventory-qty-picker
+      :key="make_component_key(['inventory-qty-picker', line.id])"
       :options="utils.wms.inventory_line_qty_picker_options(line)"
       :readonly="!showQtyPicker"
       />
