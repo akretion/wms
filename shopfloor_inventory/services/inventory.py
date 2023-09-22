@@ -211,7 +211,7 @@ class ShopfloorInventory(Component):
         location = self.env["stock.location"].browse(location_id)
         current_line = self.env["stock.inventory.line"].browse(line_id)
         search = self._actions_for("search")
-        product = search.product_from_scan(barcode, use_packaging=False)
+        product = search.product_from_scan(barcode)
         lot = self.env["stock.production.lot"]
         if not product:
             packaging = search.packaging_from_scan(barcode)
