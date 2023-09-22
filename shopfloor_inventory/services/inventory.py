@@ -9,7 +9,7 @@ from odoo.addons.component.core import Component
 from odoo.addons.shopfloor_base.exceptions import ShopfloorError
 
 
-class Inventory(Component):
+class ShopfloorInventory(Component):
     """
     Methods for Inventory Process
     """
