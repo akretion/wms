@@ -331,6 +331,39 @@ export class WMSUtils {
         };
         return _.extend(props, override || {});
     }
+    inventory_line_product_detail_options(line, options = {}) {
+        const self = this;
+        const default_fields = [
+            {path: "product.supplier_code", label: "Vendor code", klass: "loud"},
+            //            {path: "package_src.name", label: "Pack"},
+            {path: "lot.name", label: "Lot"},
+            {path: "product.barcode", label: "Code barre"},
+        ];
+        options = _.defaults({}, options, {
+            main: true,
+            key_title: "product.display_name",
+            title_action_field: {action_val_path: "product.barcode"},
+            fields_blacklist: [],
+            fields_extend_default: true,
+        });
+        options.fields = options.fields_extend_default
+            ? default_fields.concat(options.fields || [])
+            : options.fields || [];
+        options.fields = _.filter(options.fields, function (field) {
+            return !options.fields_blacklist.includes(field.path);
+        });
+        return options;
+    }
+    inventory_line_qty_picker_options(line, override = {}) {
+        const opts = {
+            init_value: line.theoretical_qty,
+            counted_value: line.product_qty,
+            available_packaging: line.product.packaging,
+            uom: line.product.uom,
+            non_zero_only: true,
+        };
+        return _.extend(opts, override || {});
+    }
 }
 
 utils_registry.add("wms", new WMSUtils());

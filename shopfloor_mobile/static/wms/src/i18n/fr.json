@@ -23,5 +23,21 @@
   "misc.lines_count": "Nombre de lignes",
   "misc.stock_zero_check.confirm_stock_not_zero": "Confirmer le stock",
   "misc.stock_zero_check.confirm_stock_zero": "Rupture de stock",
-  "scan_placeholder_translation": "Scannez un emplacement"
+  "scan_placeholder_translation": "Scannez un emplacement",
+  "inventory.scan_product.title": "Comptez les produits en les scannant",
+  "inventory.scan_product.scan_placeholder": "Scannez une boite / un produit / un lot",
+  "inventory.manual_selection.title": "Sélectionnez un inventaire et démarrez",
+  "inventory.start_location.title": "Démarrer un emplacement",
+  "inventory.start_location.scan_placeholder": "Scannez un emplacement",
+  "inventory.confirm_done.title": "Confirmer emplacement terminé",
+  "inventory.field.total_locations": "Nb emplacements",
+  "inventory.field.remaining_locations": "Nb emplacements restants",
+  "inventory.field.total_lines": "Nb de lignes",
+  "inventory.button.start": "Démarrer",
+  "inventory.button.cancel": "Annuler",
+  "inventory.button.confirm": "Confirmer",
+  "inventory.button.confirm_qty": "Confirmer quantité",
+  "inventory.button.back": "Retour",
+  "inventory.button.done": "Terminer",
+  "inventory.message.location_empty": "Emplacement vide"
 }
