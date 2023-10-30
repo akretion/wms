@@ -104,4 +104,4 @@ class SynchronizeExportableMixin(models.AbstractModel):
         recs = self.search(domain)
         if not recs:
             return
-        recs.with_context(warehouse=warehouse).synchronize_export()
+        return recs.with_context(warehouse=warehouse).synchronize_export()
