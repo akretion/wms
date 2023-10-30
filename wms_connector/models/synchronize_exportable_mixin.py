@@ -52,10 +52,13 @@ class SynchronizeExportableMixin(models.AbstractModel):
             yield records, data
 
     def synchronize_export(self):
+        res = self.env["attachment.queue"]
         for records, data in self._get_export_data():
             vals = self._format_to_exportfile(data)
             attachment = self.env["attachment.queue"].create(vals)
             records.track_export(attachment)
+            res += attachment
+        return res
 
     def track_export(self, attachment):
         self.wms_export_date = datetime.datetime.now()
@@ -94,4 +97,4 @@ class SynchronizeExportableMixin(models.AbstractModel):
         recs = self.search(domain)
         if not recs:
             return
-        recs.with_context(warehouse=warehouse).synchronize_export()
+        return recs.with_context(warehouse=warehouse).synchronize_export()
