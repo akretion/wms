@@ -23,6 +23,7 @@ class WmsProductSync(models.Model):
         for record in self:
             record.to_export = True
 
+    @api.model
     def _schedule_export(self, warehouse, domain=False):
         warehouse.refresh_wms_products()
         return super()._schedule_export(warehouse, domain)

@@ -6,7 +6,7 @@ import csv
 import datetime
 from io import StringIO
 
-from odoo import fields, models
+from odoo import api, fields, models
 from odoo.tools import config
 
 
@@ -98,6 +98,7 @@ class SynchronizeExportableMixin(models.AbstractModel):
     def _get_export_name(self):
         raise NotImplementedError
 
+    @api.model
     def _schedule_export(self, warehouse, domain=False):
         if not domain:
             domain = []
