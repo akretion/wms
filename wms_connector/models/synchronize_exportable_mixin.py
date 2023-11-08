@@ -104,5 +104,5 @@ class SynchronizeExportableMixin(models.AbstractModel):
             domain = []
         recs = self.search(domain)
         if not recs:
-            return
+            return self.env["attachment.queue"]
         return recs.with_context(warehouse=warehouse).synchronize_export()
