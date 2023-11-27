@@ -24,10 +24,6 @@ class BaseRESTService(AbstractComponent):
         }
         return vals
 
-
-class ShopfloorRESTService(BaseRESTService):
-    _inherit = "base.rest.service"
-
     def _dispatch_exception(
         self, method_name, exception_klass, orig_exception, *args, params=None
     ):

@@ -6,6 +6,9 @@ from odoo.exceptions import UserError
 
 class ShopfloorDispatchError(UserError):
     def __init__(self, payload):
+        """
+        Flag the error to let shopfloor mobile raise the error without formating it.
+        """
         payload["no_wrap"] = True
         self.rest_json_info = payload
         super().__init__(payload["message"]["body"])
