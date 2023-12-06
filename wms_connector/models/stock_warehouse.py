@@ -200,6 +200,7 @@ class StockWarehouse(models.Model):
             "filepath": filepath,
             "backend_id": self.env.ref("fs_storage.default_fs_storage").id,
             "file_type": filetype,
+            "default_warehouse_id": self.id,
         }
 
     def _prepare_wms_cron_vals(self, code="", name_fragment=""):
