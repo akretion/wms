@@ -9,7 +9,7 @@ class StockPicking(models.Model):
     _name = "stock.picking"
 
     wms_connector_exported = fields.Boolean(
-        String="Exported to WMS",
+        string="Exported to WMS",
         compute="_compute_wms_exported",
         readonly=True,
         store=True,
