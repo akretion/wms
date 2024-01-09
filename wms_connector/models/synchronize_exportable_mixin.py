@@ -54,7 +54,7 @@ class SynchronizeExportableMixin(models.AbstractModel):
     def synchronize_export(self):
         res = self.env["attachment.queue"]
         for records, data in self._get_export_data():
-            vals = records._format_to_exportfile(records._get_export_name(), data)
+            vals = records._format_to_exportfile(data)
             attachment = self.env["attachment.queue"].create(vals)
             records.track_export(attachment)
             res += attachment
@@ -68,8 +68,8 @@ class SynchronizeExportableMixin(models.AbstractModel):
         raise NotImplementedError
 
     # TODO cleanup this code
-    def _format_to_exportfile(self, name, data):
-        return self._format_to_exportfile_csv(name, data)
+    def _format_to_exportfile(self, data):
+        return self._format_to_exportfile_csv(data)
 
     def _format_to_exportfile_csv(self, data):
         csv_file = StringIO()
