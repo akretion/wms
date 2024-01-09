@@ -17,6 +17,6 @@
         "views/stock_warehouse.xml",
     ],
     "demo": [
-        "demo/storage_backend.xml",
+        "demo/fs_storage.xml",
     ],
 }

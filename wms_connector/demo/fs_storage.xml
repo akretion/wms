@@ -3,9 +3,10 @@
      License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
 <odoo>
 
-    <record model="storage.backend" id="demo_wms_backend">
+    <record model="fs.storage" id="demo_wms_storage">
         <field name="name">Demo WMS backend</field>
-        <field name="directory_path">/</field>
+        <field name="protocol">odoofs</field>
+        <field name="code">demo_wms_storage</field>
     </record>
 
 </odoo>
