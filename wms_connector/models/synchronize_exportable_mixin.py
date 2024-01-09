@@ -6,7 +6,7 @@ import csv
 import datetime
 from io import StringIO
 
-from odoo import fields, models
+from odoo import api, fields, models
 from odoo.tools import config
 
 
@@ -52,10 +52,13 @@ class SynchronizeExportableMixin(models.AbstractModel):
             yield records, data
 
     def synchronize_export(self):
+        res = self.env["attachment.queue"]
         for records, data in self._get_export_data():
-            vals = self._format_to_exportfile(data)
+            vals = records._format_to_exportfile(data)
             attachment = self.env["attachment.queue"].create(vals)
             records.track_export(attachment)
+            res += attachment
+        return res
 
     def track_export(self, attachment):
         self.wms_export_date = datetime.datetime.now()
@@ -65,8 +68,8 @@ class SynchronizeExportableMixin(models.AbstractModel):
         raise NotImplementedError
 
     # TODO cleanup this code
-    def _format_to_exportfile(self, name, data):
-        return self._format_to_exportfile_csv(name, data)
+    def _format_to_exportfile(self, data):
+        return self._format_to_exportfile_csv(data)
 
     def _format_to_exportfile_csv(self, data):
         csv_file = StringIO()
@@ -88,10 +91,11 @@ class SynchronizeExportableMixin(models.AbstractModel):
     def _get_export_name(self):
         raise NotImplementedError
 
+    @api.model
     def _schedule_export(self, warehouse, domain=False):
         if not domain:
             domain = []
         recs = self.search(domain)
         if not recs:
-            return
-        recs.with_context(warehouse=warehouse).synchronize_export()
+            return self.env["attachment.queue"]
+        return recs.with_context(warehouse=warehouse).synchronize_export()
