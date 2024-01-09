@@ -22,9 +22,9 @@ class AttachmentQueue(models.Model):
         for rec in self:
             task_queue_prefix = None
             if rec.file_type == "wms_reception_confirmed":
-                task_queue_prefix = "wms_import_picking_in"
+                task_queue_prefix = "wms_import_confirm_reception"
             elif rec.file_type == "wms_delivery_confirmed":
-                task_queue_prefix = "wms_import_picking_out"
+                task_queue_prefix = "wms_import_confirm_delivery"
             elif rec.file_type == "wms_update_inventory":
                 task_queue_prefix = "wms_import_update_inventory"
 
