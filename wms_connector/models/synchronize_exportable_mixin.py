@@ -73,15 +73,10 @@ class SynchronizeExportableMixin(models.AbstractModel):
         raise NotImplementedError
 
     # TODO cleanup this code
-<<<<<<< HEAD
     # We should just have a method that return the data
     # and a generic one that return the vals
-    def _format_to_exportfile(self, name, data):
-        return self._format_to_exportfile_csv(name, data)
-=======
     def _format_to_exportfile(self, data):
         return self._format_to_exportfile_csv(data)
->>>>>>> a7bdc61d (revert unnecessary changes)
 
     def _format_to_exportfile_csv(self, data):
         csv_file = StringIO()
