@@ -198,7 +198,6 @@ class StockWarehouse(models.Model):
             "name": "WMS task for {} {}".format(self.name, name_fragment),
             "method_type": method_type,
             "filepath": filepath,
-            "backend_id": self.env.ref("fs_storage.default_fs_storage").id,
             "file_type": filetype,
             "default_warehouse_id": self.id,
         }
