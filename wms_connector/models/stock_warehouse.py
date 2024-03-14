@@ -21,9 +21,9 @@ FILTER_VALS = {
 }
 FILTER_DOMAINS = {
     "wms_export_product_filter_id": "[]",
-    "wms_export_picking_in_filter_id": '[("wms_export_date", "=", False),'
+    "wms_export_picking_in_filter_id": '[("export_date", "=", False),'
     ' ("picking_type_id", "=", {}), ("state", "=", "assigned")]',
-    "wms_export_picking_out_filter_id": '[("wms_export_date", "=", False),'
+    "wms_export_picking_out_filter_id": '[("export_date", "=", False),'
     ' ("picking_type_id", "=", {}), ("state", "=", "assigned")]',
 }
 
