@@ -8,5 +8,5 @@ from odoo import models
 class SynchronizeExportableMixin(models.AbstractModel):
     _inherit = "synchronize.exportable.mixin"
 
-    def _synchronize_context_hook(self, warehouse):
-        return {"warehouse": warehouse}
+    def _synchronize_context_hook(self, wh_arg):
+        return {"warehouse": wh_arg[0]}

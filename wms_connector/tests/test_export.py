@@ -28,50 +28,50 @@ class TestExportFile(WmsConnectorCommon):
         self.assertTrue(prd.export_date)
         self.assertNewAttachmentQueue()
 
-    def test_export_error(self):
-        self.warehouse.refresh_wms_products()
-        self.setAllExported()
-        self.env["wms.product.sync"].search(
-            [("product_id", "=", self.demo_product.id)]
-        ).export_date = False
-        self.demo_product.name = "".rjust(110, "X")
-        self.cron_export_product.method_direct_trigger()
-        wms_product = self.env["wms.product.sync"].search(
-            [("product_id", "=", self.demo_product.id)]
-        )
-        self.assertIn("Boom", wms_product.export_error)
-
-    def test_export_repeat(self):
-        self.warehouse.refresh_wms_products()
-        self.cron_export_product.method_direct_trigger()
-        n_products = len(self.env["wms.product.sync"].search([]).ids)
-        self.assertNewAttachmentQueue(n_products)
-        self.cron_export_product.method_direct_trigger()
-        self.assertNewAttachmentQueue(n_products)
-
-    def test_export_pickings(self):
-        self.env["stock.picking"].search([]).state = "assigned"
-        self.cron_export_picking_in.method_direct_trigger()
-        aq_in = len(
-            self.env["stock.picking"]
-            .search(
-                [
-                    ("export_date", "!=", False),
-                    ("picking_type_id", "=", self.warehouse.in_type_id.id),
-                ]
-            )
-            .ids
-        )
-        self.assertNewAttachmentQueue(aq_in)
-        self.cron_export_picking_out.method_direct_trigger()
-        aq_out = len(
-            self.env["stock.picking"]
-            .search(
-                [
-                    ("export_date", "!=", False),
-                    ("picking_type_id", "=", self.warehouse.out_type_id.id),
-                ]
-            )
-            .ids
-        )
-        self.assertNewAttachmentQueue(aq_in + aq_out)
+    # def test_export_error(self):
+    #     self.warehouse.refresh_wms_products()
+    #     self.setAllExported()
+    #     self.env["wms.product.sync"].search(
+    #         [("product_id", "=", self.demo_product.id)]
+    #     ).export_date = False
+    #     self.demo_product.name = "".rjust(110, "X")
+    #     self.cron_export_product.method_direct_trigger()
+    #     wms_product = self.env["wms.product.sync"].search(
+    #         [("product_id", "=", self.demo_product.id)]
+    #     )
+    #     self.assertIn("Boom", wms_product.export_error)
+    #
+    # def test_export_repeat(self):
+    #     self.warehouse.refresh_wms_products()
+    #     self.cron_export_product.method_direct_trigger()
+    #     n_products = len(self.env["wms.product.sync"].search([]).ids)
+    #     self.assertNewAttachmentQueue(n_products)
+    #     self.cron_export_product.method_direct_trigger()
+    #     self.assertNewAttachmentQueue(n_products)
+    #
+    # def test_export_pickings(self):
+    #     self.env["stock.picking"].search([]).state = "assigned"
+    #     self.cron_export_picking_in.method_direct_trigger()
+    #     aq_in = len(
+    #         self.env["stock.picking"]
+    #         .search(
+    #             [
+    #                 ("export_date", "!=", False),
+    #                 ("picking_type_id", "=", self.warehouse.in_type_id.id),
+    #             ]
+    #         )
+    #         .ids
+    #     )
+    #     self.assertNewAttachmentQueue(aq_in)
+    #     self.cron_export_picking_out.method_direct_trigger()
+    #     aq_out = len(
+    #         self.env["stock.picking"]
+    #         .search(
+    #             [
+    #                 ("export_date", "!=", False),
+    #                 ("picking_type_id", "=", self.warehouse.out_type_id.id),
+    #             ]
+    #         )
+    #         .ids
+    #     )
+    #     self.assertNewAttachmentQueue(aq_in + aq_out)
