@@ -19,6 +19,7 @@ class WmsConnectorCommon(SynchronizeRecordCommon):
     def setAllExported(self):
         self.env["stock.picking"].search([]).export_date = datetime.date.today()
         self.env["wms.product.sync"].search([]).export_date = datetime.date.today()
+        self.env["wms.product.sync"].search([]).to_export = False
 
 
 class WmsConnectorCase(WmsConnectorCommon):
