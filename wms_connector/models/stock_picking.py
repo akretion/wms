@@ -16,9 +16,9 @@ class StockPicking(models.Model):
         compute="_compute_wms_sync_cancel_supported"
     )
     wms_import_attachment_id = fields.Many2one(
-        "attachment.queue", index=True, readonly=True
+        "attachment.queue", index=True, readonly=True, copy=False
     )
-    wms_export_date = fields.Datetime(tracking=True)
+    wms_export_date = fields.Datetime(tracking=True, copy=False)
 
     def _get_wms_export_task(self):
         return self.picking_type_id.warehouse_id.sudo().wms_export_task_id
@@ -72,3 +72,16 @@ class StockPicking(models.Model):
                     _("The picking %s have been exported and can not be modified")
                     % picking.name
                 )
+
+    def _create_backorder(self):
+        backorders = super()._create_backorder()
+        for backorder in backorders:
+            picking = backorder.backorder_id
+            if picking.wms_export_date:
+                backorder.write(
+                    {
+                        "wms_export_date": picking.wms_export_date,
+                        "wms_import_attachment_id": picking.wms_import_attachment_id.id,
+                    }
+                )
+        return backorders
