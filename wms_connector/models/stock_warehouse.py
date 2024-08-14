@@ -21,9 +21,9 @@ FILTER_VALS = {
 }
 FILTER_DOMAINS = {
     "wms_export_product_filter_id": "[]",
-    "wms_export_picking_in_filter_id": '[("wms_export_date", "=", False),'
+    "wms_export_picking_in_filter_id": '[("export_date", "=", False),'
     ' ("picking_type_id", "=", {}), ("state", "=", "assigned")]',
-    "wms_export_picking_out_filter_id": '[("wms_export_date", "=", False),'
+    "wms_export_picking_out_filter_id": '[("export_date", "=", False),'
     ' ("picking_type_id", "=", {}), ("state", "=", "assigned")]',
 }
 
@@ -124,7 +124,7 @@ class StockWarehouse(models.Model):
             "product": [
                 ("warehouse_id", "=", self.id),
                 ("to_export", "=", True),
-                ("wms_export_error", "=", False),
+                ("export_error", "=", False),
             ],
             "pickings_in": self.wms_export_picking_in_filter_id._get_eval_domain(),
             "pickings_out": self.wms_export_picking_out_filter_id._get_eval_domain(),

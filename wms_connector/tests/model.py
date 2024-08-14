@@ -7,7 +7,7 @@ from odoo import models
 class WmsProductSync(models.Model):
     _inherit = ["wms.product.sync"]
 
-    def _prepare_export_data(self):
+    def _prepare_export_data(self, _):
         res = []
         for rec in self:
             res += [
@@ -20,11 +20,14 @@ class WmsProductSync(models.Model):
     def _get_export_name(self):
         return self.name
 
+    def _get_export_task(self):
+        return self.warehouse_id.wms_export_task_id
+
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    def _prepare_export_data(self):
+    def _prepare_export_data(self, _):
         return [
             {
                 "name": rec.name,
@@ -34,3 +37,6 @@ class StockPicking(models.Model):
 
     def _get_export_name(self):
         return self.name
+
+    def _get_export_task(self):
+        return self.location_id.warehouse_id.wms_export_task_id

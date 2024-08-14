@@ -26,11 +26,11 @@ class WmsProductSync(models.Model):
     @api.model
     def _schedule_export(self, warehouse, domain=False):
         warehouse.refresh_wms_products()
-        return super()._schedule_export(warehouse, domain)
+        return super()._schedule_export(warehouse, domain=domain)
 
     def track_export(self, attachment):
         super().track_export(attachment)
         self.to_export = False
 
-    def _get_wms_export_task(self):
+    def _get_export_task(self):
         return self.warehouse_id.sudo().wms_export_task_id

@@ -16,7 +16,7 @@
                     attrs="{'invisible': [
                         '|',
                         '|',
-                        ('wms_export_date', '!=', False),
+                        ('export_date', '!=', False),
                         ('is_wms_exportable', '=', False),
                         ('state', 'in', ('cancel', 'done', 'draft')),
                     ]}"
@@ -28,7 +28,7 @@
                     groups="stock.group_stock_manager"
                     attrs="{'invisible': [
                         '|',
-                        ('wms_export_date', '=', False),
+                        ('export_date', '=', False),
                         ('state', '=', 'cancel'),
                     ]}"
                     confirm="Before cancelling, ensure that your have cancelled the picking in the
@@ -37,24 +37,24 @@
             </header>
             <field name="date_done" position="before">
                 <field
-                    name="wms_export_date"
+                    name="export_date"
                     attrs="{'invisible': [('is_wms_exportable', '=', False)]}"
                 />
             </field>
             <field name="group_id" position="after">
                 <field
-                    name="wms_export_attachment_id"
-                    attrs="{'invisible': [('wms_export_attachment_id', '=', False)]}"
+                    name="export_attachment_id"
+                    attrs="{'invisible': [('export_attachment_id', '=', False)]}"
                 />
             </field>
             <header position="after">
                 <div
                     class="alert alert-danger"
                     role="alert"
-                    attrs="{'invisible': [('wms_export_error', '=', False)]}"
+                    attrs="{'invisible': [('export_error', '=', False)]}"
                 >
                     <p>Erreur de Synchronisation avec Reflex</p>
-                    <field name="wms_export_error" />
+                    <field name="export_error" />
                 </div>
             </header>
         </field>
@@ -69,7 +69,7 @@
                 <filter
                     string="To export"
                     name="not_wms_exported"
-                    domain="[('wms_export_date', '=', False)]"
+                    domain="[('export_date', '=', False)]"
                 />
             </filter>
         </field>
@@ -80,7 +80,7 @@
         <field name="inherit_id" ref="stock.vpicktree" />
         <field name="arch" type="xml">
             <field name="date_deadline" position="after">
-                <field name="wms_export_date" string="Exported at" optional="True" />
+                <field name="export_date" string="Exported at" optional="True" />
             </field>
         </field>
     </record>

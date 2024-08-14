@@ -16,7 +16,7 @@ class StockPicking(models.Model):
         compute="_compute_wms_sync_cancel_supported"
     )
 
-    def _get_wms_export_task(self):
+    def _get_export_task(self):
         return self.picking_type_id.warehouse_id.sudo().wms_export_task_id
 
     def _compute_wms_sync_cancel_supported(self):
@@ -41,7 +41,7 @@ class StockPicking(models.Model):
         for record in self.filtered(lambda p: p.state != "cancel"):
             if (
                 not self._context.get("skip_wms_cancel_check")
-                and record.wms_export_date
+                and record.export_date
                 and not record.wms_sync_cancel_supported
             ):
                 raise UserError(
