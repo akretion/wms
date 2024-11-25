@@ -5,7 +5,7 @@
 {
     "name": "Shopfloor MRP Production",
     "summary": "MRP with shopfloor",
-    "version": "16.0.2.1.0",
+    "version": "14.0.1.0.0",
     "development_status": "Beta",
     "category": "Inventory",
     "website": "https://github.com/OCA/wms",
