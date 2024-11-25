@@ -1,0 +1,12 @@
+<odoo noupdate="1">
+    <record id="shopfloor_menu_demo_mrp_production" model="shopfloor.menu">
+        <field name="name">MRP Production</field>
+        <field name="sequence">60</field>
+        <field name="profile_id" ref="shopfloor.profile_demo_1" />
+        <field
+            name="scenario_id"
+            ref="shopfloor_mrp_production.scenario_mrp_production"
+        />
+        <field name="picking_type_ids" search="[['code','=','mrp_operation']]" />
+    </record>
+</odoo>
