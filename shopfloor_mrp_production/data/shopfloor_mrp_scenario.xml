@@ -1,0 +1,10 @@
+<odoo noupdate="1">
+    <record id="scenario_mrp_production" model="shopfloor.scenario">
+        <field name="name">MRP Production</field>
+        <field name="key">mrp_production</field>
+        <field name="options_edit">
+{
+}
+        </field>
+    </record>
+</odoo>

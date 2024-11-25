@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <template
+        id="shopfloor_app_assets"
+        inherit_id="shopfloor_mobile.shopfloor_app_assets"
+    >
+        <script id="script_app_main" position="before">
+             <script
+                id="script_scenario_mrp_production"
+                t-attf-src="/shopfloor_mrp_production_mobile/static/wms/src/scenario/mrp_production.js?v=#{mod_version}"
+                type="module"
+            />
+        </script>
+    </template>
+</odoo>
