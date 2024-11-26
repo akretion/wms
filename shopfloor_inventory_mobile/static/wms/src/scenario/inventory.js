@@ -101,7 +101,7 @@ const Inventory = {
                     <div class="button-list button-vertical-list full">
                         <v-row align="center">
                             <v-col class="text-center" cols="12">
-                                <btn-action action="todo" @click="state.on_confirm">{{ $t('inventory.button.confirm') }}</btn-action>
+                                <btn-action action="todo" @click="state.on_confirm">{{ $t('inventory.button.confirm_location') }}</btn-action>
                             </v-col>
                         </v-row>
                     </div>
@@ -128,7 +128,7 @@ const Inventory = {
                <div class="button-list button-vertical-list full">
                    <v-row align="center">
                        <v-col class="text-center" cols="12">
-                           <btn-action action="todo" @click="state.on_confirm">{{ $t('inventory.button.confirm') }}</btn-action>
+                           <btn-action action="todo" @click="state.on_confirm">{{ $t('inventory.button.confirm_done_location') }}</btn-action>
                        </v-col>
                    </v-row>
                </div>

@@ -122,6 +122,7 @@ class ShopfloorInventory(Component):
             ("user_id", "=", self.env.user.id),
             ("state", "=", "confirm"),
             ("shopfloor_validated", "!=", True),
+            ("company_id", "=", self.env.company.id),
         ]
 
     def _inventory_search(self, name_fragment=None, inventory_ids=None):
