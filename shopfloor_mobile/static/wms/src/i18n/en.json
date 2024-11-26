@@ -40,6 +40,8 @@
   "inventory.button.cancel": "Cancel",
   "inventory.button.confirm": "Confirm",
   "inventory.button.confirm_qty": "Confirm quantity",
+  "inventory.button.confirm_location": "Confirm location",
+  "inventory.button.confirm_done_location": "Confirm location done",
   "inventory.button.back": "Back",
   "inventory.button.done": "Done",
   "inventory.message.location_empty": "Location is empty"

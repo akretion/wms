@@ -36,7 +36,9 @@
   "inventory.button.start": "Démarrer",
   "inventory.button.cancel": "Annuler",
   "inventory.button.confirm": "Confirmer",
-  "inventory.button.confirm_qty": "Confirmer quantité",
+  "inventory.button.confirm_location": "Confirmer emplacement",
+  "inventory.button.confirm_done_location": "Confirmer emplacement terminé",
+  "inventory.button.confirm_qty": "Confirmer quantité article",
   "inventory.button.back": "Retour",
   "inventory.button.done": "Terminer",
   "inventory.message.location_empty": "Emplacement vide"
