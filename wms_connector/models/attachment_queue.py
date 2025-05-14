@@ -46,8 +46,12 @@ class AttachmentQueue(models.Model):
             else:
                 rec.warehouse_id = None
 
+    @api.model
+    def _get_mappings(self):
+        return WMS_IMPORT_FILETYPES
+
     def _run(self):
-        for filetype in [el[0] for el in WMS_IMPORT_FILETYPES]:
+        for filetype in [el[0] for el in self._get_mappings()]:
             if self.file_type == filetype:
                 return getattr(self.with_company(self.company_id), "_run_" + filetype)()
         return super()._run()
