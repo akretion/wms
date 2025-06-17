@@ -21,7 +21,7 @@ export var InventoryQtyPickerMixin = {
     watch: {
         options: function (opts, old_opts) {
             if (opts.counted_value != old_opts.counted_value) {
-                this.qty_done = parseInt(opts.counted_value, 10);
+                this.qty_done = parseFloat(opts.counted_value);
             }
         },
         qty_done: function () {
@@ -84,7 +84,7 @@ export var InventoryQtyPickerMixin = {
             // Const min_unit = _.last(pkg_by_qty);
             pkg_by_qty.forEach(function (pkg) {
                 let qty_per_pkg = 0;
-                [qty_per_pkg, qty] = self._qty_by_pkg(pkg.qty, qty);
+                [qty_per_pkg, qty] = self._qty_by_pkg(pkg, qty);
                 res[pkg.id] = qty_per_pkg;
                 if (!qty) return;
             });
@@ -96,15 +96,17 @@ export var InventoryQtyPickerMixin = {
          * @param {*} pkg_by_qty
          * @param {*} qty
          */
-        _qty_by_pkg: function (pkg_qty, qty) {
-            const precision = this.unit_uom.rounding || 3;
+        _qty_by_pkg: function (pkg, qty) {
+            const precision = (this.unit_uom.rounding + "").split(".")[1].length || 3;
             let qty_per_pkg = 0;
-            // TODO: anything better to do like `float_compare`?
-            while (_.round(qty - pkg_qty, precision) >= 0.0) {
-                qty -= pkg_qty;
-                qty_per_pkg += 1;
+            if (pkg?.is_unit) {
+                const qty_for_pkg = _.round(qty, precision);
+                return [qty_for_pkg, 0];
             }
-            return [qty_per_pkg, qty];
+            // TODO: anything better to do like `float_compare`?
+            const remainder = _.round(qty % pkg.qty, precision);
+            const qty_for_pkg = (qty - remainder) / pkg.qty;
+            return [qty_for_pkg, remainder];
         },
         _compute_qty: function () {
             const self = this;
@@ -115,12 +117,18 @@ export var InventoryQtyPickerMixin = {
             return value;
         },
         compute_qty: function () {
-            this.qty_done = this._compute_qty();
+            if (!this.qty_done) {
+                return null;
+            }
+            const computed_qty = this._compute_qty();
+            if (this.qty_done != computed_qty) {
+                this.qty_done = computed_qty;
+            }
         },
     },
     created: function () {
-        this.qty_todo = parseInt(this.opts.init_value, 10);
-        this.qty_done = parseInt(this.opts.counted_value, 10);
+        this.qty_todo = parseFloat(this.opts.init_value);
+        this.qty_done = parseFloat(this.opts.counted_value);
     },
     computed: {
         opts() {
@@ -145,6 +153,7 @@ export var InventoryQtyPickerMixin = {
                     name: this.opts.uom.name,
                     qty: this.opts.uom.factor,
                     rounding: this.opts.uom.rounding,
+                    is_unit: true,
                 };
             }
             return unit;
@@ -179,7 +188,7 @@ export var InventoryQtyPickerMixin = {
                 const next_pkgs = packaging.slice(i + 1);
                 remaining = undefined;
                 _.every(next_pkgs, function (next_pkg) {
-                    [qty_per_pkg, remaining] = self._qty_by_pkg(next_pkg.qty, pkg.qty);
+                    [qty_per_pkg, remaining] = self._qty_by_pkg(next_pkg, pkg.qty);
                     elected_next_pkg = next_pkg;
                     return remaining;
                 });
@@ -241,20 +250,26 @@ export var InventoryQtyPicker = Vue.component("inventory-qty-picker", {
     <v-expansion-panels flat v-model="panel">
         <v-expansion-panel>
             <v-expansion-panel-header expand-icon="mdi-menu-down">
-                <v-row dense align="center">
-                    <v-col cols="5" md="3">
-                        <input type="number" v-model="qty_done" class="qty-done" :style="qty_color"
-                            v-on:click.stop
-                            :readonly="readonly"
-                        />
-                    </v-col>
-                    <v-col cols="3" md="2" :class="readonly ? 'd-none' : ''">
-                        <span class="qty-todo">/ {{ qty_todo }}</span>
-                    </v-col>
-                    <v-col>
-                        {{ unit_uom.name }}
-                    </v-col>
-                </v-row>
+                <div>
+                    <v-row dense align="center">
+                        <v-col cols="5" md="3">
+                            <input type="number" v-model="qty_done" class="qty-done" :style="qty_color" ref="inputRef"
+                                v-on:click.stop
+                                :readonly="readonly"
+                                :step="unit_uom.rounding"
+                            >
+                        </v-col>
+                        <v-col cols="3" md="2" :class="readonly ? 'd-none' : ''">
+                            <span class="qty-todo">/ {{ qty_todo }}</span>
+                        </v-col>
+                        <v-col>
+                            {{ unit_uom.name }}
+                        </v-col>
+                    </v-row>
+                    <div class="qty-done-error">
+                        {{ $refs?.inputRef?.validationMessage }}
+                    </div>
+                </div>
             </v-expansion-panel-header>
             <v-expansion-panel-content v-if="sorted_packaging.length > 1">
                 <v-row dense
@@ -297,8 +312,8 @@ export var InventoryQtyPickerDisplay = Vue.component("inventory-qty-picker-displ
         },
     },
     updated: function () {
-        this.qty_todo = parseInt(this.opts.init_value, 10);
-        this.qty_done = parseInt(this.opts.counted_value, 10);
+        this.qty_todo = parseFloat(this.opts.init_value);
+        this.qty_done = parseFloat(this.opts.counted_value);
     },
     template: `
 <div :class="[$options._componentTag, opts.mode ? 'mode-' + opts.mode: '', 'd-inline']">

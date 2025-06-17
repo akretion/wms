@@ -34,6 +34,13 @@ class ShopfloorMenu(models.Model):
     display_location_content_is_possible = fields.Boolean(
         compute="_compute_display_location_content_is_possible"
     )
+    ignore_location_ongoing_operation = fields.Boolean(
+        string="Ignore location ongoing operations",
+        default=False,
+    )
+    ignore_location_ongoing_operation_is_possible = fields.Boolean(
+        compute="_compute_ignore_location_ongoing_operation_is_possible"
+    )
 
     @api.depends("scenario_id")
     def _compute_use_existing_inventory_is_possible(self):
@@ -78,3 +85,10 @@ class ShopfloorMenu(models.Model):
                         "not reset to zero for menu {}."
                     ).format(menu.name)
                 )
+
+    @api.depends("scenario_id")
+    def _compute_ignore_location_ongoing_operation_is_possible(self):
+        for menu in self:
+            menu.ignore_location_ongoing_operation_is_possible = (
+                menu.scenario_id.has_option("ignore_location_ongoing_operation")
+            )

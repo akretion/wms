@@ -14,6 +14,11 @@
                 t-set="mod_version"
                 t-value="get_version('shopfloor_inventory_mobile')"
             />
+            <link
+                id="link_css_main"
+                t-attf-href="/shopfloor_inventory_mobile/static/wms/src/css/main.css?v=#{mod_version}"
+                rel="stylesheet"
+            />
             <script
                 id="script_component_inventory_detail"
                 t-attf-src="/shopfloor_inventory_mobile/static/wms/src/components/inventory_detail.js?v=#{mod_version}"

@@ -39,6 +39,16 @@
                     <field name="display_location_content_is_possible" invisible="1" />
                     <field name="display_location_content" />
                 </group>
+                <group
+                    name="ignore_location_ongoing_operation"
+                    attrs="{'invisible': [('ignore_location_ongoing_operation_is_possible', '=', False)]}"
+                >
+                    <field
+                        name="ignore_location_ongoing_operation_is_possible"
+                        invisible="1"
+                    />
+                    <field name="ignore_location_ongoing_operation" />
+                </group>
             </group>
         </field>
     </record>
