@@ -182,7 +182,10 @@ class ShopfloorInventory(Component):
                 data=self.data.inventory(inventory, with_locations=True),
                 next_state="start_location",
             )
-        if location.has_on_going_operation():
+        if (
+            not self.work.menu.ignore_location_ongoing_operation
+            and location.has_on_going_operation()
+        ):
             raise ShopfloorError(
                 self.msg_store.location_has_on_going_operation(location),
                 next_state="start_location",
@@ -446,7 +449,7 @@ class ShopfloorInventoryValidator(Component):
                 "type": "integer",
                 "nullable": True,
             },
-            "quantity": {"coerce": to_int, "required": False, "type": "float"},
+            "quantity": {"required": False, "type": "float"},
         }
 
     def confirm_line_qty(self):
@@ -454,7 +457,7 @@ class ShopfloorInventoryValidator(Component):
             "inventory_id": {"coerce": to_int, "required": True, "type": "integer"},
             "location_id": {"coerce": to_int, "required": True, "type": "integer"},
             "line_id": {"coerce": to_int, "required": True, "type": "integer"},
-            "quantity": {"coerce": to_int, "required": False, "type": "float"},
+            "quantity": {"required": False, "type": "float"},
         }
 
     def location_inventoried(self):
