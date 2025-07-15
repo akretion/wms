@@ -37,6 +37,7 @@
   "inventory.field.total_locations": "Total locations",
   "inventory.field.remaining_locations": "Remaining locations",
   "inventory.field.total_lines": "Total lines",
+  "inventory.field.counted_qty": "Counted Qty",
   "inventory.button.start": "Start",
   "inventory.button.cancel": "Cancel",
   "inventory.button.confirm": "Confirm",

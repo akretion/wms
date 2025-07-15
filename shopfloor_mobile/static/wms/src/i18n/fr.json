@@ -34,6 +34,7 @@
   "inventory.field.total_locations": "Nb emplacements",
   "inventory.field.remaining_locations": "Nb emplacements restants",
   "inventory.field.total_lines": "Nb de lignes",
+  "inventory.field.counted_qty": "Qté comptée",
   "inventory.button.start": "Démarrer",
   "inventory.button.cancel": "Annuler",
   "inventory.button.confirm": "Confirmer",
