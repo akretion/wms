@@ -71,7 +71,7 @@ const Inventory = {
                         :key="make_state_component_key(['inventory-line-state', line.product.id])"
                         :card_color="utils.colors.color_for(line_state_color(line))"
                         :record="line"
-                        :options="{main: true, key_title: 'product.display_name'}"
+                        :options="{main: true, key_title: 'product.display_name', fields: [{path: 'product_qty', label: $t('inventory.field.counted_qty')}]}"
                         />
                 </div>
                 <div v-if="_.isEmpty(_.result(state, 'data.lines')) && _.isEmpty(_.result(state, 'data.current_line')) && _.result(state, 'data.display_location_content')" >
