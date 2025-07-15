@@ -296,8 +296,10 @@ class ShopfloorInventory(Component):
             domain += [("product_id", "=", product.id)]
         if lot:
             domain += [("prod_lot_id", "in", lot.ids)]
+        # Increase number of lines displayed for Abilis
+        # it is not good for performances so I do it in custom
         line = self.env["stock.inventory.line"].search(
-            domain, order="product_qty", limit=15
+            domain, order="product_qty", limit=150
         )
         if not line and create:
             if self.work.menu.force_inventory_add_product:
