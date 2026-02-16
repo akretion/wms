@@ -809,6 +809,7 @@ class Reception(Component):
                 "selected_move_line": self._data_for_move_lines(line),
                 "picking": self.data.picking(picking),
                 "confirmation_required": asking_confirmation,
+                "reception_without_pack": self.work.menu.reception_without_pack,
             },
             message=message,
         )
@@ -1705,6 +1706,11 @@ class ShopfloorReceptionValidatorResponse(Component):
                 "type": "string",
                 "nullable": True,
                 "required": False,
+            },
+            "reception_without_pack": {
+                "type": "boolean",
+                "nullable": False,
+                "required": True,
             },
         }
 
