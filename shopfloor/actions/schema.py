@@ -4,7 +4,6 @@ from odoo.addons.component.core import Component
 
 
 class ShopfloorSchemaAction(Component):
-
     _inherit = "shopfloor.schema.action"
 
     def picking(self):
@@ -119,6 +118,7 @@ class ShopfloorSchemaAction(Component):
         return {
             "id": {"required": True, "type": "integer"},
             "name": {"type": "string", "nullable": False, "required": True},
+            "display_name": {"type": "string", "nullable": False, "required": True},
             "barcode": {"type": "string", "nullable": True, "required": False},
             "operation_progress": {
                 "type": "dict",

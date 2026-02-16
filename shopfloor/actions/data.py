@@ -36,6 +36,7 @@ class DataAction(Component):
         return [
             "id",
             "name",
+            "display_name",
             # Fallback to name if barcode is not valued.
             ("barcode", lambda rec, fname: rec[fname] if rec[fname] else rec.name),
         ]
