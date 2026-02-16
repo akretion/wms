@@ -134,12 +134,12 @@ const Reception = {
                     />
                 </v-card>
                 <div class="button-list button-vertical-list full">
-                    <v-row align="center">
+                    <v-row align="center" v-if="!state.data.reception_without_pack">
                         <v-col class="text-center" cols="12">
                             <btn-action @click="state.on_add_to_existing_pack">Existing pack</btn-action>
                         </v-col>
                     </v-row>
-                    <v-row align="center">
+                    <v-row align="center" v-if="!state.data.reception_without_pack">
                         <v-col class="text-center" cols="12">
                             <btn-action @click="state.on_create_new_pack">New pack</btn-action>
                         </v-col>
