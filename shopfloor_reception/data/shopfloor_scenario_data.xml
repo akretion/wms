@@ -10,7 +10,7 @@
             {
             "auto_post_line": true,
             "allow_return": true,
-            "reception_without_pack": true
+            "reception_without_pack": true,
             "scan_location_or_pack_first": true
             }
         </field>
