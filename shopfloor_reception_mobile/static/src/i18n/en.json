@@ -1,0 +1,22 @@
+{
+  "reception": {
+    "choose_an_operation": "Choose an operation",
+    "scan_document_product_package": "Scan document / product / package",
+    "select_a_move": "Select a move",
+    "scan_product_package": "Scan product / package",
+    "confirm_done": "Confirm done",
+    "set_lot": "Set lot",
+    "set_quantity": "Set quantity",
+    "set_destination": "Set destination",
+    "select_destination_package": "Select destination package",
+    "confirm_new_package": "Confirm new package",
+    "barcode": "Barcode",
+    "expiry_date": "Expiry date",
+    "vendor_code": "Vendor code",
+    "qty_done": "Qty done",
+    "lot": "Lot",
+    "pack": "Pack",
+    "packs_available": "Packs available",
+    "find_an_operation": "Find an operation"
+  }
+}
