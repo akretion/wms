@@ -134,12 +134,12 @@ const Reception = {
                     />
                 </v-card>
                 <div class="button-list button-vertical-list full">
-                    <v-row align="center">
+                    <v-row align="center" v-if="!state.data.reception_without_pack">
                         <v-col class="text-center" cols="12">
                             <btn-action @click="state.on_add_to_existing_pack">Existing pack</btn-action>
                         </v-col>
                     </v-row>
-                    <v-row align="center">
+                    <v-row align="center" v-if="!state.data.reception_without_pack">
                         <v-col class="text-center" cols="12">
                             <btn-action @click="state.on_create_new_pack">New pack</btn-action>
                         </v-col>
@@ -329,16 +329,16 @@ const Reception = {
                 fields: [
                     {
                         path: "product.barcode",
-                        label: "Barcode",
+                        label: this.$t("reception.barcode"),
                     },
                     {
                         path: "product.supplier_code",
-                        label: "Vendor code",
+                        label: this.$t("reception.vendor_code"),
                     },
                     {path: "lot.name", label: "Lot"},
                     {
                         path: "lot.expiration_date",
-                        label: "Expiry date",
+                        label: this.$t("reception.expiry_date"),
                         renderer: (rec, field) => {
                             return this.utils.display.render_field_date(rec, field);
                         },
@@ -360,15 +360,15 @@ const Reception = {
                     fields: [
                         {
                             path: "product.barcode",
-                            label: "Barcode",
+                            label: this.$t("reception.barcode"),
                         },
                         {
                             path: "product.supplier_code",
-                            label: "Vendor code",
+                            label: this.$t("reception.vendor_code"),
                         },
                         {
                             path: "quantity_done",
-                            label: "Qty done",
+                            label: this.$t("reception.qty_done"),
                             display_no_value: true,
                         },
                     ],
@@ -381,27 +381,27 @@ const Reception = {
                 fields: [
                     {
                         path: "product.supplier_code",
-                        label: "Vendor code",
+                        label: this.$t("reception.vendor_code"),
                     },
                     {
                         path: "product.barcode",
-                        label: "Barcode",
+                        label: this.$t("reception.barcode"),
                         action_val_path: "barcode",
                     },
                     {
                         path: "lot.name",
-                        label: "Lot",
+                        label: this.$t("reception.lot"),
                     },
                     {
                         path: "lot.expiration_date",
-                        label: "Expiry date",
+                        label: this.$t("reception.expiry_date"),
                         renderer: (rec, field) => {
                             return this.utils.display.render_field_date(rec, field);
                         },
                     },
                     {
                         path: "package_dest.name",
-                        label: "Pack",
+                        label: this.$t("reception.pack"),
                         klass: "loud",
                     },
                 ],
@@ -435,7 +435,7 @@ const Reception = {
         },
         manual_select_options_for_select_dest_package: function () {
             return {
-                group_title_default: "Packs available",
+                group_title_default: this.$t("reception.packs_available"),
                 group_color: this.utils.colors.color_for("screen_step_todo"),
                 list_item_component: "list-item",
                 list_item_options: {
@@ -497,7 +497,7 @@ const Reception = {
             initial_state_key: "select_document",
             scan_destination_qty: 0,
             states: this._get_states(),
-            filter_input_placeholder: "Find an operation",
+            filter_input_placeholder: this.$t("reception.find_an_operation"),
             filtered_pickings: [],
         };
     },

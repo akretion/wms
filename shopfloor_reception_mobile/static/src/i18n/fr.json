@@ -1,0 +1,22 @@
+{
+  "reception": {
+    "choose_an_operation": "Choisir une opération",
+    "scan_document_product_package": "Scanner document / produit / colis",
+    "select_a_move": "Sélectionner un mouvement",
+    "scan_product_package": "Scanner produit / colis",
+    "confirm_done": "Confirmer terminé",
+    "set_lot": "Définir le lot",
+    "set_quantity": "Définir la quantité",
+    "set_destination": "Définir la destination",
+    "select_destination_package": "Sélectionner le colis de destination",
+    "confirm_new_package": "Confirmer le nouveau colis",
+    "barcode": "Code-barres",
+    "expiry_date": "Date d'expiration",
+    "vendor_code": "Code fournisseur",
+    "qty_done": "Qté faite",
+    "lot": "Lot",
+    "pack": "Colis",
+    "packs_available": "Colis disponibles",
+    "find_an_operation": "Trouver une opération"
+  }
+}
