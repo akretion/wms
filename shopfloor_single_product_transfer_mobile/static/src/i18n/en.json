@@ -1,0 +1,18 @@
+{
+  "single_product_transfer": {
+    "working_from_location": "Working from location {location}",
+    "working_on_package": "Working on package {package}",
+    "lot": "Lot",
+    "source_location": "Source location",
+    "ongoing": "Ongoing",
+    "available": "Available",
+    "scan_location_or_package": "Scan location or package",
+    "scan_location_or_package_placeholder": "Scan location / package",
+    "select_product": "Select product",
+    "scan_product_or_lot_placeholder": "Scan product / lot",
+    "set_quantity": "Set quantity",
+    "scan_product_packaging_lot_location_package_placeholder": "Scan product / packaging / lot / location / package",
+    "set_location": "Set location",
+    "scan_location_placeholder": "Scan location"
+  }
+}
