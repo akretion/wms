@@ -5,7 +5,6 @@
 
 import {ScenarioBaseMixin} from "/shopfloor_mobile_base/static/wms/src/scenario/mixins.js";
 import {process_registry} from "/shopfloor_mobile_base/static/wms/src/services/process_registry.js";
-import {mapI18n} from "/shopfloor_mobile_base/static/wms/src/utils/i18n.js";
 
 const SingleProductTransfer = {
     mixins: [ScenarioBaseMixin],
@@ -96,7 +95,7 @@ const SingleProductTransfer = {
             <last-operation v-if="state_is('show_completion_info')" v-on:confirm="state.on_confirm"></last-operation>
         </Screen>
     `,
-    methods: mapI18n({
+    methods: {
         screen_title: function () {
             if (_.isEmpty(this.current_doc()) || this.state_is("select_document")) {
                 return this.menu_item().name;
@@ -209,7 +208,7 @@ const SingleProductTransfer = {
                 false
             );
         },
-    }),
+    },
     data: function () {
         return {
             usage: "single_product_transfer",
