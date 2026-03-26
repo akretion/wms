@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
     Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
     @author Simone Orsi <simahawk@gmail.com>
@@ -19,6 +19,11 @@
             <script
                 id="script_scenario_single_product_transfer"
                 t-attf-src="/shopfloor_single_product_transfer_mobile/static/src/scenario/single_product_transfer.js?v=#{mod_version}"
+                type="module"
+            />
+            <script
+                id="script_add_single_product_transfer_translations_registry"
+                t-attf-src="/shopfloor_single_product_transfer_mobile/static/src/i18n/add_translations_to_registry.js?v=#{mod_version}"
                 type="module"
             />
         </script>
