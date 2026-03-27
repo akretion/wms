@@ -41,6 +41,13 @@ class ShopfloorMenu(models.Model):
     ignore_location_ongoing_operation_is_possible = fields.Boolean(
         compute="_compute_ignore_location_ongoing_operation_is_possible"
     )
+    filtered_warehouse_ids = fields.Many2many(
+        comodel_name="stock.warehouse",
+        string="Filter inventory to these warehouses only",
+    )
+    filtered_warehouse_ids_is_possible = fields.Boolean(
+        compute="_compute_filtered_warehouse_ids_is_possible"
+    )
 
     @api.depends("scenario_id")
     def _compute_use_existing_inventory_is_possible(self):
@@ -91,4 +98,11 @@ class ShopfloorMenu(models.Model):
         for menu in self:
             menu.ignore_location_ongoing_operation_is_possible = (
                 menu.scenario_id.has_option("ignore_location_ongoing_operation")
+            )
+
+    @api.depends("scenario_id")
+    def _compute_filtered_warehouse_ids_is_possible(self):
+        for menu in self:
+            menu.filtered_warehouse_ids_is_possible = menu.scenario_id.has_option(
+                "filtered_warehouse_ids"
             )
