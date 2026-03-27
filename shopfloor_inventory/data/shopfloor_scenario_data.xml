@@ -3,13 +3,14 @@
         <field name="name">Inventory</field>
         <field name="key">inventory</field>
         <field name="options_edit">
-{
-    "use_existing_inventory": true,
-    "inventory_zero_counted_quantity": true,
-    "force_inventory_add_product": true,
-    "display_location_content": true,
-    "ignore_location_ongoing_operation": true
-}
+            {
+            "use_existing_inventory": true,
+            "inventory_zero_counted_quantity": true,
+            "force_inventory_add_product": true,
+            "display_location_content": true,
+            "ignore_location_ongoing_operation": true,
+            "filtered_warehouse_ids": true
+            }
         </field>
     </record>
 </odoo>

@@ -1,12 +1,12 @@
 # Copyright 2020 Akretion (http://www.akretion.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import _
-from odoo.osv import expression
-
 from odoo.addons.base_rest.components.service import to_int
 from odoo.addons.component.core import Component
 from odoo.addons.shopfloor_base.exceptions import ShopfloorError
+from odoo.osv import expression
+
+from odoo import _
 
 
 class ShopfloorInventory(Component):
@@ -131,15 +131,23 @@ class ShopfloorInventory(Component):
             domain = expression.AND([domain, [("name", "ilike", name_fragment)]])
         if inventory_ids:
             domain = expression.AND([domain, [("id", "in", inventory_ids)]])
+        if self.work.menu.filtered_warehouse_ids:
+            warehouse_locations = []
+            for wh_id in self.work.menu.filtered_warehouse_ids:
+                warehouse_locations.append(wh_id.view_location_id.id)
+            domain = expression.AND(
+                [domain, [("location_ids", "child_of", warehouse_locations)]]
+            )
         records = self.env["stock.inventory"].search(domain, order="id asc")
-        #        records = records.filtered(self._inventory_filter)
         return records
 
     def _select_an_inventory(self, inventories):
         # first look for started inventory assigned to self
         candidates = inventories.filtered(
-            lambda inv: inv.user_id == self.env.user
-            and any(loc.state != "pending" for loc in inv.sub_location_ids)
+            lambda inv: (
+                inv.user_id == self.env.user
+                and any(loc.state != "pending" for loc in inv.sub_location_ids)
+            )
         )
         if candidates:
             return candidates[0]
