@@ -174,7 +174,7 @@ export const reception_states = function () {
                 cancel: "on_cancel",
             },
             on_qty_edit: (qty) => {
-                this.scan_destination_qty = parseInt(qty, 10);
+                this.scan_destination_qty = parseFloat(qty);
             },
             on_scan: (barcode) => {
                 this.wait_call(

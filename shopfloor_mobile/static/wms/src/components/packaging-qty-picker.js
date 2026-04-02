@@ -17,23 +17,28 @@ export var PackagingQtyPickerMixin = {
     },
     data: function () {
         return {
-            qty: parseInt(this.qtyInit, 10),
+            qty: Number(this.qtyInit),
             qty_by_pkg: {},
             qty_by_pkg_manual: false,
         };
     },
     watch: {
         qtyInit: function () {
-            this.qty = parseInt(this.qtyInit, 10);
+            this.qty = Number(this.qtyInit);
         },
         qty: {
-            handler() {
+            handler(newVal, oldVal) {
+                if (this._is_computing) return;
+
                 if (!this.qty_by_pkg_manual) {
+                    this._is_updating_from_total = true; // Verrou
                     this.qty_by_pkg = this.product_qty_by_packaging();
+                    this.$nextTick(() => {
+                        this._is_updating_from_total = false;
+                    });
                 }
                 this.qty_by_pkg_manual = false;
             },
-            immediate: true,
         },
     },
     methods: {
@@ -103,18 +108,29 @@ export var PackagingQtyPickerMixin = {
          * @param {*} qty
          */
         _qty_by_pkg: function (pkg_qty, qty) {
-            const precision = this.unit_uom.rounding || 3;
-            const remainder = _.round(qty % pkg_qty, precision);
-            const qty_for_pkg = (qty - remainder) / pkg_qty;
+            const precision = this.unit_uom.rounding
+                ? Math.round(Math.abs(Math.log10(this.unit_uom.rounding)))
+                : 3;
+            const qty_for_pkg = Math.floor(_.round(qty / pkg_qty, 10));
+
+            const remainder = _.round(qty - qty_for_pkg * pkg_qty, precision);
+
             return [qty_for_pkg, remainder];
         },
+
         _compute_qty: function () {
             const self = this;
             let value = 0;
+            const precision = this.unit_uom.rounding
+                ? Math.round(Math.abs(Math.log10(this.unit_uom.rounding)))
+                : 3;
             _.forEach(this.qty_by_pkg, function (qty, id) {
-                value += self.packaging_by_id(id).qty * qty;
+                const pkg = self.packaging_by_id(id);
+                if (pkg && qty) {
+                    value += _.round(pkg.qty * qty, 10);
+                }
             });
-            return value;
+            return _.round(value, precision);
         },
         compute_qty: function () {
             this.qty = this._compute_qty();
@@ -199,9 +215,14 @@ export var PackagingQtyPicker = Vue.component("packaging-qty-picker", {
         qty_by_pkg: {
             deep: true,
             handler: function () {
-                // prevent watched qty to update again qty_by_pkg
+                if (this._is_updating_from_total) return;
+
                 this.qty_by_pkg_manual = true;
+                this._is_computing = true;
                 this.compute_qty();
+                this.$nextTick(() => {
+                    this._is_computing = false;
+                });
                 this.qty_by_pkg_manual = false;
             },
         },
@@ -247,7 +268,7 @@ export var PackagingQtyPicker = Vue.component("packaging-qty-picker", {
             <v-expansion-panel-header expand-icon="mdi-menu-down">
                 <v-row dense align="center">
                     <v-col cols="5" md="3">
-                        <input type="number" v-model="qty" class="qty-done" :style="qty_color"
+                        <input type="number" step="any" v-model="qty" class="qty-done" :style="qty_color"
                             v-on:click.stop
                             :readonly="readonly"
                         />
