@@ -1194,12 +1194,13 @@ class Reception(Component):
         savepoint = self._actions_for("savepoint").new()
         line.qty_done = quantity
         compare = self._set_quantity__check_quantity_done(line)
-        if compare == 1:
-            # If move's qty_done > to move's qty_todo, rollback and return an error
-            savepoint.rollback()
-            return self._response_for_set_quantity(
-                picking, line, message=self.msg_store.unable_to_pick_qty()
-            )
+        # Allow to process quantity higher than planned quantity
+        # if compare == 1:
+        #     # If move's qty_done > to move's qty_todo, rollback and return an error
+        #     savepoint.rollback()
+        #     return self._response_for_set_quantity(
+        #         picking, line, message=self.msg_store.unable_to_pick_qty()
+        #     )
         savepoint.release()
         # Only if total_qty_done < qty_todo, we split the move line
         if compare == -1:
