@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="shopfloor_menu_form_view" model="ir.ui.view">
         <field name="model">shopfloor.menu</field>
@@ -48,6 +48,19 @@
                         invisible="1"
                     />
                     <field name="ignore_location_ongoing_operation" />
+                </group>
+                <group
+                    name="filtered_warehouse_ids"
+                    attrs="{'invisible': [('filtered_warehouse_ids_is_possible', '=', False)]}"
+                >
+                    <field
+                        name="filtered_warehouse_ids_is_possible"
+                        invisible="1"
+                    />
+                    <field name="filtered_warehouse_ids"
+                        widget="many2many_tags"
+                        options="{'no_create': 1}"
+                    />
                 </group>
             </group>
         </field>
