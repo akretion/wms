@@ -57,6 +57,16 @@ const Inventory = {
             </div>
 
             <div v-if="state_is('scan_product')" >
+                <div v-if="(!_.isEmpty(_.result(state, 'data.lines')) && _.isEmpty(_.result(state, 'data.current_line'))) || !_.result(state, 'data.display_location_content')" >
+                    <div class="button-list button-vertical-list full">
+                        <v-row align="center">
+                            <v-col class="text-center" cols="12">
+                                <btn-action action="todo" @click="state.on_confirm">{{ $t('inventory.button.confirm_location') }}</btn-action>
+                            </v-col>
+                        </v-row>
+                    </div>
+                </div>
+
                 <div v-if="_.result(state, 'data.current_line')" >
                     <inventory-line-detail
                         v-if="state_is('scan_product')"
@@ -66,6 +76,16 @@ const Inventory = {
                         v-on:confirm="state.on_confirm_qty"
                         />
                 </div>
+                <div v-if="_.result(state, 'data.current_line')" >
+                    <div class="button-list button-vertical-list full">
+                        <v-row align="center">
+                            <v-col class="text-center" cols="12">
+                                <btn-action action="todo" @click="state.on_confirm_qty">{{ $t('inventory.button.confirm_qty') }}</btn-action>
+                            </v-col>
+                        </v-row>
+                    </div>
+                </div>
+
                 <div v-for="line in state.data.lines">
                     <item-detail-card
                         :key="make_state_component_key(['inventory-line-state', line.product.id])"
@@ -84,24 +104,6 @@ const Inventory = {
                         <v-row align="center">
                             <v-col class="text-center" cols="12">
                                 <btn-action action="todo" @click="state.on_confirm_empty">{{ $t('inventory.button.confirm') }}</btn-action>
-                            </v-col>
-                        </v-row>
-                    </div>
-                </div>
-                <div v-if="_.result(state, 'data.current_line')" >
-                    <div class="button-list button-vertical-list full">
-                        <v-row align="center">
-                            <v-col class="text-center" cols="12">
-                                <btn-action action="todo" @click="state.on_confirm_qty">{{ $t('inventory.button.confirm_qty') }}</btn-action>
-                            </v-col>
-                        </v-row>
-                    </div>
-                </div>
-                <div v-if="(!_.isEmpty(_.result(state, 'data.lines')) && _.isEmpty(_.result(state, 'data.current_line'))) || !_.result(state, 'data.display_location_content')" >
-                    <div class="button-list button-vertical-list full">
-                        <v-row align="center">
-                            <v-col class="text-center" cols="12">
-                                <btn-action action="todo" @click="state.on_confirm">{{ $t('inventory.button.confirm_location') }}</btn-action>
                             </v-col>
                         </v-row>
                     </div>

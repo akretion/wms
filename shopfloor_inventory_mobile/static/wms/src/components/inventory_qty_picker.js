@@ -151,7 +151,7 @@ export var InventoryQtyPickerMixin = {
                 unit = {
                     id: "uom-" + this.opts.uom.id,
                     name: this.opts.uom.name,
-                    qty: this.opts.uom.factor,
+                    qty: 1,
                     rounding: this.opts.uom.rounding,
                     is_unit: true,
                 };
