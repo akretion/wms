@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<odoo>
+    <record id="shopfloor_menu" model="ir.ui.view">
+        <field name="name">shopfloor.menu.inherit.view.form</field>
+        <field name="model">shopfloor.menu</field>
+        <field name="inherit_id" ref="shopfloor.shopfloor_menu_form_view" />
+        <field name="arch" type="xml">
+            <group name="allow_alternative_destination_package" position="after">
+                <group
+                    name="reception_without_pack"
+                    attrs="{'invisible': [('reception_without_pack_is_possible', '=', False)]}"
+                >
+                    <field name="reception_without_pack_is_possible" invisible="1" />
+                    <field name="reception_without_pack" />
+                </group>
+            </group>
+
+        </field>
+    </record>
+
+</odoo>
