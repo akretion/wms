@@ -14,6 +14,7 @@ from odoo.addons.component.core import AbstractComponent
 
 from ..actions.base_action import get_actions_for
 from ..apispec.service_apispec import ShopfloorRestServiceAPISpec
+from ..exceptions import ShopfloorDispatchError, ShopfloorError
 
 
 class BaseShopfloorService(AbstractComponent):
@@ -40,7 +41,19 @@ class BaseShopfloorService(AbstractComponent):
 
     def dispatch(self, method_name, *args, params=None):
         self._validate_headers_update_work_context(request, method_name)
-        return super().dispatch(method_name, *args, params=params)
+        try:
+            return super().dispatch(method_name, *args, params=params)
+        except ShopfloorError as e:
+            res = self._response(
+                message={"message_type": e.message_type, "body": str(e)},
+                base_response=e.base_response,
+                data=e.data,
+                next_state=e.next_state,
+                popup=e.popup,
+            )
+            method = getattr(self, method_name, object())
+            payload = self._prepare_response(method, res)
+            raise ShopfloorDispatchError(payload)
 
     def _actions_for(self, usage, **kw):
         return get_actions_for(self, usage, **kw)

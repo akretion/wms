@@ -1,6 +1,8 @@
 # Copyright 2020 Camptocamp SA (http://www.camptocamp.com)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
+from odoo.addons.shopfloor_base.exceptions import ShopfloorDispatchError
+
 from .test_single_pack_transfer_base import SinglePackTransferCommonBase
 
 
@@ -62,11 +64,10 @@ class TestSinglePackTransferPutaway(SinglePackTransferCommonBase):
             )
             self._update_qty_in_location(location, self.product_a, 10, package=package)
 
-        response = self.service.dispatch(
-            "start", params={"barcode": self.shelf1.barcode}
-        )
-        self.assert_response(
-            response,
+        with self.assertRaises(ShopfloorDispatchError) as error:
+            self.service.dispatch("start", params={"barcode": self.shelf1.barcode})
+        self.assert_exception_response(
+            error,
             next_state="start",
             message=self.service.msg_store.no_putaway_destination_available(),
         )

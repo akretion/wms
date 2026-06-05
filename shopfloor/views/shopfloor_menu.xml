@@ -168,7 +168,7 @@
                         invisible="1"
                     />
                     <field name="allow_alternative_destination_package" />
-                </group>
+              </group>
             </group>
         </field>
     </record>
