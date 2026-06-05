@@ -1,0 +1,18 @@
+{
+  "single_product_transfer": {
+    "working_from_location": "Travail depuis l'emplacement {location}",
+    "working_on_package": "Travail sur le colis {package}",
+    "lot": "Lot",
+    "source_location": "Emplacement source",
+    "ongoing": "En cours",
+    "available": "Disponible",
+    "scan_location_or_package": "Scanner un emplacement ou un colis",
+    "scan_location_or_package_placeholder": "Scanner emplacement / colis",
+    "select_product": "Sélectionner un produit",
+    "scan_product_or_lot_placeholder": "Scanner produit / lot",
+    "set_quantity": "Définir la quantité",
+    "scan_product_packaging_lot_location_package_placeholder": "Scanner produit / conditionnement / lot / emplacement / colis",
+    "set_location": "Définir l'emplacement",
+    "scan_location_placeholder": "Scanner emplacement"
+  }
+}

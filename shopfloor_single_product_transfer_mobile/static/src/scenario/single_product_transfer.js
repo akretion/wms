@@ -122,7 +122,11 @@ const SingleProductTransfer = {
         },
         current_location_msg: function () {
             if (this.current_location().id) {
-                return {title: "Working from location " + this.current_location().name};
+                return {
+                    title: this.$t("single_product_transfer.working_from_location", {
+                        location: this.current_location().name,
+                    }),
+                };
             }
             return {};
         },
@@ -135,7 +139,11 @@ const SingleProductTransfer = {
         },
         current_package_msg: function () {
             if (this.current_package().id) {
-                return {title: "Working on package " + this.current_package().name};
+                return {
+                    title: this.$t("single_product_transfer.working_on_package", {
+                        package: this.current_package().name,
+                    }),
+                };
             }
             return {};
         },
@@ -143,20 +151,31 @@ const SingleProductTransfer = {
             return {
                 title_action_field: {action_val_path: "product.barcode"},
                 key_title: "product.display_name",
-                fields: [{path: "lot.name", label: "Lot", action_val_path: "lot.name"}],
+                fields: [
+                    {
+                        path: "lot.name",
+                        label: this.$t("single_product_transfer.lot"),
+                        action_val_path: "lot.name",
+                    },
+                ],
             };
         },
         move_line_options_for_set_location: function () {
             return {
                 key_title: "product.display_name",
                 loud_labels: true,
-                fields: [{path: "location_src.name", label: "Source Location"}],
+                fields: [
+                    {
+                        path: "location_src.name",
+                        label: this.$t("single_product_transfer.source_location"),
+                    },
+                ],
             };
         },
         linear_progress_options_for_select_product: function () {
             return {
-                done_label: "Ongoing",
-                todo_label: "Available",
+                done_label: this.$t("single_product_transfer.ongoing"),
+                todo_label: this.$t("single_product_transfer.available"),
                 color: "lime",
             };
         },
@@ -202,8 +221,12 @@ const SingleProductTransfer = {
                 },
                 select_location_or_package: {
                     display_info: {
-                        title: "Scan a location or a package",
-                        scan_placeholder: "Scan location / package",
+                        title: this.$t(
+                            "single_product_transfer.scan_location_or_package"
+                        ),
+                        scan_placeholder: this.$t(
+                            "single_product_transfer.scan_location_or_package_placeholder"
+                        ),
                     },
                     on_scan: (scanned) => {
                         this.wait_call(
@@ -215,8 +238,10 @@ const SingleProductTransfer = {
                 },
                 select_product: {
                     display_info: {
-                        title: "Select a product",
-                        scan_placeholder: "Scan product / lot",
+                        title: this.$t("single_product_transfer.select_product"),
+                        scan_placeholder: this.$t(
+                            "single_product_transfer.scan_product_or_lot_placeholder"
+                        ),
                     },
                     on_scan: (scanned) => {
                         const params = this.get_select_product_scan_params(scanned);
@@ -228,9 +253,10 @@ const SingleProductTransfer = {
                 },
                 set_quantity: {
                     display_info: {
-                        title: "Set quantity",
-                        scan_placeholder:
-                            "Scan product / packaging / lot / location / package",
+                        title: this.$t("single_product_transfer.set_quantity"),
+                        scan_placeholder: this.$t(
+                            "single_product_transfer.scan_product_packaging_lot_location_package_placeholder"
+                        ),
                     },
                     events: {
                         qty_edit: "on_qty_update",
@@ -259,8 +285,10 @@ const SingleProductTransfer = {
                 },
                 set_location: {
                     display_info: {
-                        title: "Set location",
-                        scan_placeholder: "Scan location",
+                        title: this.$t("single_product_transfer.set_location"),
+                        scan_placeholder: this.$t(
+                            "single_product_transfer.scan_location_placeholder"
+                        ),
                     },
                     on_scan: (scanned) => {
                         this.wait_call(
