@@ -451,6 +451,169 @@ class ClusterPickingSetDestinationAllCase(ClusterPickingUnloadingCommonCase):
         )
 
 
+class ClusterPickingValidateDestinationAllCase(ClusterPickingUnloadingCommonCase):
+    """Tests covering the /validate_destination_all endpoint
+
+    All the picked lines go to the same destination. The endpoint uses the
+    expected destination directly without any barcode scan.
+    """
+
+    def test_validate_destination_all_ok(self):
+        """Validate destination on all lines for the full batch and end the process"""
+        move_lines = self.move_lines
+        self._set_dest_package_and_done(move_lines[:2], self.bin1)
+        self._set_dest_package_and_done(move_lines[2:], self.bin2)
+        move_lines.write({"location_dest_id": self.packing_location.id})
+
+        response = self.service.dispatch(
+            "validate_destination_all",
+            params={"picking_batch_id": self.batch.id},
+        )
+        self.assertRecordValues(
+            move_lines.mapped("picking_id"), [{"state": "done"}, {"state": "done"}]
+        )
+        self.assertRecordValues(
+            move_lines,
+            [
+                {
+                    "shopfloor_unloaded": True,
+                    "qty_done": 10,
+                    "state": "done",
+                    "location_dest_id": self.packing_location.id,
+                },
+                {
+                    "shopfloor_unloaded": True,
+                    "qty_done": 10,
+                    "state": "done",
+                    "location_dest_id": self.packing_location.id,
+                },
+                {
+                    "shopfloor_unloaded": True,
+                    "qty_done": 10,
+                    "state": "done",
+                    "location_dest_id": self.packing_location.id,
+                },
+            ],
+        )
+        self.assertRecordValues(self.batch, [{"state": "done"}])
+        self.assert_response(
+            response,
+            next_state="start",
+            message={"message_type": "success", "body": "Batch Transfer complete"},
+        )
+
+    def test_validate_destination_all_remaining_lines(self):
+        """Validate destination on all lines for a part of the batch"""
+        lines_to_unload = self.move_lines[:2]
+        self._set_dest_package_and_done(lines_to_unload, self.bin1)
+        lines_to_unload.write({"location_dest_id": self.packing_location.id})
+
+        response = self.service.dispatch(
+            "validate_destination_all",
+            params={"picking_batch_id": self.batch.id},
+        )
+        self.assertRecordValues(self.one_line_picking, [{"state": "done"}])
+        self.assertRecordValues(self.two_lines_picking, [{"state": "assigned"}])
+        self.assertRecordValues(
+            self.move_lines,
+            [
+                {
+                    "shopfloor_unloaded": True,
+                    "qty_done": 10,
+                    "state": "done",
+                    "picking_id": self.one_line_picking.id,
+                    "location_dest_id": self.packing_location.id,
+                },
+                {
+                    "shopfloor_unloaded": True,
+                    "qty_done": 10,
+                    "state": "assigned",
+                    "picking_id": self.two_lines_picking.id,
+                    "location_dest_id": self.packing_location.id,
+                },
+                {
+                    "shopfloor_unloaded": False,
+                    "qty_done": 0,
+                    "state": "assigned",
+                    "picking_id": self.two_lines_picking.id,
+                    "location_dest_id": self.packing_location.id,
+                },
+            ],
+        )
+        self.assertRecordValues(self.batch, [{"state": "in_progress"}])
+        self.assert_response(
+            response,
+            next_state="start_line",
+            data=self._line_data(self.move_lines[2]),
+            message={"body": "Batch Transfer line done", "message_type": "success"},
+        )
+
+    def test_validate_destination_all_picking_unassigned(self):
+        """Validate destination on lines for some transfers of the batch.
+
+        The remaining transfers stay as unavailable (confirmed) and are removed
+        from the batch when this one is validated.
+        """
+        self.batch.picking_ids.do_unreserve()
+        location = self.one_line_picking.location_id
+        product = self.one_line_picking.move_lines.product_id
+        qty = self.one_line_picking.move_lines.product_uom_qty
+        self._update_qty_in_location(location, product, qty)
+        self.one_line_picking.action_assign()
+        lines = self.one_line_picking.move_line_ids
+        self._set_dest_package_and_done(lines, self.bin1)
+        lines.write({"location_dest_id": self.packing_location.id})
+
+        response = self.service.dispatch(
+            "validate_destination_all",
+            params={"picking_batch_id": self.batch.id},
+        )
+        self.assertRecordValues(self.one_line_picking, [{"state": "done"}])
+        self.assertRecordValues(self.two_lines_picking, [{"state": "confirmed"}])
+        self.assertRecordValues(self.batch, [{"state": "done"}])
+        self.assertEqual(self.one_line_picking.batch_id, self.batch)
+        self.assertFalse(self.two_lines_picking.batch_id)
+
+        self.assert_response(
+            response,
+            next_state="start",
+            message=self.service.msg_store.batch_transfer_complete(),
+        )
+
+    def test_validate_destination_all_but_different_dest(self):
+        """Endpoint was called but destinations are different"""
+        move_lines = self.move_lines
+        self._set_dest_package_and_done(move_lines, self.bin1)
+        move_lines[:2].write({"location_dest_id": self.packing_a_location.id})
+        move_lines[2:].write({"location_dest_id": self.packing_b_location.id})
+
+        response = self.service.dispatch(
+            "validate_destination_all",
+            params={"picking_batch_id": self.batch.id},
+        )
+        location = move_lines[0].location_dest_id
+        data = self._data_for_batch(self.batch, location, pack=self.bin1)
+        self.assert_response(
+            response,
+            next_state="unload_single",
+            data=data,
+        )
+
+    def test_validate_destination_all_completion_info(self):
+        """Validate destination shows completion info popup when configured"""
+        move_lines = self.move_lines
+        self._set_dest_package_and_done(move_lines[:2], self.bin1)
+        self._set_dest_package_and_done(move_lines[2:], self.bin2)
+        move_lines.write({"location_dest_id": self.packing_location.id})
+
+        response = self.service.dispatch(
+            "validate_destination_all",
+            params={"picking_batch_id": self.batch.id},
+        )
+        self.assertIn("popup", response)
+        self.assertTrue(response["popup"])
+
+
 class ClusterPickingUnloadSplitCase(ClusterPickingUnloadingCommonCase):
     """Tests covering the /unload_split endpoint
 

@@ -170,6 +170,15 @@ const ClusterPicking = {
                 <div class="button-list button-vertical-list full">
                     <v-row align="center">
                         <v-col class="text-center" cols="12">
+                            <v-btn color="primary" @click="state.on_validate">
+                                {{ $t("cluster_picking.unload_all.validate") }}
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                </div>
+                <div class="button-list button-vertical-list full">
+                    <v-row align="center">
+                        <v-col class="text-center" cols="12">
                             <v-btn color="primary" @click="$emit('action', 'action_split')">Split [TODO]</v-btn>
                         </v-col>
                     </v-row>
@@ -487,6 +496,13 @@ const ClusterPicking = {
                                 picking_batch_id: this.current_batch().id,
                                 barcode: scanned.text,
                                 confirmation: confirmation,
+                            })
+                        );
+                    },
+                    on_validate: () => {
+                        this.wait_call(
+                            this.odoo.call("validate_destination_all", {
+                                picking_batch_id: this.current_batch().id,
                             })
                         );
                     },

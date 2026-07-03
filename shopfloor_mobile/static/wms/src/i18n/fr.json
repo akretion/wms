@@ -16,6 +16,7 @@
   "cluster_picking.start_line.scan_placeholder": "Scannez l'emplacement / la boite / le produit / le lot",
   "cluster_picking.start_line.title": "Sélectionnez le produit en scannant quelque chose",
   "cluster_picking.unload_all.title": "Décharger tous les compartiments",
+  "cluster_picking.unload_all.validate": "Valider",
   "cluster_picking.unload_set_destination.title": "Définir un emplacement de destination",
   "cluster_picking.unload_single.title": "Décharger un seul compartiment",
   "location_content_transfer.scan_destination.title": "Définissez une qté et scannez l'emplacement de destination",
