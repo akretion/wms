@@ -4,7 +4,7 @@
 from markupsafe import Markup
 
 from odoo import api, fields, models
-from odoo.tools.float_utils import float_compare
+from odoo.tools.float_utils import float_compare, float_is_zero
 
 
 class StockMove(models.Model):
@@ -18,6 +18,13 @@ class StockMove(models.Model):
             move.quantity_picked = sum(
                 ml.qty_picked for ml in move.move_line_ids if ml.picked
             )
+
+    @property
+    def has_quantity_reserved(self):
+        self.ensure_one()
+        return not float_is_zero(
+            self.quantity, precision_rounding=self.product_uom.rounding
+        )
 
     def _qty_is_satisfied(self):
         compare = float_compare(
