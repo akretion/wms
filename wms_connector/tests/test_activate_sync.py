@@ -50,14 +50,14 @@ class TestActivateSync(SavepointCase):
             [], limit=3
         )
         self.warehouse.wms_export_product_filter_id.domain = (
-            '[("id", "in", {})]'.format((match_unlink + match_keep).ids)
+            f'[("id", "in", {(match_unlink + match_keep).ids})]'
         )
         self.warehouse.refresh_wms_products()
         self.assertEqual(
             self.warehouse.wms_product_sync_ids.product_id, (match_unlink + match_keep)
         )
         self.warehouse.wms_export_product_filter_id.domain = (
-            '[("id", "in", {})]'.format((match_keep + nomatch_match).ids)
+            f'[("id", "in", {(match_keep + nomatch_match).ids})]'
         )
         self.warehouse.refresh_wms_products()
         self.assertEqual(

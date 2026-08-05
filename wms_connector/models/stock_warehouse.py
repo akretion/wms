@@ -216,7 +216,7 @@ class StockWarehouse(models.Model):
         self, filetype, name_fragment="", method_type="export", filepath="IN/"
     ):
         return {
-            "name": "WMS task for {} {}".format(self.name, name_fragment),
+            "name": f"WMS task for {self.name} {name_fragment}",
             "method_type": method_type,
             "filepath": filepath,
             "backend_id": self.env.ref("storage_backend.default_storage_backend").id,
@@ -225,7 +225,7 @@ class StockWarehouse(models.Model):
 
     def _prepare_wms_cron_vals(self, code="", name_fragment=""):
         return {
-            "name": "WMS cron for {} {}".format(self.name, name_fragment),
+            "name": f"WMS cron for {self.name} {name_fragment}",
             "active": False,
             "interval_type": "days",
             "interval_number": 1,

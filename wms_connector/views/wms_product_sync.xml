@@ -2,7 +2,6 @@
 <!-- Copyright 2023 Akretion
      License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
 <odoo>
-
     <record model="ir.ui.view" id="wms_product_sync_form_view">
         <field name="name">wms.product.sync.form (in wms_connector)</field>
         <field name="model">wms.product.sync</field>
@@ -57,5 +56,4 @@
         <field name="action" ref="wms_product_sync_act_window" />
         <field name="sequence" eval="16" />
     </record>
-
 </odoo>
