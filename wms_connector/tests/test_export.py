@@ -9,13 +9,14 @@ FN_EXPORT_VALS = (
 
 
 class TestExportFile(WmsConnectorCase):
-    def setUp(self):
-        super().setUp()
-        self.warehouse.active_wms_sync = True
-        self.cron_export_product = self.warehouse.wms_export_product_cron_id
-        self.cron_export_picking_in = self.warehouse.wms_export_picking_in_cron_id
-        self.cron_export_picking_out = self.warehouse.wms_export_picking_out_cron_id
-        self.demo_product = self.env.ref("product.product_product_1")
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.warehouse.active_wms_sync = True
+        cls.cron_export_product = cls.warehouse.wms_export_product_cron_id
+        cls.cron_export_picking_in = cls.warehouse.wms_export_picking_in_cron_id
+        cls.cron_export_picking_out = cls.warehouse.wms_export_picking_out_cron_id
+        cls.demo_product = cls.env.ref("product.product_product_1")
 
     def test_export_filter(self):
         self.warehouse.refresh_wms_products()

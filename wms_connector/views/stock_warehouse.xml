@@ -39,26 +39,47 @@
                 <page
                     name="wms_sync"
                     string="Synchronization"
-                    attrs="{'invisible': [('active_wms_sync', '=', False)]}"
+                    invisible="not active_wms_sync"
                 >
                     <group>
-                        <field name="wms_export_task_id" />
-                        <field name="wms_import_confirm_delivery_task_id" />
-                        <field name="wms_import_confirm_reception_task_id" />
-                        <field name="wms_import_update_inventory_task_id" />
+                        <field name="wms_export_task_id" readonly="True" />
+                        <field
+                            name="wms_import_confirm_delivery_task_id"
+                            readonly="True"
+                        />
+                        <field
+                            name="wms_import_confirm_reception_task_id"
+                            readonly="True"
+                        />
+                        <field
+                            name="wms_import_update_inventory_task_id"
+                            readonly="True"
+                        />
                     </group>
                     <group>
-                        <field name="wms_export_product_cron_id" />
-                        <field name="wms_export_picking_in_cron_id" />
-                        <field name="wms_export_picking_out_cron_id" />
-                        <field name="wms_import_confirm_delivery_cron_id" />
-                        <field name="wms_import_confirm_reception_cron_id" />
-                        <field name="wms_import_update_inventory_cron_id" />
+                        <field name="wms_export_product_cron_id" readonly="True" />
+                        <field name="wms_export_picking_in_cron_id" readonly="True" />
+                        <field name="wms_export_picking_out_cron_id" readonly="True" />
+                        <field
+                            name="wms_import_confirm_delivery_cron_id"
+                            readonly="True"
+                        />
+                        <field
+                            name="wms_import_confirm_reception_cron_id"
+                            readonly="True"
+                        />
+                        <field
+                            name="wms_import_update_inventory_cron_id"
+                            readonly="True"
+                        />
                     </group>
                     <group>
-                        <field name="wms_export_product_filter_id" />
-                        <field name="wms_export_picking_in_filter_id" />
-                        <field name="wms_export_picking_out_filter_id" />
+                        <field name="wms_export_product_filter_id" readonly="True" />
+                        <field name="wms_export_picking_in_filter_id" readonly="True" />
+                        <field
+                            name="wms_export_picking_out_filter_id"
+                            readonly="True"
+                        />
                     </group>
                     <group>
                         <button

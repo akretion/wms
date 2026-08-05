@@ -16,7 +16,7 @@ class StockPicking(models.Model):
         compute="_compute_wms_sync_cancel_supported"
     )
     wms_import_attachment_id = fields.Many2one(
-        "attachment.queue", index=True, readonly=True, copy=False
+        "attachment.queue", index=True, copy=False
     )
     wms_export_date = fields.Datetime(tracking=True, copy=False)
 

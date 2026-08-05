@@ -104,22 +104,18 @@ class StockWarehouse(models.Model):
     active_wms_sync = fields.Boolean(
         inverse="_inverse_active_wms_sync", readonly=False, store=True
     )
-    wms_export_task_id = fields.Many2one("attachment.synchronize.task", readonly=True)
+    wms_export_task_id = fields.Many2one("attachment.synchronize.task")
     wms_import_confirm_reception_task_id = fields.Many2one(
-        "attachment.synchronize.task", readonly=True
+        "attachment.synchronize.task"
     )
-    wms_import_confirm_delivery_task_id = fields.Many2one(
-        "attachment.synchronize.task", readonly=True
-    )
-    wms_import_update_inventory_task_id = fields.Many2one(
-        "attachment.synchronize.task", readonly=True
-    )
-    wms_export_product_cron_id = fields.Many2one("ir.cron", readonly=True)
-    wms_export_picking_in_cron_id = fields.Many2one("ir.cron", readonly=True)
-    wms_export_picking_out_cron_id = fields.Many2one("ir.cron", readonly=True)
-    wms_import_confirm_reception_cron_id = fields.Many2one("ir.cron", readonly=True)
-    wms_import_confirm_delivery_cron_id = fields.Many2one("ir.cron", readonly=True)
-    wms_import_update_inventory_cron_id = fields.Many2one("ir.cron", readonly=True)
+    wms_import_confirm_delivery_task_id = fields.Many2one("attachment.synchronize.task")
+    wms_import_update_inventory_task_id = fields.Many2one("attachment.synchronize.task")
+    wms_export_product_cron_id = fields.Many2one("ir.cron")
+    wms_export_picking_in_cron_id = fields.Many2one("ir.cron")
+    wms_export_picking_out_cron_id = fields.Many2one("ir.cron")
+    wms_import_confirm_reception_cron_id = fields.Many2one("ir.cron")
+    wms_import_confirm_delivery_cron_id = fields.Many2one("ir.cron")
+    wms_import_update_inventory_cron_id = fields.Many2one("ir.cron")
     wms_export_product_filter_id = fields.Many2one("ir.filters")
     wms_export_picking_in_filter_id = fields.Many2one("ir.filters")
     wms_export_picking_out_filter_id = fields.Many2one("ir.filters")
@@ -269,9 +265,9 @@ class StockWarehouse(models.Model):
     def button_open_wms_sync_ids(self):
         return {
             "name": "WMS synchronized products",
-            "view_mode": "tree,form",
+            "view_mode": "list,form",
             "views": [
-                (self.env.ref("wms_connector.wms_product_sync_tree_view").id, "tree"),
+                (self.env.ref("wms_connector.wms_product_sync_tree_view").id, "list"),
                 (self.env.ref("wms_connector.wms_product_sync_form_view").id, "form"),
             ],
             "res_model": "wms.product.sync",
@@ -283,7 +279,7 @@ class StockWarehouse(models.Model):
     def button_open_wms_pickings_in(self):
         return {
             "name": "WMS synchronized transfers",
-            "view_mode": "tree,form",
+            "view_mode": "list,form",
             "views": [
                 (False, "tree"),
                 (False, "form"),
@@ -297,7 +293,7 @@ class StockWarehouse(models.Model):
     def button_open_wms_pickings_out(self):
         return {
             "name": "WMS synchronized transfers",
-            "view_mode": "tree,form",
+            "view_mode": "list,form",
             "views": [
                 (False, "tree"),
                 (False, "form"),

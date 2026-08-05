@@ -7,54 +7,40 @@
         <field name="inherit_id" ref="stock.view_picking_form" />
         <field name="arch" type="xml">
             <header position="inside">
-                <field name="is_wms_exportable" invisible="True" />
                 <button
                     name="button_trigger_export"
                     type="object"
                     string="Export to WMS"
-                    attrs="{'invisible': [
-                        '|',
-                        '|',
-                        ('wms_export_date', '!=', False),
-                        ('is_wms_exportable', '=', False),
-                        ('state', 'in', ('cancel', 'done', 'draft')),
-                    ]}"
+                    invisible="((wms_export_date or not is_wms_exportable) or state in ('cancel', 'done', 'draft'))"
                 />
                 <button
                     name="action_force_cancel_wms"
                     type="object"
                     string="Force Cancel"
                     groups="stock.group_stock_manager"
-                    attrs="{'invisible': [
-                        '|',
-                        ('wms_export_date', '=', False),
-                        ('state', '=', 'cancel'),
-                    ]}"
-                    confirm="Before cancelling, ensure that your have cancelled the picking in the
-                             external WMS"
+                    confirm="Before cancelling, ensure that your have cancelled the picking in the                              external WMS"
+                    invisible="(not wms_export_date or state == 'cancel')"
                 />
             </header>
             <field name="date_done" position="before">
-                <field
-                    name="wms_export_date"
-                    attrs="{'invisible': [('is_wms_exportable', '=', False)]}"
-                />
+                <field name="wms_export_date" invisible="not is_wms_exportable" />
             </field>
             <field name="group_id" position="after">
                 <field
                     name="wms_export_attachment_id"
-                    attrs="{'invisible': [('wms_export_attachment_id', '=', False)]}"
+                    invisible="not wms_export_attachment_id"
                 />
                 <field
                     name="wms_import_attachment_id"
-                    attrs="{'invisible': [('wms_import_attachment_id', '=', False)]}"
+                    invisible="not wms_import_attachment_id"
+                    readonly="True"
                 />
             </field>
             <header position="after">
                 <div
                     class="alert alert-danger"
                     role="alert"
-                    attrs="{'invisible': [('wms_export_error', '=', False)]}"
+                    invisible="not wms_export_error"
                 >
                     <p>Synchronisation error</p>
                     <field name="wms_export_error" />

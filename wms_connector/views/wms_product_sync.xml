@@ -18,8 +18,8 @@
                     <group>
                         <field name="name" />
                         <field name="wms_export_date" />
-                        <field name="product_id" />
-                        <field name="warehouse_id" />
+                        <field name="product_id" readonly="True" />
+                        <field name="warehouse_id" readonly="True" />
                         <field name="wms_export_error" />
                     </group>
                 </sheet>
@@ -31,23 +31,24 @@
         <field name="name">wms.product.sync.tree (in wms_connector)</field>
         <field name="model">wms.product.sync</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name" />
-                <field name="product_id" />
-                <field name="warehouse_id" />
+                <field name="product_id" readonly="True" />
+                <field name="warehouse_id" readonly="True" />
                 <field name="wms_export_date" />
                 <field name="wms_export_error" />
-                <field name="to_export" />
-            </tree>
+                <field name="to_export" readonly="True" />
+            </list>
         </field>
     </record>
 
     <record model="ir.actions.act_window" id="wms_product_sync_act_window">
         <field name="name">Wms Product Sync</field>
         <field name="res_model">wms.product.sync</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="domain">[]</field>
         <field name="context">{}</field>
+        <field name="path">wms-product-sync</field>
     </record>
 
     <record model="ir.ui.menu" id="wms_product_sync_menu">
