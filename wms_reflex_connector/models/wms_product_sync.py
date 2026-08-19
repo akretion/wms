@@ -20,7 +20,6 @@ class WmsProductSync(models.Model):
     def record_per_file(self):
         return 1000
 
-    # TODO FIXME
     def _format_to_exportfile_txt(self, data):
         vals = super()._format_to_exportfile_txt(data)
         vals["task_id"] = self.warehouse_id.wms_export_task_id.id

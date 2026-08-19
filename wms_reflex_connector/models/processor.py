@@ -4,18 +4,29 @@
 import csv
 import logging
 from collections import Counter
+from dataclasses import dataclass
 from datetime import datetime
+from typing import Iterable
 
-from odoo import models
+from odoo import fields, models
 from odoo.exceptions import UserError, ValidationError
 
-from odoo.addons.wms_reflex_connector.parser_reflex.rec53 import parse_record
+from odoo.addons.wms_connector.models.stock_move import StockMove
+from odoo.addons.wms_reflex_connector.parser_reflex.dispatcher import (
+    ReflexInterfaceDispatcher,
+)
 
 _logger = logging.getLogger(__name__)
 
 
 class DataError(Exception):
     """Data Error"""
+
+
+@dataclass
+class MoveToProcess:
+    move_ids: Iterable[StockMove]
+    qty: fields.Float()
 
 
 class ProcessorPickingBase(models.AbstractModel):
@@ -59,51 +70,102 @@ class ProcessorPickingBase(models.AbstractModel):
     def _process_lines(self, lines):
         raise NotImplementedError()
 
-    def _process_todo(self, todo, allow_extra_qty=False, carrier_code=False):
+    def _process_move_to_process(
+        self,
+        move_to_process,
+        errors,
+        done,
+        pickings,
+        allow_extra_quantity,
+        **kwargs,
+    ):
+        qty = move_to_process.qty
+        moves = move_to_process.move_ids
+        initial_qty = qty
+        for move in moves:
+            if qty == 0:
+                continue
+            # FIXME in V18
+            qty = self._process_move(move, qty)
+            pickings |= move.picking_id
+        if qty:
+            self._process_extra_quantity(
+                moves,
+                qty,
+                errors,
+                done,
+                initial_qty,
+                allow_extra_quantity,
+                **kwargs,
+            )
+        else:
+            done.append((moves, initial_qty))
+
+    def _process_move(self, move, qty):
+        if (
+            len(move.move_line_ids) > 1
+            and sum(move.move_line_ids.mapped("qty_done")) == 0
+        ):
+            # Setting the done qty on the move when having several
+            # stock.move.line is not possible if this lines are empty
+            # we just drop them before
+            move.move_line_ids.unlink()
+        move_qty = min(move.product_qty - move.quantity_done, qty)
+        move.quantity_done += move_qty
+        qty -= move_qty
+        return qty
+
+    def _process_extra_quantity(
+        self, moves, qty, errors, done, initial_qty, allow_extra_qty=False, **kwargs
+    ):
+        move = moves[-1]
+        if allow_extra_qty:
+            # If will still have qty, this mean we have received more product
+            # then expected, we just add them on the last move
+            move.quantity_done += qty
+            done.append((moves, initial_qty))
+        else:
+            errors.append(
+                f"{initial_qty} x {move.product_id.reflex_code} -  "
+                + f"{move.reflex_reference} : "
+                + f"{qty} produits ont été expédiés en trop"
+            )
+
+    def _post_process_move(self, pickings, move_to_process, **kwargs):
+        # confirm and always do a backorder
+        # if carrier_code:
+        #     carrier_id = self.env["delivery.carrier"].search(
+        #         [("delivery_carrier_code_reflex", "=", carrier_code)]
+        #     )
+        #     pickings.carrier_id = carrier_id.id if carrier_id else False
+        pass
+
+    def _pre_process_move_todos(self, moves_todo):
+        return moves_todo
+
+    def _process_move_list(
+        self,
+        moves_todo: list[MoveToProcess],
+        allow_extra_quantity=False,
+        **kwargs,
+    ):
         errors = []
         done = []
         pickings = self.env["stock.picking"]
-        self._reset_picking(todo)
-        for moves, qty in todo:
-            initial_qty = qty
-            for move in moves:
-                # FIXME in V18
-                if (
-                    len(move.move_line_ids) > 1
-                    and sum(move.move_line_ids.mapped("qty_done")) == 0
-                ):
-                    # Setting the done qty on the move when having several
-                    # stock.move.line is not possible if this lines are empty
-                    # we just drop them before
-                    move.move_line_ids.unlink()
-                move_qty = min(move.product_qty - move.quantity_done, qty)
-                move.quantity_done += move_qty
-                qty -= move_qty
-                pickings |= move.picking_id
-                if not qty:
-                    continue
-            if qty:
-                if allow_extra_qty:
-                    # If will still have qty, this mean we have received more product
-                    # then expected, we just add them on the last move
-                    move.quantity_done += qty
-                    done.append((moves, initial_qty))
-                else:
-                    errors.append(
-                        f"{initial_qty} x {move.product_id.reflex_code} -  "
-                        + f"{move.reflex_reference} : "
-                        + f"{qty} produits ont été expédiés en trop"
-                    )
-            else:
-                done.append((moves, initial_qty))
+        self._reset_picking(moves_todo)
+        moves_todo = self._pre_process_move_todos(moves_todo)
+        for move_to_process in moves_todo:
+            pickings += self._process_move_to_process(
+                move_to_process,
+                errors,
+                done,
+                pickings,
+                allow_extra_quantity,
+                **kwargs,
+            )
         if errors:
             raise UserError(self._build_error_message(errors, done))
-        # confirm and always do a backorder
-        if carrier_code:
-            carrier_id = self.env["delivery.carrier"].search(
-                [("delivery_carrier_code_reflex", "=", carrier_code)]
-            )
-            pickings.carrier_id = carrier_id.id if carrier_id else False
+        self._post_process_move(pickings, moves_todo)
         pickings.with_context(validation_from_sync=True).button_validate()
         pickings.wms_import_attachment_id = self.attachment_queue_id.id
 
@@ -113,35 +175,25 @@ class ProcessorPickingIn(models.TransientModel):
     _name = "processor.picking.in"
     _description = "Processor Picking In"
 
+    def _get_interface_list(self):
+        raise NotImplementedError()
+
     def _get_picking_type(self):
         return self.warehouse_id.in_type_id
 
-    def _get_move(self, order_ref, product_reflex_code, qty):
+    def _process_line(self, line_data, state, moves):
         raise NotImplementedError()
-        # move = self.env["stock.move"].search(
-        #     [
-        #         "|",
-        #         ("picking_id.origin", "=", order_ref),
-        #         ("picking_id", "in", self._get_picking_name(order_ref).ids),
-        #         ("product_id.reflex_code", "=", product_reflex_code),
-        #         ("state", "not in", ("cancel", "done")),
-        #     ]
-        # )
-        # if not move:
-        #     raise DataError(
-        #         f"{qty} x {product_reflex_code} (cmd: {order_ref}) : "
-        #         + "Aucune ligne d'expédition trouvé"
-        #     )
-        # return move
 
     def run(self, string_buffer):
+        dispatcher = ReflexInterfaceDispatcher(self._get_interface_list())
         errors = []
         warnings = []
-        lines = []
+        state = {}
+        moves = []
         for line in iter(string_buffer.readline, ""):
-            lines.push(parse_record(line))
-        todo = self._process_lines(lines)
-        self._process_todo(lines, allow_extra_qty=True)
+            line_data = dispatcher.parse(line)
+            self._process_line(line_data, state, moves)
+        self._process_moves(moves, allow_extra_qty=True)
         self.attachment_queue_id.description = "\n".join(warnings)
 
 
