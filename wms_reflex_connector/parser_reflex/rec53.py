@@ -30,7 +30,7 @@ def _error(
     rubrique: str | None, field: str, offset: int, value: str, reason: str
 ) -> Reflex53ParseError:
     return Reflex53ParseError(
-        f"Interface 53 {field} at offset {offset}: {reason} ({value!r})",
+        f"Interface 53{rubrique} {field} at offset {offset}: {reason} ({value!r})",
         rubrique=rubrique,
         field=field,
         offset=offset,
@@ -49,8 +49,6 @@ def _normalise_payload(record: str) -> str:
         payload = payload[:-1]
     if "\r" in payload or "\n" in payload:
         raise _error(None, "record", 1, record, "unexpected line terminator")
-    if len(payload) != 270:
-        raise _error(None, "record", 1, record, "expected 270 characters")
     return payload
 
 
@@ -59,8 +57,6 @@ def _field(
 ) -> str:
     """Return an exact one-based payload slice."""
     raw = payload[offset - 1 : offset - 1 + width]
-    if len(raw) != width:
-        raise _error(rubrique, field, offset, raw, "wrong field width")
     return raw
 
 
@@ -86,14 +82,6 @@ def _optional_decimal_9_3(
     return Decimal(int(raw)).scaleb(-3)
 
 
-def _require_padding(
-    payload: str, offset: int, width: int, rubrique: str, field: str = "padding"
-) -> None:
-    raw = _field(payload, offset, width, rubrique, field)
-    if raw != " " * width:
-        raise _error(rubrique, field, offset, raw, "expected spaces only")
-
-
 def _envelope(payload: str) -> tuple[str, dict[str, Any]]:
     envelope_rubrique = payload[11:14]
     sequence_raw = _field(payload, 1, 7, envelope_rubrique, "sequence")
@@ -109,7 +97,7 @@ def _envelope(payload: str) -> tuple[str, dict[str, Any]]:
         raise _error(envelope_rubrique, "interface", 10, interface, "expected '53'")
     rubrique = _field(payload, 12, 3, envelope_rubrique, "rubrique")
     if rubrique not in _SUPPORTED:
-        raise _error(rubrique, "rubrique", 12, rubrique, "unsupported rubrique")
+        return None, None
     common = {
         "sequence": int(sequence_raw),
         "application": application,
@@ -129,6 +117,11 @@ def _prepare(record: str, expected: str) -> tuple[str, dict[str, Any]]:
     if rubrique != expected:
         raise _error(rubrique, "rubrique", 12, rubrique, f"expected '{expected}'")
     return payload, common
+
+
+@dataclass(kw_only=True)
+class Reflex53UnknownRecord:
+    CODE: ClassVar[str] = None
 
 
 @dataclass(kw_only=True)
@@ -159,9 +152,7 @@ class Reflex53Rubrique110(Reflex53Record):
         return cls._parse_prepared(payload, values)
 
     @classmethod
-    def _parse_prepared(
-        cls, payload: str, values: dict[str, Any]
-    ) -> Self:
+    def _parse_prepared(cls, payload: str, values: dict[str, Any]) -> Self:
         values.update(
             entry_date_century=_text(payload, 32, 2, cls.CODE, "entry_date_century"),
             entry_date_year=_text(payload, 34, 2, cls.CODE, "entry_date_year"),
@@ -170,7 +161,6 @@ class Reflex53Rubrique110(Reflex53Record):
             entry_time=_text(payload, 40, 6, cls.CODE, "entry_time"),
             reception_reason=_text(payload, 46, 3, cls.CODE, "reception_reason"),
         )
-        _require_padding(payload, 49, 222, cls.CODE)
         return cls(**values)
 
 
@@ -188,16 +178,13 @@ class Reflex53Rubrique120(Reflex53Record):
         return cls._parse_prepared(payload, values)
 
     @classmethod
-    def _parse_prepared(
-        cls, payload: str, values: dict[str, Any]
-    ) -> Self:
+    def _parse_prepared(cls, payload: str, values: dict[str, Any]) -> Self:
         values.update(
             ordering_party=_text(payload, 32, 13, cls.CODE, "ordering_party"),
             customs_delay=_text(payload, 45, 3, cls.CODE, "customs_delay"),
             workshop=_text(payload, 48, 3, cls.CODE, "workshop"),
             reception_type=_text(payload, 51, 3, cls.CODE, "reception_type"),
         )
-        _require_padding(payload, 54, 217, cls.CODE)
         return cls(**values)
 
 
@@ -214,9 +201,7 @@ class Reflex53Rubrique130(Reflex53Record):
         return cls._parse_prepared(payload, values)
 
     @classmethod
-    def _parse_prepared(
-        cls, payload: str, values: dict[str, Any]
-    ) -> Self:
+    def _parse_prepared(cls, payload: str, values: dict[str, Any]) -> Self:
         values.update(
             supplier=_text(payload, 32, 13, cls.CODE, "supplier"),
             reception_reference=_text(payload, 45, 20, cls.CODE, "reception_reference"),
@@ -224,7 +209,6 @@ class Reflex53Rubrique130(Reflex53Record):
                 payload, 65, 10, cls.CODE, "supplier_delivery_note"
             ),
         )
-        _require_padding(payload, 75, 196, cls.CODE)
         return cls(**values)
 
 
@@ -254,9 +238,7 @@ class Reflex53Rubrique150(Reflex53Record):
         return cls._parse_prepared(payload, values)
 
     @classmethod
-    def _parse_prepared(
-        cls, payload: str, values: dict[str, Any]
-    ) -> Self:
+    def _parse_prepared(cls, payload: str, values: dict[str, Any]) -> Self:
         specs = (
             ("carrier", 32, 13),
             ("driver", 45, 20),
@@ -281,7 +263,6 @@ class Reflex53Rubrique150(Reflex53Record):
                 for name, offset, width in specs
             }
         )
-        _require_padding(payload, 120, 151, cls.CODE)
         return cls(**values)
 
 
@@ -302,9 +283,7 @@ class Reflex53Rubrique310(Reflex53Record):
         return cls._parse_prepared(payload, values)
 
     @classmethod
-    def _parse_prepared(
-        cls, payload: str, values: dict[str, Any]
-    ) -> Self:
+    def _parse_prepared(cls, payload: str, values: dict[str, Any]) -> Self:
         specs = (
             ("reception_line", 32, 6),
             ("article", 38, 16),
@@ -320,7 +299,6 @@ class Reflex53Rubrique310(Reflex53Record):
                 for name, offset, width in specs
             }
         )
-        _require_padding(payload, 98, 173, cls.CODE)
         return cls(**values)
 
 
@@ -365,9 +343,7 @@ class Reflex53Rubrique340(Reflex53Record):
         return cls._parse_prepared(payload, values)
 
     @classmethod
-    def _parse_prepared(
-        cls, payload: str, values: dict[str, Any]
-    ) -> Self:
+    def _parse_prepared(cls, payload: str, values: dict[str, Any]) -> Self:
         values["reception_line"] = _text(payload, 32, 6, cls.CODE, "reception_line")
         int_specs = (
             ("quantity_level_1", 38),
@@ -423,7 +399,6 @@ class Reflex53Rubrique340(Reflex53Record):
                 for name, offset, width in specs
             }
         )
-        _require_padding(payload, 263, 8, cls.CODE)
         return cls(**values)
 
 
@@ -440,4 +415,6 @@ _PARSERS = {
 def parse_record(record: str) -> Reflex53Record:
     payload = _normalise_payload(record)
     rubrique, common = _envelope(payload)
+    if rubrique is None:
+        return Reflex53UnknownRecord()
     return _PARSERS[rubrique]._parse_prepared(payload, common)

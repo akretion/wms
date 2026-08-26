@@ -23,12 +23,6 @@ class DataError(Exception):
     """Data Error"""
 
 
-@dataclass
-class MoveToProcess:
-    move_ids: Iterable[StockMove]
-    qty: fields.Float()
-
-
 class ProcessorPickingBase(models.AbstractModel):
     _name = "processor.picking.base"
     _description = "Processor Picking Base"
@@ -54,54 +48,10 @@ class ProcessorPickingBase(models.AbstractModel):
                 )
         return "\n".join(errors)
 
-    def _reset_picking(self, todo):
-        # Ensure that we do not have qty done set on the picking
-        # due to wrong manipulation
-        reset_pickings = self.env["stock.picking"]
-        for (
-            moves,
-            _qty,
-        ) in todo:
-            reset_pickings |= moves.picking_id
-        for line in reset_pickings.move_lines:
-            if line.quantity_done:
-                line.quantity_done = 0
-
     def _process_lines(self, lines):
         raise NotImplementedError()
 
-    def _process_move_to_process(
-        self,
-        move_to_process,
-        errors,
-        done,
-        pickings,
-        allow_extra_quantity,
-        **kwargs,
-    ):
-        qty = move_to_process.qty
-        moves = move_to_process.move_ids
-        initial_qty = qty
-        for move in moves:
-            if qty == 0:
-                continue
-            # FIXME in V18
-            qty = self._process_move(move, qty)
-            pickings |= move.picking_id
-        if qty:
-            self._process_extra_quantity(
-                moves,
-                qty,
-                errors,
-                done,
-                initial_qty,
-                allow_extra_quantity,
-                **kwargs,
-            )
-        else:
-            done.append((moves, initial_qty))
-
-    def _process_move(self, move, qty):
+    def _process_move(self, move, state):
         if (
             len(move.move_line_ids) > 1
             and sum(move.move_line_ids.mapped("qty_done")) == 0
@@ -110,14 +60,32 @@ class ProcessorPickingBase(models.AbstractModel):
             # stock.move.line is not possible if this lines are empty
             # we just drop them before
             move.move_line_ids.unlink()
-        move_qty = min(move.product_qty - move.quantity_done, qty)
-        move.quantity_done += move_qty
-        qty -= move_qty
-        return qty
+        move_qty = min(move.product_qty - move.quantity, state["qty"])
+        move.quantity += move_qty
+        state["qty"] -= move_qty
+        return state, move, self.env["stock.move.line"]
 
-    def _process_extra_quantity(
-        self, moves, qty, errors, done, initial_qty, allow_extra_qty=False, **kwargs
+    def _process_move_list(self, move_list, state, errors, done, **kwargs):
+        pickings = self.env["stock.picking"]
+        moves = self.env["stock.move"]
+        move_lines = self.env["stock.move.line"]
+
+        for move in move_list:
+            state, new_moves, new_move_lines = self._process_move(move, state)
+            moves |= new_moves
+            move_lines |= new_move_lines
+            pickings |= move.picking_id
+
+        return (state, moves, move_lines, pickings)
+
+    def _setup_state(self, state):
+        return {"initial_qty": state["qty"], "qty": state["qty"]}
+
+    def _post_process_parse_result_item(
+        self, state, moves, move_lines, errors, done, allow_extra_qty, **kwargs
     ):
+        initial_qty = state["initial_qty"]
+        qty = state["qty"]
         move = moves[-1]
         if allow_extra_qty:
             # If will still have qty, this mean we have received more product
@@ -131,43 +99,75 @@ class ProcessorPickingBase(models.AbstractModel):
                 + f"{qty} produits ont été expédiés en trop"
             )
 
-    def _post_process_move(self, pickings, move_to_process, **kwargs):
-        # confirm and always do a backorder
-        # if carrier_code:
-        #     carrier_id = self.env["delivery.carrier"].search(
-        #         [("delivery_carrier_code_reflex", "=", carrier_code)]
-        #     )
-        #     pickings.carrier_id = carrier_id.id if carrier_id else False
-        pass
-
-    def _pre_process_move_todos(self, moves_todo):
-        return moves_todo
-
-    def _process_move_list(
+    def _process_parse_result_item(
         self,
-        moves_todo: list[MoveToProcess],
-        allow_extra_quantity=False,
+        item,
+        errors,
+        done,
+        allow_extra_qty,
         **kwargs,
     ):
+        state = self._setup_state(item)
+        pickings = self.env["stock.picking"]
+        moves = self.env["stock.move"]
+        move_lines = self.env["stock.move.line"]
+
+        for moves in item["move_ids"]:
+            state, new_moves, new_move_lines, new_pickings = self._process_move_list(
+                moves, state, errors, done, **kwargs
+            )
+            moves |= new_moves
+            move_lines |= new_move_lines
+            pickings |= new_pickings
+
+        self._post_process_parse_result_item(
+            state, moves, move_lines, errors, done, allow_extra_qty, **kwargs
+        )
+
+        return pickings, moves, move_lines
+
+    def _post_process_pickings_move_move_line(self, pickings, moves, move_lines):
+        pickings.with_context(validation_from_sync=True).button_validate()
+        pickings.wms_import_attachment_id = self.attachment_queue_id.id
+
+    def _pre_process_parse_result(self, moves_todo):
+        return moves_todo
+
+    def _process_parse_result_list(self, parse_result, allow_extra_qty, **kwargs):
         errors = []
         done = []
         pickings = self.env["stock.picking"]
-        self._reset_picking(moves_todo)
-        moves_todo = self._pre_process_move_todos(moves_todo)
-        for move_to_process in moves_todo:
-            pickings += self._process_move_to_process(
-                move_to_process,
+        moves = self.env["stock.move"]
+        move_lines = self.env["stock.move.line"]
+        for item in parse_result:
+            new_pickings, new_moves, new_move_lines = self._process_parse_result_item(
+                item,
                 errors,
                 done,
-                pickings,
-                allow_extra_quantity,
+                allow_extra_qty,
                 **kwargs,
             )
+            moves |= new_moves
+            move_lines |= new_move_lines
+            pickings |= new_pickings
         if errors:
             raise UserError(self._build_error_message(errors, done))
-        self._post_process_move(pickings, moves_todo)
-        pickings.with_context(validation_from_sync=True).button_validate()
-        pickings.wms_import_attachment_id = self.attachment_queue_id.id
+        return pickings, moves, move_lines
+
+    def _process_parse_result(
+        self,
+        parse_result,
+        allow_extra_qty=False,
+        **kwargs,
+    ):
+        pickings = self.env["stock.picking"]
+        parse_result = self._pre_process_parse_result(parse_result, **kwargs)
+        pickings, moves, move_lines = self._process_parse_result_list(
+            parse_result, allow_extra_qty, **kwargs
+        )
+        self._post_process_pickings_move_move_line(
+            pickings, moves, move_lines, **kwargs
+        )
 
 
 class ProcessorPickingIn(models.TransientModel):
@@ -186,15 +186,15 @@ class ProcessorPickingIn(models.TransientModel):
 
     def run(self, string_buffer):
         dispatcher = ReflexInterfaceDispatcher(self._get_interface_list())
-        errors = []
-        warnings = []
         state = {}
         moves = []
         for line in iter(string_buffer.readline, ""):
             line_data = dispatcher.parse(line)
-            self._process_line(line_data, state, moves)
-        self._process_moves(moves, allow_extra_qty=True)
-        self.attachment_queue_id.description = "\n".join(warnings)
+            new_state = self._process_line(line_data, state, moves)
+            state.update(new_state)
+        self._process_parse_result(moves, allow_extra_qty=True)
+        # TODO(franz): bring warnings back in
+        # self.attachment_queue_id.description = "\n".join(warnings)
 
 
 class ProcessorPickingOut(models.TransientModel):
@@ -202,142 +202,22 @@ class ProcessorPickingOut(models.TransientModel):
     _name = "processor.picking.out"
     _description = "Processor Picking Out"
 
+    def _get_interface_list(self):
+        raise NotImplementedError()
+
     def _get_picking_type(self):
-        return self.warehouse_id.out_type_id
+        return self.warehouse_id.in_type_id
 
-    def _get_move(self, reflex_move_ref, product_reflex_code, qty):
-        if not reflex_move_ref:
-            raise DataError("Pas de reference reflex pour cette expedition")
-
-        if reflex_move_ref[-3:] == "BIS":
-            # TODO see why we have this case and if happen often
-            _logger.warning("Solve Aliné Hack, remove BIS from reference")
-            reflex_move_ref = reflex_move_ref[:-3].strip()
-
-        moves = self.env["stock.move"].search(
-            [
-                ("reflex_reference", "=", reflex_move_ref),
-                ("product_id.reflex_code", "=", product_reflex_code),
-                ("state", "not in", ("cancel", "done")),
-            ]
-        )
-
-        # Migration hack
-        if not moves and reflex_move_ref[0:2] == "ZM":
-            sale = self.env["sale.order"].search([("name", "=", reflex_move_ref[:-2])])
-            if sale:
-                picking = sale.picking_ids.filtered(
-                    lambda s: s.state != "cancel"
-                ).sorted("id")
-                if picking:
-                    reflex_move_ref = picking[0].name + reflex_move_ref[-2:]
-                    moves = self._get_move(reflex_move_ref, product_reflex_code, qty)
-
-        if not moves:
-            raise DataError(
-                f"{qty} x {product_reflex_code} -  "
-                + f"{reflex_move_ref} : aucune ligne d'expédition trouvé"
-            )
-        return moves
+    def _process_line(self, line_data, state, moves):
+        raise NotImplementedError()
 
     def run(self, string_buffer):
-        errors = []
-        warnings = []
-        todo = []
-        carrier_code = ""
+        dispatcher = ReflexInterfaceDispatcher(self._get_interface_list())
+        state = {}
+        moves = []
         for line in iter(string_buffer.readline, ""):
-            try:
-                if "HL52210" in line:
-                    reflex_move_ref = line[117:137].strip()
-                    product_reflex_code = line[67:83].strip()
-                elif "HL52250" in line:
-                    qty = int(line[46:53].strip())
-                    if qty:
-                        moves = self._get_move(
-                            reflex_move_ref, product_reflex_code, qty
-                        )
-                        todo.append((moves, qty))
-                elif "HL52165" in line:
-                    carrier_code = line[51:63].strip()
-            except DataError as e:
-                errors.append(str(e))
-
-        if errors:
-            if self._context.get("do_not_raise_error"):
-                warnings += [
-                    "L'import à été forcé, les lignes suivantes n'ont pas "
-                    "pu être traité \n"
-                ] + errors
-            else:
-                raise UserError(self._build_error_message(errors, todo))
-        self._process_todo(
-            todo,
-            allow_extra_qty=self._context.get("do_not_raise_error"),
-            carrier_code=carrier_code,
-        )
-        self.attachment_queue_id.description = "\n".join(warnings)
-
-
-class ProcessorInventory(models.TransientModel):
-    _name = "processor.inventory"
-    _description = "Processor Inventory"
-
-    @property
-    def warehouse_id(self):
-        return self._context["warehouse"]
-
-    @property
-    def attachment_queue_id(self):
-        return self._context["attachment_queue"]
-
-    def run(self, name, string_buffer):
-        missings = []
-        reader = csv.reader(string_buffer, delimiter=";")
-        vals_lines = []
-        product2qty = Counter()
-        location = self.warehouse_id.lot_stock_id
-        inventory = self.env["stock.inventory"].create(
-            {
-                "name": name,
-                "location_ids": [(6, 0, location.ids)],
-                # TODO attachment task should have company so attachment queue
-                # will have the right company and we should set the company based
-                # on the attachment queue
-                "company_id": self.warehouse_id.company_id.id,
-            }
-        )
-        inventory.action_start()
-
-        # Note: we only support one location
-        lines = {
-            (line.product_id, line.prod_lot_id): line for line in inventory.line_ids
-        }
-
-        for row in reader:
-            product2qty[row[0]] += int(row[1])
-
-        for code, qty in product2qty.items():
-            product = self.env["product.product"].search([("reflex_code", "=", code)])
-            if not product:
-                missings.append((code, qty))
-            else:
-                # TODO add lot support when we will have case
-                line = lines.get((product, self.env["stock.production.lot"]))
-                if line:
-                    line.product_qty = qty
-                else:
-                    vals_lines.append(
-                        {
-                            "product_id": product.id,
-                            "product_qty": qty,
-                            "location_id": location.id,
-                            "inventory_id": inventory.id,
-                        }
-                    )
-        self.env["stock.inventory.line"].create(vals_lines)
-        if missings:
-            messages = "<p>Les produits suivants n'ont pas été trouvé<br/>"
-            messages += "<br/>".join([f"{item[1]} x {item[0]}" for item in missings])
-            messages += "</p>"
-            inventory.message_post(body=messages)
-            self.attachment_queue_id.description = messages.replace("<br/>", "\n")
+            line_data = dispatcher.parse(line)
+            self._process_line(line_data, state, moves)
+        self._process_parse_result(moves, allow_extra_qty=True)
+        # TODO(franz): bring warnings back in
+        # self.attachment_queue_id.description = "\n".join(warnings)

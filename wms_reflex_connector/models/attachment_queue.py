@@ -13,7 +13,7 @@ class AttachmentQueue(models.Model):
     def _read_reflex_data(self):
         return io.StringIO(base64.b64decode(self.datas).decode("latin-1"), newline=None)
 
-    def _run_wms_picking_in(self):
+    def _run_wms_reception_confirmed(self):
         return (
             self.env["processor.picking.in"]
             .with_context(
@@ -23,7 +23,7 @@ class AttachmentQueue(models.Model):
             .run(self._read_reflex_data())
         )
 
-    def _run_wms_picking_out(self):
+    def _run_wms_delivery_confirmed(self):
         return (
             self.env["processor.picking.out"]
             .with_context(
@@ -33,7 +33,7 @@ class AttachmentQueue(models.Model):
             .run(self._read_reflex_data())
         )
 
-    def _run_wms_stock_inventory(self):
+    def _run_wms_update_inventory(self):
         return (
             self.env["processor.inventory"]
             .with_context(

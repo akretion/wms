@@ -50,7 +50,7 @@ def _normalise_payload(record: str) -> str:
         if record.endswith("\n")
         else record
     )
-    if "\r" in payload or "\n" in payload or len(payload) < 14 or len(payload) > 270:
+    if "\r" in payload or "\n" in payload or len(payload) < 14:
         raise _error(
             None,
             "record",
@@ -65,8 +65,6 @@ def _field(
     payload: str, offset: int, width: int, rubrique: str | None, field: str
 ) -> str:
     raw = payload[offset - 1 : offset - 1 + width]
-    if len(raw) != width:
-        raise _error(rubrique, field, offset, raw, "wrong field width")
     return raw
 
 
@@ -105,7 +103,7 @@ def _envelope(payload: str) -> tuple[str, dict[str, Any]]:
         raise _error(candidate, "interface", 10, interface, "expected '52'")
     rubrique = _field(payload, 12, 3, candidate, "rubrique")
     if rubrique not in _SUPPORTED:
-        raise _error(rubrique, "rubrique", 12, rubrique, "unsupported rubrique")
+        return None, None
     minimum = _MINIMUM_LENGTHS[rubrique]
     if len(payload) < minimum:
         raise _error(
@@ -146,6 +144,11 @@ def _values(
             values[name] = raw.rstrip(" ")
     values["extension_data"] = payload[_MINIMUM_LENGTHS[cls.CODE] :].rstrip(" ")
     return values
+
+
+@dataclass(kw_only=True)
+class Reflex52UnknownRecord:
+    CODE: ClassVar[str] = None
 
 
 @dataclass(kw_only=True)
@@ -419,4 +422,6 @@ _PARSERS = {
 def parse_record(record: str) -> Reflex52Record:
     payload = _normalise_payload(record)
     rubrique, values = _envelope(payload)
+    if rubrique is None:
+        return Reflex52UknownRecord()
     return _PARSERS[rubrique](**_values(payload, _PARSERS[rubrique], values))

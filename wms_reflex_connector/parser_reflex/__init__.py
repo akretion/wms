@@ -3,4 +3,5 @@ from . import (
     prep52,
     rec53,
     stock55,
+    dispatcher,
 )

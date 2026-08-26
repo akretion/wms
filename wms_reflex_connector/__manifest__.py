@@ -11,8 +11,9 @@
     "depends": [
         "wms_connector",
         "storage_backend_ftp",
+        "stock",
     ],
     "external_dependencies": {"python": ["unidecode"]},
-    "data": [],
+    "data": ["security/ir.model.access.csv"],
     "demo": [],
 }

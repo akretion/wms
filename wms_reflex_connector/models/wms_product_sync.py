@@ -9,6 +9,7 @@ from odoo.exceptions import ValidationError
 
 class WmsProductSync(models.Model):
     _inherit = ["reflex.exportable.mixin", "wms.product.sync"]
+    _name = "wms.product.sync"
 
     def _should_export_product(self):
         return True

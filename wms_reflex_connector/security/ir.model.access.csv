@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+wms_reflex_connector.access_processor_picking_in,access_processor_picking_in,wms_reflex_connector.model_processor_picking_in,base.group_user,1,0,0,0
+wms_reflex_connector.access_processor_picking_out,access_processor_picking_out,wms_reflex_connector.model_processor_picking_out,base.group_user,1,0,0,0

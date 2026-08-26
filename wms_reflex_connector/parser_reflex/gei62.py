@@ -6,6 +6,11 @@ from typing import Any, ClassVar, Self
 _SUPPORTED = ("110", "112")
 
 
+@dataclass(kw_only=True)
+class Reflex62UnknownRecord:
+    CODE: ClassVar[str] = None
+
+
 class Reflex62ParseError(ValueError):
     """A malformed Interface 62 record, with protocol location context."""
 
@@ -48,8 +53,6 @@ def _normalise_payload(record: str) -> str:
         payload = payload[:-1]
     if "\r" in payload or "\n" in payload:
         raise _error(None, "record", 1, record, "unexpected line terminator")
-    if len(payload) != 270:
-        raise _error(None, "record", 1, record, "expected 270 characters")
     return payload
 
 
@@ -58,8 +61,6 @@ def _field(
 ) -> str:
     """Return an exact one-based payload slice."""
     raw = payload[offset - 1 : offset - 1 + width]
-    if len(raw) != width:
-        raise _error(rubrique, field, offset, raw, "wrong field width")
     return raw
 
 
@@ -98,7 +99,7 @@ def _envelope(payload: str) -> tuple[str, dict[str, Any]]:
         raise _error(envelope_rubrique, "interface", 10, interface, "expected '62'")
     rubrique = _field(payload, 12, 3, envelope_rubrique, "rubrique")
     if rubrique not in _SUPPORTED:
-        raise _error(rubrique, "rubrique", 12, rubrique, "unsupported rubrique")
+        return None, None
     return rubrique, {
         "sequence": int(sequence_raw),
         "application": application,
@@ -113,6 +114,11 @@ def _prepare(record: str, expected: str) -> tuple[str, dict[str, Any]]:
     if rubrique != expected:
         raise _error(rubrique, "rubrique", 12, rubrique, f"expected '{expected}'")
     return payload, values
+
+
+@dataclass(kw_only=True)
+class Reflex62UnknownRecord:
+    CODE: ClassVar[str] = None
 
 
 @dataclass(kw_only=True)
@@ -210,4 +216,6 @@ _PARSERS = {
 def parse_record(record: str) -> Reflex62Record:
     payload = _normalise_payload(record)
     rubrique, values = _envelope(payload)
+    if rubrique is None:
+        return Reflex62UknownRecord()
     return _PARSERS[rubrique]._parse_prepared(payload, values)
