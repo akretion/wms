@@ -17,7 +17,7 @@ class WmsConnectorCommon(SyncCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.backend = cls.env.ref("wms_connector.demo_wms_backend")
+        cls.backend = cls.env.ref("fs_storage.fs_storage_demo")
         cls.backend.directory_path = str(uuid.uuid1()) + "/"
         cls.aq_before = cls.env["attachment.queue"].search([])
         cls.warehouse = cls.env.ref("stock.warehouse0")

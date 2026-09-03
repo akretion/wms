@@ -3,13 +3,12 @@
 
 {
     "name": "Wms Connector",
-    "summary": """
-        WMS Connector""",
+    "summary": """WMS Connector""",
     "version": "18.0.1.0.0",
     "license": "AGPL-3",
     "author": "Akretion,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/wms",
-    "depends": ["stock", "sale", "attachment_synchronize"],
+    "depends": ["stock", "sale", "attachment_synchronize", "storage_backend"],
     "data": [
         "security/wms_product_sync.xml",
         "views/wms_product_sync.xml",
