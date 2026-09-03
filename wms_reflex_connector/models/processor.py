@@ -52,14 +52,6 @@ class ProcessorPickingBase(models.AbstractModel):
         raise NotImplementedError()
 
     def _process_move(self, move, state):
-        if (
-            len(move.move_line_ids) > 1
-            and sum(move.move_line_ids.mapped("qty_done")) == 0
-        ):
-            # Setting the done qty on the move when having several
-            # stock.move.line is not possible if this lines are empty
-            # we just drop them before
-            move.move_line_ids.unlink()
         move_qty = min(move.product_qty - move.quantity, state["qty"])
         move.quantity += move_qty
         state["qty"] -= move_qty
@@ -79,18 +71,26 @@ class ProcessorPickingBase(models.AbstractModel):
         return (state, moves, move_lines, pickings)
 
     def _setup_state(self, state):
-        return {"initial_qty": state["qty"], "qty": state["qty"]}
+        return {
+            "initial_qty": state["qty"],
+            "qty": state["qty"],
+            "prod_code": state["prod_code"],
+            "order_ref": state["order_ref"],
+        }
 
     def _post_process_parse_result_item(
         self, state, moves, move_lines, errors, done, allow_extra_qty, **kwargs
     ):
+        if len(moves) == 0:
+            return
+
         initial_qty = state["initial_qty"]
         qty = state["qty"]
         move = moves[-1]
         if allow_extra_qty:
             # If will still have qty, this mean we have received more product
             # then expected, we just add them on the last move
-            move.quantity_done += qty
+            move.quantity += qty
             done.append((moves, initial_qty))
         else:
             errors.append(
