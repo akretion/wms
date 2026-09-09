@@ -76,14 +76,6 @@ def _optional_int(raw: str, rubrique: str, field: str, offset: int) -> int | Non
     return int(raw)
 
 
-def _require_padding(
-    payload: str, offset: int, width: int, rubrique: str, field: str = "padding"
-) -> None:
-    raw = _field(payload, offset, width, rubrique, field)
-    if raw != " " * width:
-        raise _error(rubrique, field, offset, raw, "expected spaces only")
-
-
 def _envelope(payload: str) -> tuple[str, dict[str, Any]]:
     envelope_rubrique = payload[11:14]
     sequence_raw = _field(payload, 1, 7, envelope_rubrique, "sequence")
@@ -177,7 +169,6 @@ class Reflex62Rubrique110(Reflex62Record):
             "movement_quantity_base_vl",
             170,
         )
-        _require_padding(payload, 248, 23, cls.CODE)
         return cls(**values)
 
 
@@ -203,7 +194,6 @@ class Reflex62Rubrique112(Reflex62Record):
                 "expected eight ASCII digits",
             )
         values["creation_date"] = creation_date
-        _require_padding(payload, 210, 61, cls.CODE)
         return cls(**values)
 
 

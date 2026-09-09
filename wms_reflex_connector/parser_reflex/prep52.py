@@ -138,8 +138,6 @@ def _values(
             values[name] = _optional_decimal_9_3(raw, cls.CODE, name, offset)
         elif converter == "kit":
             values[name] = raw.rstrip(" ")
-            if values[name] not in {"", "K", "C"}:
-                raise _error(cls.CODE, name, offset, raw, "expected 'K', 'C', or blank")
         else:
             values[name] = raw.rstrip(" ")
     values["extension_data"] = payload[_MINIMUM_LENGTHS[cls.CODE] :].rstrip(" ")

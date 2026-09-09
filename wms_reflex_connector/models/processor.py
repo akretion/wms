@@ -1,17 +1,11 @@
 # Copyright 2023 Akretion
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
 
-import csv
 import logging
-from collections import Counter
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Iterable
 
-from odoo import fields, models
+from odoo import models
 from odoo.exceptions import UserError, ValidationError
 
-from odoo.addons.wms_connector.models.stock_move import StockMove
 from odoo.addons.wms_reflex_connector.parser_reflex.dispatcher import (
     ReflexInterfaceDispatcher,
 )
@@ -151,7 +145,7 @@ class ProcessorPickingBase(models.AbstractModel):
             move_lines |= new_move_lines
             pickings |= new_pickings
         if errors:
-            raise UserError(self._build_error_message(errors, done))
+            raise ValidationError(self._build_error_message(errors, done))
         return pickings, moves, move_lines
 
     def _process_parse_result(
