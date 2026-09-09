@@ -8,7 +8,7 @@
     "license": "AGPL-3",
     "author": "Akretion,Odoo Community Association (OCA)",
     "website": "https://github.com/OCA/wms",
-    "depends": ["stock", "sale", "attachment_synchronize", "storage_backend"],
+    "depends": ["stock", "sale", "attachment_synchronize"],
     "data": [
         "security/wms_product_sync.xml",
         "views/wms_product_sync.xml",

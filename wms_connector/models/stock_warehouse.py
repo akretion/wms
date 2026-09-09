@@ -211,11 +211,12 @@ class StockWarehouse(models.Model):
     def _prepare_wms_task_vals(
         self, filetype, name_fragment="", method_type="export", filepath="IN/"
     ):
+        storage = self.env["fs.storage"].search([])
         return {
             "name": f"WMS task for {self.name} {name_fragment}",
             "method_type": method_type,
             "filepath": filepath,
-            "backend_id": self.env.ref("storage_backend.default_storage_backend").id,
+            "backend_id": storage.id,
             "file_type": filetype,
         }
 
