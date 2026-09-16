@@ -421,5 +421,5 @@ def parse_record(record: str) -> Reflex52Record:
     payload = _normalise_payload(record)
     rubrique, values = _envelope(payload)
     if rubrique is None:
-        return Reflex52UknownRecord()
+        return Reflex52UnknownRecord()
     return _PARSERS[rubrique](**_values(payload, _PARSERS[rubrique], values))

@@ -179,6 +179,7 @@ class ProcessorPickingIn(models.TransientModel):
         raise NotImplementedError()
 
     def run(self, string_buffer):
+        self = self.sudo()
         dispatcher = ReflexInterfaceDispatcher(self._get_interface_list())
         state = {}
         moves = []
@@ -206,6 +207,7 @@ class ProcessorPickingOut(models.TransientModel):
         raise NotImplementedError()
 
     def run(self, string_buffer):
+        self = self.sudo()
         dispatcher = ReflexInterfaceDispatcher(self._get_interface_list())
         state = {}
         moves = []
