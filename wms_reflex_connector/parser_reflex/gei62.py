@@ -109,11 +109,6 @@ def _prepare(record: str, expected: str) -> tuple[str, dict[str, Any]]:
 
 
 @dataclass(kw_only=True)
-class Reflex62UnknownRecord:
-    CODE: ClassVar[str] = None
-
-
-@dataclass(kw_only=True)
 class Reflex62Record:
     sequence: int
     application: str
@@ -207,5 +202,5 @@ def parse_record(record: str) -> Reflex62Record:
     payload = _normalise_payload(record)
     rubrique, values = _envelope(payload)
     if rubrique is None:
-        return Reflex62UknownRecord()
+        return Reflex62UnknownRecord()
     return _PARSERS[rubrique]._parse_prepared(payload, values)
