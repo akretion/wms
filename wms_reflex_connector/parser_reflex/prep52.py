@@ -104,11 +104,6 @@ def _envelope(payload: str) -> tuple[str, dict[str, Any]]:
     rubrique = _field(payload, 12, 3, candidate, "rubrique")
     if rubrique not in _SUPPORTED:
         return None, None
-    minimum = _MINIMUM_LENGTHS[rubrique]
-    if len(payload) < minimum:
-        raise _error(
-            rubrique, "record", 1, payload, f"expected at least {minimum} characters"
-        )
     return rubrique, {
         "sequence": int(sequence),
         "application": application,
