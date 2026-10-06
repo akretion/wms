@@ -52,8 +52,7 @@ const messages_fr = {
         },
     },
     app: {
-        profile_not_configured:
-            "Profil pas encore configuré. Sélectionnez un profil.",
+        profile_not_configured: "Profil pas encore configuré. Sélectionnez un profil.",
         profile_configure: "Configurer le profil",
         loading: "Chargement en cours...",
         action: {

@@ -4,7 +4,6 @@
 # Copyright 2025 Michael Tietz (MT Software) <mtietz@mt-software.de>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 from odoo import fields
-
 from odoo.addons.base_rest.components.service import to_int
 from odoo.addons.component.core import Component
 from odoo.addons.shopfloor_base.exceptions import ShopfloorError
@@ -133,7 +132,6 @@ class SinglePackTransfer(Component):
                     next_state="start",
                 )
             elif other_move_lines and self.work.menu.allow_unreserve_other_moves:
-
                 unreserved_moves = other_move_lines.move_id
                 other_package_levels = other_move_lines.package_level_id
                 other_package_levels.explode_package()
@@ -290,7 +288,7 @@ class SinglePackTransfer(Component):
         # package.move_ids may be empty, it seems
         moves = package_level.move_ids | package_level.move_line_ids.move_id
         if "done" in moves.mapped("state"):
-            raise AlreadyDone(next_state="start")
+            raise ShopfloorError(self.msg_store.already_done(), next_state="start")
 
         package_level.is_done = False
         if (
