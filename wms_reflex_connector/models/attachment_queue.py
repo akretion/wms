@@ -13,6 +13,10 @@ class AttachmentQueue(models.Model):
     def _read_reflex_data(self):
         return io.StringIO(base64.b64decode(self.datas).decode("latin-1"), newline=None)
 
+    def run(self):
+        self.state_message = ""
+        return super().run()
+
     def _run_wms_reception_confirmed(self):
         return (
             self.env["processor.picking.in"]
