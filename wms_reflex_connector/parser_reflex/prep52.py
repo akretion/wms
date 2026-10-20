@@ -4,14 +4,44 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, ClassVar, Self
 
-_SUPPORTED = ("150", "160", "165", "199", "210", "220")
+_SUPPORTED = (
+    "010",
+    "110",
+    "120",
+    "130",
+    "140",
+    "150",
+    "160",
+    "165",
+    "199",
+    "210",
+    "220",
+    "230",
+    "240",
+    "250",
+    "251",
+    "260",
+    "299",
+)
+
 _MINIMUM_LENGTHS = {
+    "010": 38,
+    "110": 77,
+    "120": 47,
+    "130": 47,
+    "140": 118,
     "150": 118,
     "160": 45,
     "165": 197,
     "199": 104,
     "210": 165,
     "220": 133,
+    "230": 63,
+    "240": 67,
+    "250": 228,
+    "251": 160,
+    "260": 111,
+    "299": 119,
 }
 
 
@@ -109,8 +139,15 @@ def _envelope(payload: str) -> tuple[str, dict[str, Any]]:
         "application": application,
         "interface": interface,
         "rubrique": rubrique,
-        "activity": _text(payload, 15, 3, rubrique, "activity"),
-        "physical_location": _text(payload, 18, 3, rubrique, "physical_location"),
+        # Rubrique 010 contains units, without activity or warehouse identifiers.
+        "activity": (
+            "" if rubrique == "010" else _text(payload, 15, 3, rubrique, "activity")
+        ),
+        "physical_location": (
+            ""
+            if rubrique == "010"
+            else _text(payload, 18, 3, rubrique, "physical_location")
+        ),
     }
 
 
@@ -153,6 +190,152 @@ class Reflex52Record:
     activity: str
     physical_location: str
     extension_data: str
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique010(Reflex52Record):
+    length_unit: str
+    distance_unit: str
+    weight_unit: str
+    volume_unit: str
+    surface_unit: str
+    capacity_unit: str
+    temperature_unit: str
+    price_unit: str
+    CODE: ClassVar[str] = "010"
+    FIELDS: ClassVar[tuple] = (
+        ("length_unit", 15, 3, "text"),
+        ("distance_unit", 18, 3, "text"),
+        ("weight_unit", 21, 3, "text"),
+        ("volume_unit", 24, 3, "text"),
+        ("surface_unit", 27, 3, "text"),
+        ("capacity_unit", 30, 3, "text"),
+        ("temperature_unit", 33, 3, "text"),
+        ("price_unit", 36, 3, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique110(Reflex52Record):
+    preparation_year: str
+    preparation_number: str
+    preparation_type_code: str
+    preparation_recipient_code: str
+    shipment_recipient_code: str
+    transport_quantity: Decimal | None
+    transport_quantity_unit: str
+    preparation_order_reason_code: str
+    CODE: ClassVar[str] = "110"
+    FIELDS: ClassVar[tuple] = (
+        ("preparation_year", 21, 2, "text"),
+        ("preparation_number", 23, 9, "text"),
+        ("preparation_type_code", 32, 3, "text"),
+        ("preparation_recipient_code", 35, 13, "text"),
+        ("shipment_recipient_code", 48, 13, "text"),
+        ("transport_quantity", 61, 11, "decimal"),
+        ("transport_quantity_unit", 72, 3, "text"),
+        ("preparation_order_reason_code", 75, 3, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique120(Reflex52Record):
+    preparation_year: str
+    preparation_number: str
+    expected_delivery_date_century: str
+    expected_delivery_date_year: str
+    expected_delivery_date_month: str
+    expected_delivery_date_day: str
+    expected_delivery_start_time: str
+    expected_delivery_end_time: str
+    CODE: ClassVar[str] = "120"
+    FIELDS: ClassVar[tuple] = (
+        ("preparation_year", 21, 2, "text"),
+        ("preparation_number", 23, 9, "text"),
+        ("expected_delivery_date_century", 32, 2, "text"),
+        ("expected_delivery_date_year", 34, 2, "text"),
+        ("expected_delivery_date_month", 36, 2, "text"),
+        ("expected_delivery_date_day", 38, 2, "text"),
+        ("expected_delivery_start_time", 40, 4, "text"),
+        ("expected_delivery_end_time", 44, 4, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique130(Reflex52Record):
+    preparation_year: str
+    preparation_number: str
+    appointment_date_century: str
+    appointment_date_year: str
+    appointment_date_month: str
+    appointment_date_day: str
+    appointment_start_time: str
+    appointment_end_time: str
+    CODE: ClassVar[str] = "130"
+    FIELDS: ClassVar[tuple] = (
+        ("preparation_year", 21, 2, "text"),
+        ("preparation_number", 23, 9, "text"),
+        ("appointment_date_century", 32, 2, "text"),
+        ("appointment_date_year", 34, 2, "text"),
+        ("appointment_date_month", 36, 2, "text"),
+        ("appointment_date_day", 38, 2, "text"),
+        ("appointment_start_time", 40, 4, "text"),
+        ("appointment_end_time", 44, 4, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique140(Reflex52Record):
+    preparation_year: str
+    preparation_number: str
+    quantity_level_1: int | None
+    quantity_level_2: int | None
+    quantity_level_3: int | None
+    quantity_base_vl: int | None
+    general_quantity_level_1: int | None
+    general_quantity_level_2: int | None
+    total_net_weight: Decimal | None
+    total_gross_weight: Decimal | None
+    total_volume: Decimal | None
+    CODE: ClassVar[str] = "140"
+    FIELDS: ClassVar[tuple] = (
+        ("preparation_year", 21, 2, "text"),
+        ("preparation_number", 23, 9, "text"),
+        ("quantity_level_1", 32, 9, "int"),
+        ("quantity_level_2", 41, 9, "int"),
+        ("quantity_level_3", 50, 9, "int"),
+        ("quantity_base_vl", 59, 9, "int"),
+        ("general_quantity_level_1", 68, 9, "int"),
+        ("general_quantity_level_2", 77, 9, "int"),
+        ("total_net_weight", 86, 11, "decimal"),
+        ("total_gross_weight", 97, 11, "decimal"),
+        ("total_volume", 108, 11, "decimal"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
 
 
 @dataclass(kw_only=True)
@@ -399,15 +582,282 @@ class Reflex52Rubrique220(Reflex52Record):
         return cls(**_values(payload, cls, values))
 
 
+@dataclass(kw_only=True)
+class Reflex52Rubrique230(Reflex52Record):
+    line_preparation_year: str
+    line_number: str
+    preparation_year: str
+    preparation_number: str
+    forced_scheduling_minimum_days: int | None
+    validation_date_century: str
+    validation_date_year: str
+    validation_date_month: str
+    validation_date_day: str
+    validation_time: str
+    CODE: ClassVar[str] = "230"
+    FIELDS: ClassVar[tuple] = (
+        ("line_preparation_year", 21, 2, "text"),
+        ("line_number", 23, 13, "text"),
+        ("preparation_year", 36, 2, "text"),
+        ("preparation_number", 38, 9, "text"),
+        ("forced_scheduling_minimum_days", 47, 3, "int"),
+        ("validation_date_century", 50, 2, "text"),
+        ("validation_date_year", 52, 2, "text"),
+        ("validation_date_month", 54, 2, "text"),
+        ("validation_date_day", 56, 2, "text"),
+        ("validation_time", 58, 6, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique240(Reflex52Record):
+    line_preparation_year: str
+    line_number: str
+    preparation_year: str
+    preparation_number: str
+    remainder_activity: str
+    remainder_physical_location: str
+    remainder_line_preparation_year: str
+    remainder_line_number: str
+    CODE: ClassVar[str] = "240"
+    FIELDS: ClassVar[tuple] = (
+        ("line_preparation_year", 21, 2, "text"),
+        ("line_number", 23, 13, "text"),
+        ("preparation_year", 36, 2, "text"),
+        ("preparation_number", 38, 9, "text"),
+        ("remainder_activity", 47, 3, "text"),
+        ("remainder_physical_location", 50, 3, "text"),
+        ("remainder_line_preparation_year", 53, 2, "text"),
+        ("remainder_line_number", 55, 13, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique250(Reflex52Record):
+    line_preparation_year: str
+    line_number: str
+    preparation_year: str
+    preparation_number: str
+    quantity_base_vl: int | None
+    net_weight: Decimal | None
+    supplier_code: str
+    support_number: str
+    parcel_number: str
+    price: Decimal | None
+    lot_1: str
+    manufacturing_date_century: str
+    manufacturing_date_year: str
+    manufacturing_date_month: str
+    manufacturing_date_day: str
+    receipt_date_century: str
+    receipt_date_year: str
+    receipt_date_month: str
+    receipt_date_day: str
+    best_before_date_century: str
+    best_before_date_year: str
+    best_before_date_month: str
+    best_before_date_day: str
+    sell_by_date_century: str
+    sell_by_date_year: str
+    sell_by_date_month: str
+    sell_by_date_day: str
+    use_by_date_century: str
+    use_by_date_year: str
+    use_by_date_month: str
+    use_by_date_day: str
+    lot_2: str
+    lot_3: str
+    support_type_code: str
+    parcel_type_code: str
+    CODE: ClassVar[str] = "250"
+    FIELDS: ClassVar[tuple] = (
+        ("line_preparation_year", 21, 2, "text"),
+        ("line_number", 23, 13, "text"),
+        ("preparation_year", 36, 2, "text"),
+        ("preparation_number", 38, 9, "text"),
+        ("quantity_base_vl", 47, 7, "int"),
+        ("net_weight", 54, 9, "decimal"),
+        ("supplier_code", 63, 13, "text"),
+        ("support_number", 76, 18, "text"),
+        ("parcel_number", 94, 18, "text"),
+        ("price", 112, 11, "decimal"),
+        ("lot_1", 123, 20, "text"),
+        ("manufacturing_date_century", 143, 2, "text"),
+        ("manufacturing_date_year", 145, 2, "text"),
+        ("manufacturing_date_month", 147, 2, "text"),
+        ("manufacturing_date_day", 149, 2, "text"),
+        ("receipt_date_century", 151, 2, "text"),
+        ("receipt_date_year", 153, 2, "text"),
+        ("receipt_date_month", 155, 2, "text"),
+        ("receipt_date_day", 157, 2, "text"),
+        ("best_before_date_century", 159, 2, "text"),
+        ("best_before_date_year", 161, 2, "text"),
+        ("best_before_date_month", 163, 2, "text"),
+        ("best_before_date_day", 165, 2, "text"),
+        ("sell_by_date_century", 167, 2, "text"),
+        ("sell_by_date_year", 169, 2, "text"),
+        ("sell_by_date_month", 171, 2, "text"),
+        ("sell_by_date_day", 173, 2, "text"),
+        ("use_by_date_century", 175, 2, "text"),
+        ("use_by_date_year", 177, 2, "text"),
+        ("use_by_date_month", 179, 2, "text"),
+        ("use_by_date_day", 181, 2, "text"),
+        ("lot_2", 183, 20, "text"),
+        ("lot_3", 203, 20, "text"),
+        ("support_type_code", 223, 3, "text"),
+        ("parcel_type_code", 226, 3, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique251(Reflex52Record):
+    line_preparation_year: str
+    line_number: str
+    preparation_year: str
+    preparation_number: str
+    blocked_specific_reason_flag: str
+    blocking_reason_code: str
+    blocked_customs_flag: str
+    customs_release_date_century: str
+    customs_release_date_year: str
+    customs_release_date_month: str
+    customs_release_date_day: str
+    customs_reserved: str
+    blocked_stabilization_flag: str
+    stabilization_release_date_century: str
+    stabilization_release_date_year: str
+    stabilization_release_date_month: str
+    stabilization_release_date_day: str
+    stabilization_reserved: str
+    blocked_control_flag: str
+    blocked_reconditioning_flag: str
+    reservation_recipient_code: str
+    reservation_recipient_family_code: str
+    reservation_reference: str
+    allocation_ordering_party_code: str
+    allocation_order_reference: str
+    already_prepared_flag: str
+    CODE: ClassVar[str] = "251"
+    FIELDS: ClassVar[tuple] = (
+        ("line_preparation_year", 21, 2, "text"),
+        ("line_number", 23, 13, "text"),
+        ("preparation_year", 36, 2, "text"),
+        ("preparation_number", 38, 9, "text"),
+        ("blocked_specific_reason_flag", 47, 1, "text"),
+        ("blocking_reason_code", 48, 3, "text"),
+        ("blocked_customs_flag", 51, 1, "text"),
+        ("customs_release_date_century", 52, 2, "text"),
+        ("customs_release_date_year", 54, 2, "text"),
+        ("customs_release_date_month", 56, 2, "text"),
+        ("customs_release_date_day", 58, 2, "text"),
+        ("customs_reserved", 60, 4, "text"),
+        ("blocked_stabilization_flag", 64, 1, "text"),
+        ("stabilization_release_date_century", 65, 2, "text"),
+        ("stabilization_release_date_year", 67, 2, "text"),
+        ("stabilization_release_date_month", 69, 2, "text"),
+        ("stabilization_release_date_day", 71, 2, "text"),
+        ("stabilization_reserved", 73, 4, "text"),
+        ("blocked_control_flag", 77, 1, "text"),
+        ("blocked_reconditioning_flag", 78, 1, "text"),
+        ("reservation_recipient_code", 79, 13, "text"),
+        ("reservation_recipient_family_code", 92, 15, "text"),
+        ("reservation_reference", 107, 20, "text"),
+        ("allocation_ordering_party_code", 127, 13, "text"),
+        ("allocation_order_reference", 140, 20, "text"),
+        ("already_prepared_flag", 160, 1, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique260(Reflex52Record):
+    line_preparation_year: str
+    line_number: str
+    preparation_year: str
+    preparation_number: str
+    start_serial_number: str
+    end_serial_number: str
+    entered_unit_count: int | None
+    CODE: ClassVar[str] = "260"
+    FIELDS: ClassVar[tuple] = (
+        ("line_preparation_year", 21, 2, "text"),
+        ("line_number", 23, 13, "text"),
+        ("preparation_year", 36, 2, "text"),
+        ("preparation_number", 38, 9, "text"),
+        ("start_serial_number", 47, 30, "text"),
+        ("end_serial_number", 77, 30, "text"),
+        ("entered_unit_count", 107, 5, "int"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
+@dataclass(kw_only=True)
+class Reflex52Rubrique299(Reflex52Record):
+    line_preparation_year: str
+    line_number: str
+    preparation_year: str
+    preparation_number: str
+    comment: str
+    comment_family: str
+    CODE: ClassVar[str] = "299"
+    FIELDS: ClassVar[tuple] = (
+        ("line_preparation_year", 21, 2, "text"),
+        ("line_number", 23, 13, "text"),
+        ("preparation_year", 36, 2, "text"),
+        ("preparation_number", 38, 9, "text"),
+        ("comment", 47, 70, "text"),
+        ("comment_family", 117, 3, "text"),
+    )
+
+    @classmethod
+    def parse(cls, record: str) -> Self:
+        payload, values = _prepare(record, cls.CODE)
+        return cls(**_values(payload, cls, values))
+
+
 _PARSERS = {
     cls.CODE: cls
     for cls in (
+        Reflex52Rubrique010,
+        Reflex52Rubrique110,
+        Reflex52Rubrique120,
+        Reflex52Rubrique130,
+        Reflex52Rubrique140,
         Reflex52Rubrique150,
         Reflex52Rubrique160,
         Reflex52Rubrique165,
         Reflex52Rubrique199,
         Reflex52Rubrique210,
         Reflex52Rubrique220,
+        Reflex52Rubrique230,
+        Reflex52Rubrique240,
+        Reflex52Rubrique250,
+        Reflex52Rubrique251,
+        Reflex52Rubrique260,
+        Reflex52Rubrique299,
     )
 }
 
