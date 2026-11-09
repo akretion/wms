@@ -24,26 +24,6 @@ _SUPPORTED = (
     "299",
 )
 
-_MINIMUM_LENGTHS = {
-    "010": 38,
-    "110": 77,
-    "120": 47,
-    "130": 47,
-    "140": 118,
-    "150": 118,
-    "160": 45,
-    "165": 197,
-    "199": 104,
-    "210": 165,
-    "220": 133,
-    "230": 63,
-    "240": 67,
-    "250": 228,
-    "251": 160,
-    "260": 111,
-    "299": 119,
-}
-
 
 class Reflex52ParseError(ValueError):
     """A malformed Interface 52 record, with protocol location context."""
@@ -172,7 +152,6 @@ def _values(
             values[name] = raw.rstrip(" ")
         else:
             values[name] = raw.rstrip(" ")
-    values["extension_data"] = payload[_MINIMUM_LENGTHS[cls.CODE] :].rstrip(" ")
     return values
 
 
@@ -189,7 +168,6 @@ class Reflex52Record:
     rubrique: str
     activity: str
     physical_location: str
-    extension_data: str
 
 
 @dataclass(kw_only=True)

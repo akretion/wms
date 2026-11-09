@@ -182,11 +182,15 @@ class ProcessorPickingIn(models.TransientModel):
         self = self.sudo()
         dispatcher = ReflexInterfaceDispatcher(self._get_interface_list())
         state = {}
+        errors = []
         moves = []
         for line in iter(string_buffer.readline, ""):
             line_data = dispatcher.parse(line)
-            new_state = self._process_line(line_data, state, moves)
+            new_state, error = self._process_line(line_data, state, moves)
+            errors += error
             state.update(new_state)
+        if len(errors) > 0:
+            raise UserError("\n".join(errors))
         self._process_parse_result(moves, allow_extra_qty=True)
         # TODO(franz): bring warnings back in
         # self.attachment_queue_id.description = "\n".join(warnings)
@@ -210,10 +214,15 @@ class ProcessorPickingOut(models.TransientModel):
         self = self.sudo()
         dispatcher = ReflexInterfaceDispatcher(self._get_interface_list())
         state = {}
+        errors = []
         moves = []
         for line in iter(string_buffer.readline, ""):
             line_data = dispatcher.parse(line)
-            self._process_line(line_data, state, moves)
+            new_state, error = self._process_line(line_data, state, moves)
+            errors += error
+            state.update(new_state)
+        if len(errors) > 0:
+            raise UserError("\n".join(errors))
         self._process_parse_result(moves, allow_extra_qty=True)
         # TODO(franz): bring warnings back in
         # self.attachment_queue_id.description = "\n".join(warnings)
